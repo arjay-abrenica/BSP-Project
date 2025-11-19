@@ -41,3 +41,10 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Node modules
+/backend/node_modules
+/frontend/node_modules
+
+# Environment variables
+/backend/.env
