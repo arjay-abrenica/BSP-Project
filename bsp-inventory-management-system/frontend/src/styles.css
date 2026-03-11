@@ -1,5 +1,22 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    /* BSP-IMS Color Palette */
+    --bsp-dark-green: #0b5e3a;
+    /* Sidebar, borders, text */
+    --bsp-light-green: #d1e3d8;
+    /* Card headers, active states */
+    --bsp-bg-color: #f4f6f5;
+    /* Main background */
+    --bsp-text-main: #333333;
+    --bsp-alert-red: #d92d20;
+    /* Low stock percentage text */
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+}
+
 body {
     margin: 0;
-    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bsp-bg-color);
+    color: var(--bsp-text-main);
 }

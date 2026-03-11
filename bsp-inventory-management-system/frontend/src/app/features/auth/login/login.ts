@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -16,8 +17,8 @@ export class Login {
   imagePathLoginImg: string = './assets/img/loginImage.png';
   imagePathBSPLogo: string = './assets/img/bspLogo.png';
 
-  // Inject FormBuilder to easily create form controls and groups
-  constructor(private fb: FormBuilder) {}
+  // Inject FormBuilder to easily create form controls, and Router for navigation
+  constructor(private fb: FormBuilder, private router: Router) {}
 
   ngOnInit(): void {
     // Initialize the form with controls and validation rules
@@ -31,33 +32,8 @@ export class Login {
 
   // Method called when the user clicks the Log In button
   onSubmit() {
-    // Check if the form is valid (e.g., all required fields are filled)
-    if (this.loginForm.valid) {
-      const username = this.loginForm.value.username;
-      const password = this.loginForm.value.password;
-
-      console.log('Attempting login with:', username, 'and', password);
-
-      // --- LOGIN LOGIC GOES HERE ---
-      // 1. Call your Authentication Service (e.g., an API call)
-      // this.authService.login(username, password).subscribe({ ... });
-
-      // 2. Example of a simple hardcoded check:
-      if (username === 'test' && password === '123') {
-        alert('Login Successful! Redirecting...');
-        // In a real app, you would use the Router to navigate:
-        // this.router.navigate(['/dashboard']); 
-      } else {
-        this.errorMessage = 'Invalid username or password. Please try again.';
-      }
-
-      // Optional: Reset the password field after a failed attempt
-      this.loginForm.get('password')?.reset();
-
-    } else {
-      // If the form is not valid (e.g., button was somehow pressed when disabled)
-      this.loginForm.markAllAsTouched(); // Show validation errors to the user
-      this.errorMessage = 'Please fix the errors in the form.';
-    }
+    // Temporarily bypass form validation and login logic since there is no backend yet
+    console.log('Bypassing login and redirecting directly to admin dashboard');
+    this.router.navigate(['/admin/dashboard']);
   }
 }
