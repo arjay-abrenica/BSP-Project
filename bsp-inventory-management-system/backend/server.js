@@ -1,18 +1,24 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const db = require('./config/db');
 
-// Load environment variables
-dotenv.config();
+// --- Configuration ---
+dotenv.config(); // Load environment variables from .env
+const db = require('./db');
+const inventoryRoutes = require('./inventoryRoutes');
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cors());
+// --- Middleware ---
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cors()); // Enable Cross-Origin Resource Sharing
 
-// Test DB Connection Route
+// --- API Routes ---
+app.use('/api', inventoryRoutes);
+
+// --- System Health Checks ---
+// Endpoint to verify database connection status
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW()');
@@ -23,7 +29,7 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// Basic route
+// Simple server status check
 app.get('/', (req, res) => {
   res.send('Inventory Management System API is running...');
 });
