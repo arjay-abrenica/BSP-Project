@@ -1,0 +1,203 @@
+.sidebar-wrapper {
+    display: flex;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    left: 0;
+    border-right: 1px solid var(--bsp-dark-green);
+    transition: width 0.3s ease;
+}
+
+/* --- Primary Icon Rail --- */
+.primary-rail {
+    width: 70px;
+    background-color: var(--bsp-dark-green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+    z-index: 2;
+}
+
+.brand-logo {
+    margin-bottom: 2rem;
+
+    .logo-image {
+        width: 48px;
+        height: auto;
+        display: block;
+        /* Optional: Add a subtle drop shadow to make it pop against the dark green bg */
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+}
+
+.nav-icons {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-icons li {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+
+    a {
+        display: flex;
+        color: var(--white);
+        text-decoration: none;
+    }
+
+    .nav-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* The active state matching your image */
+    &.active {
+        background-color: var(--white);
+
+        a {
+            color: var(--bsp-dark-green);
+        }
+    }
+
+    &:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.user-profile {
+    margin-top: auto;
+
+    a {
+        color: var(--white);
+        display: flex;
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+        }
+    }
+}
+
+/* --- Secondary Text Menu --- */
+.secondary-menu {
+    width: 240px;
+    background-color: var(--white);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s ease, opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+/* Collapsed state logic */
+.sidebar-wrapper.collapsed .secondary-menu {
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem 1rem 2rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
+
+    .title-text {
+        h1 {
+            color: var(--bsp-dark-green);
+            font-size: 1.5rem;
+            margin: 0 0 0.2rem 0;
+            font-weight: 700;
+        }
+
+        p {
+            color: var(--bsp-dark-green);
+            font-size: 0.75rem;
+            margin: 0;
+        }
+    }
+
+    .collapse-btn {
+        background: none;
+        border: 1px solid var(--bsp-dark-green);
+        border-radius: 4px;
+        color: var(--bsp-dark-green);
+        cursor: pointer;
+        padding: 0.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+.menu-content {
+    padding: 1rem;
+}
+
+/* Active Menu Group Styling */
+.active-group {
+    .group-header {
+        background-color: var(--bsp-light-green-bg);
+        color: var(--bsp-dark-green);
+        border-radius: var(--radius-sm);
+        padding: 0.6rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+.sub-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        color: var(--bsp-text-muted);
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--bsp-dark-green);
+            border-radius: 50%;
+            margin-right: 10px;
+            visibility: hidden;
+        }
+
+        &.active-sub {
+            background-color: var(--bsp-light-green-bg);
+            color: var(--bsp-dark-green);
+            font-weight: 500;
+
+            .dot {
+                visibility: visible;
+            }
+        }
+
+        &:hover:not(.active-sub) {
+            background-color: #f5f5f5;
+        }
+    }
+}

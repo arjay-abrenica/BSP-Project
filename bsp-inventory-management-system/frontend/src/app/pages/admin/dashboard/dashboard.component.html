@@ -69,12 +69,24 @@
             <div class="card-content charts-grid">
                 <div class="chart-container">
                     <h3>Quarterly Usage</h3>
-                    <div class="placeholder-chart bar-chart"></div>
+                    <div class="chart-wrapper">
+                        <canvas baseChart
+                            [data]="barChartData"
+                            [options]="barChartOptions"
+                            [type]="'bar'">
+                        </canvas>
+                    </div>
                     <button class="bsp-btn">More Info</button>
                 </div>
                 <div class="chart-container">
                     <h3>Stock Distribution by Office</h3>
-                    <div class="placeholder-chart donut-chart"></div>
+                    <div class="chart-wrapper">
+                        <canvas baseChart
+                            [data]="doughnutChartData"
+                            [options]="doughnutChartOptions"
+                            [type]="'doughnut'">
+                        </canvas>
+                    </div>
                     <button class="bsp-btn">More Info</button>
                 </div>
             </div>

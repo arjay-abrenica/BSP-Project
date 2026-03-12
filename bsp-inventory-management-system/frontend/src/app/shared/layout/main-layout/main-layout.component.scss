@@ -1,0 +1,18 @@
+.app-shell {
+    display: flex;
+    height: 100vh;
+    /* Locks the app to the full height of the browser window */
+    overflow: hidden;
+    /* Prevents the whole page from scrolling */
+    background-color: var(--bsp-app-bg);
+}
+
+.content-area {
+    flex: 1;
+    /* Tells this container to take up all remaining width */
+    overflow-y: auto;
+    /* Allows only the right side to scroll if the dashboard gets long */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}

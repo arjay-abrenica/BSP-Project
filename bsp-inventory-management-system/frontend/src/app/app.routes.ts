@@ -1,44 +1,69 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-    // Default route: Login page
+
+    // 1. Routes WITHOUT the Sidebar (e.g., Auth/Login)
+    // These sit outside the layout wrapper so they take up the full screen.
     {
-        path: '',
+        path: 'login',
         loadComponent: () =>
             import('./features/auth/login/login').then(c => c.Login)
     },
 
-    // Admin Routes
+    // 2. The Main Layout Wrapper (WITH the Sidebar)
     {
-        path: 'admin/dashboard',
-        // Lazy loading the standalone component
+        path: '', // The base path
         loadComponent: () =>
-            import('./pages/admin/dashboard/dashboard.component').then(c => c.DashboardComponent)
+            import('./shared/layout/main-layout/main-layout.component').then(c => c.MainLayoutComponent),
+
+        // Everything in this 'children' array will be injected into the <router-outlet>
+        // next to your sidebar!
+        children: [
+
+            // Default redirect when someone hits the base URL
+            {
+                path: '',
+                redirectTo: 'admin/dashboard',
+                pathMatch: 'full'
+            },
+
+            // Admin Dashboard Page
+            {
+                path: 'admin/dashboard',
+                loadComponent: () =>
+                    import('./pages/admin/dashboard/dashboard.component').then(c => c.DashboardComponent)
+            },
+
+            // Inventory Page
+            /*
+            {
+                path: 'inventory',
+                loadComponent: () =>
+                    import('./pages/inventory/inventory.component').then(c => c.InventoryComponent)
+            },
+            */
+
+            // Reports Page
+            /*
+            {
+                path: 'reports',
+                loadComponent: () =>
+                    import('./pages/reports/reports.component').then(c => c.ReportsComponent)
+            },
+            */
+
+            // Settings Page
+            /*
+            {
+                path: 'settings',
+                loadComponent: () =>
+                    import('./pages/settings/settings.component').then(c => c.SettingsComponent)
+            }
+            */
+        ]
     },
 
-    // // Inventory Routes
-    // {
-    //     path: 'inventory',
-    //     // You would create this page component next
-    //     loadComponent: () =>
-    //         import('./pages/inventory/inventory.component').then(c => c.InventoryComponent)
-    // },
-
-    // // Reports Routes
-    // {
-    //     path: 'reports',
-    //     loadComponent: () =>
-    //         import('./pages/reports/reports.component').then(c => c.ReportsComponent)
-    // },
-
-    // // Settings Routes
-    // {
-    //     path: 'settings',
-    //     loadComponent: () =>
-    //         import('./pages/settings/settings.component').then(c => c.SettingsComponent)
-    // },
-
-    // Fallback route for 404 Not Found
+    // 3. Fallback route for 404 Not Found
     {
         path: '**',
         redirectTo: 'admin/dashboard'

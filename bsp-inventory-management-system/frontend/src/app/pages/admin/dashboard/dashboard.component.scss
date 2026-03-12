@@ -1,11 +1,22 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
 .dashboard-container {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 /* Page Title Bar */
 .page-title-bar {
-    background-color: var(--bsp-light-green);
+    background-color: var(--bsp-light-green-bg);
     border-radius: var(--radius-sm);
     padding: 0.5rem 1rem;
     margin-bottom: 1rem;
@@ -20,13 +31,16 @@
 /* Main Grid Layout */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 3fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 1.5rem;
+    flex-grow: 1;
+    min-height: 0;
 }
 
 /* Standard Card Styling */
 .card {
-    background-color: white;
+    background-color: var(--white);
     border: 1px solid var(--bsp-dark-green);
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -35,7 +49,7 @@
 }
 
 .card-header {
-    background-color: var(--bsp-light-green);
+    background-color: var(--bsp-light-green-bg);
     color: var(--bsp-dark-green);
     font-weight: 700;
     padding: 0.5rem 1rem;
@@ -46,6 +60,7 @@
 .card-content {
     padding: 1rem;
     flex-grow: 1;
+    overflow-y: hidden;
 }
 
 /* --- Specific Card Layouts --- */
@@ -58,6 +73,8 @@
 
 .supply-section {
     flex: 1;
+    border-left: 2px solid var(--bsp-dark-green);
+    padding-left: 1rem;
 }
 
 .supply-stats {
@@ -72,9 +89,11 @@
     }
 }
 
+/* Sub-header text (muted gray) */
 .supply-section h3,
-.stat-block h3 {
-    color: #888;
+.stat-block h3,
+.chart-container h3 {
+    color: var(--bsp-text-muted);
     font-size: 0.9rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
@@ -87,9 +106,20 @@
     font-size: 0.85rem;
 
     li {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.25rem 0;
+        display: grid;
+        grid-template-columns: 80px 1fr auto;
+        gap: 1rem;
+        padding: 0.35rem 0;
+
+        span:first-child {
+            color: var(--bsp-text-muted);
+            font-weight: 600;
+        }
+
+        span:nth-child(2) {
+            color: var(--bsp-dark-green);
+            font-weight: 500;
+        }
 
         .alert {
             color: var(--bsp-alert-red);
@@ -127,47 +157,74 @@
 /* Analytics Charts Grid */
 .charts-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
     border-top: none;
+    height: 100%;
+    min-height: 0;
+    padding-bottom: 0.5rem;
 }
 
 .chart-container {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    border-left: 2px solid var(--bsp-dark-green);
+    padding-left: 1rem;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
 
     h3 {
-        color: #888;
+        color: var(--bsp-text-muted);
         font-size: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        flex-shrink: 0;
     }
 
-    /* Placeholders for your actual charts (e.g., Chart.js) */
-    .placeholder-chart {
+    .chart-wrapper {
         width: 100%;
-        height: 150px;
-        border: 1px dashed #ccc;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: center;
+        flex-grow: 1;
+        position: relative;
+        min-height: 0;
+        
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
     }
 }
 
-/* Buttons */
+/* BSP-specific Buttons */
 .bsp-btn {
     background-color: var(--bsp-dark-green);
-    color: white;
+    color: var(--white);
     border: none;
     border-radius: var(--radius-sm);
     padding: 0.4rem 1.5rem;
     cursor: pointer;
     font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+.bsp-btn:hover {
+    opacity: 0.9;
 }
 
 /* Right Stacked Column */
 .right-stacked {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
+    min-height: 0;
+}
+
+.right-stacked .card:last-child {
+    flex-grow: 1;
 }
 
 /* Links & Activity Lists */
@@ -184,6 +241,10 @@
         padding: 0.25rem 0;
         border-bottom: 1px solid #eee;
     }
+
+    a:hover {
+        text-decoration: underline;
+    }
 }
 
 .activity-list {
@@ -196,6 +257,7 @@
         margin-bottom: 0.75rem;
         display: flex;
         align-items: center;
+        color: var(--bsp-text-muted);
 
         .dot {
             height: 4px;

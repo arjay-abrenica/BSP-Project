@@ -1,12 +1,21 @@
 :root {
-    /* BSP-IMS Color Palette */
-    --bsp-dark-green: #0b5e3a;
-    /* Sidebar, borders, text */
-    --bsp-light-green: #d1e3d8;
-    /* Card headers, active states */
-    --bsp-bg-color: #f4f6f5;
-    /* Main background */
+    /* BSP-IMS Updated Color Palette from selection reference */
+    --bsp-dark-green: #005E38;
+    /* Sidebar, borders, main text, buttons */
+
+    /* Blend of bsp-dark-green on white at 20% opacity. Hex alpha: #005e3833
+     Solid hex equivalent for performance: #CCDFD7
+     Using RGBA for clarity and easy mapping to the 20% value
+  */
+    --bsp-light-green-bg: rgba(0, 94, 56, 0.2);
+    /* Card headers, page title */
+
+    --bsp-app-bg: #f4f6f5;
+    /* Main app background (off-white) */
+    --white: #ffffff;
+    /* Card content background */
     --bsp-text-main: #333333;
+    --bsp-text-muted: #888888;
     --bsp-alert-red: #d92d20;
     /* Low stock percentage text */
 
@@ -17,6 +26,6 @@
 body {
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: var(--bsp-bg-color);
+    background-color: var(--bsp-app-bg);
     color: var(--bsp-text-main);
 }
