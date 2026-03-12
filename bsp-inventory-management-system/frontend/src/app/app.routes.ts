@@ -35,31 +35,32 @@ export const routes: Routes = [
             },
 
             // Inventory Page
-            /*
             {
                 path: 'inventory',
                 loadComponent: () =>
                     import('./pages/inventory/inventory.component').then(c => c.InventoryComponent)
             },
-            */
 
             // Reports Page
-            /*
             {
                 path: 'reports',
                 loadComponent: () =>
                     import('./pages/reports/reports.component').then(c => c.ReportsComponent)
             },
-            */
+
+            // History Page
+            {
+                path: 'history',
+                loadComponent: () =>
+                    import('./pages/history/history.component').then(c => c.HistoryComponent)
+            },
 
             // Settings Page
-            /*
             {
                 path: 'settings',
                 loadComponent: () =>
                     import('./pages/settings/settings.component').then(c => c.SettingsComponent)
             }
-            */
         ]
     },
 

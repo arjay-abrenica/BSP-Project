@@ -6,7 +6,7 @@
         </div>
 
         <ul class="nav-icons">
-            <li class="active" title="Dashboard">
+            <li title="Dashboard" routerLinkActive="active">
                 <a routerLink="/admin/dashboard" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"></rect>
@@ -16,8 +16,8 @@
                     </svg>
                 </a>
             </li>
-            <li title="Inventory">
-                <a routerLink="/inventory">
+            <li title="Inventory" routerLinkActive="active">
+                <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path
                             d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
@@ -27,8 +27,8 @@
                     </svg>
                 </a>
             </li>
-            <li title="Reports">
-                <a routerLink="/reports">
+            <li title="Reports" routerLinkActive="active">
+                <a routerLink="/reports" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -38,16 +38,16 @@
                     </svg>
                 </a>
             </li>
-            <li title="History">
-                <a routerLink="/history">
+            <li title="History" routerLinkActive="active">
+                <a routerLink="/history" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                 </a>
             </li>
-            <li title="Settings">
-                <a routerLink="/settings">
+            <li title="Settings" routerLinkActive="active">
+                <a routerLink="/settings" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path

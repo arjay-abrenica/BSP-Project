@@ -29,3 +29,101 @@ body {
     background-color: var(--bsp-app-bg);
     color: var(--bsp-text-main);
 }
+
+/* =========================================================================
+   GLOBAL REUSABLE UI COMPONENTS (Cards, Containers, Buttons)
+   ========================================================================= */
+
+/* The main outer wrapper for any routed page content */
+.page-container {
+    padding: 1rem 1.5rem;
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Page Title Bar */
+.page-title-bar {
+    background-color: var(--bsp-light-green-bg);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.page-title-bar h2 {
+    margin: 0;
+    color: var(--bsp-dark-green);
+    font-size: 1.2rem;
+}
+
+/* Main Grid Layout - Often used globally */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 1.5rem;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* Standard Card Styling */
+.card {
+    background-color: var(--white);
+    border: 1px solid var(--bsp-dark-green);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    background-color: var(--bsp-light-green-bg);
+    color: var(--bsp-dark-green);
+    font-weight: 700;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--bsp-dark-green);
+}
+
+.card-content {
+    padding: 1rem;
+    flex-grow: 1;
+    overflow-y: hidden;
+}
+
+/* BSP-specific Buttons */
+.bsp-btn {
+    background-color: var(--bsp-dark-green);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 1.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+.bsp-btn:hover {
+    opacity: 0.9;
+}
+
+/* Standard Tables used in cards */
+.simple-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.simple-table td {
+    padding: 0.5rem 0;
+}
+
+.simple-table td:first-child {
+    width: 30px;
+}
+
+.simple-table td:last-child {
+    text-align: right;
+}

@@ -20,11 +20,12 @@
 }
 
 .brand-logo {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
 
     .logo-image {
-        width: 48px;
+        width: 38px;
         height: auto;
+        margin-top: 10px;
         display: block;
         /* Optional: Add a subtle drop shadow to make it pop against the dark green bg */
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
