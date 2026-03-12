@@ -1,0 +1,123 @@
+<div class="dashboard-container">
+
+    <div class="page-title-bar">
+        <h2>Overview</h2>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <div class="card supplies-card">
+            <div class="card-header">Supplies</div>
+            <div class="card-content supplies-grid">
+
+                <div class="supply-section">
+                    <h3>Low Stock Items</h3>
+                    <ul class="stock-list">
+                        <li><span>CLP19-BF</span> <span>Clip, Backfold 19mm</span> <span class="alert">16%</span></li>
+                        <li><span>FLD-TAG</span> <span>Data Folder, Taglia Lock</span> <span class="alert">18%</span>
+                        </li>
+                        <li><span>STP-STD</span> <span>Stapler, Standard Type</span> <span class="alert">21%</span></li>
+                    </ul>
+                </div>
+
+                <div class="supply-stats">
+                    <div class="stat-block">
+                        <h3>Total Items Issued</h3>
+                        <p><span class="big-number">183</span> items have been issued this month</p>
+                    </div>
+                    <div class="stat-block">
+                        <h3>Percentage Stock Used</h3>
+                        <p><span class="big-number">63%</span> stock used this month</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card pending-card">
+            <div class="card-header">Pending Requests</div>
+            <div class="card-content">
+                <table class="simple-table">
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>OSG</td>
+                            <td>10/25/2025</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>CPSMO</td>
+                            <td>10/31/2025</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>IAO</td>
+                            <td>11/07/2025</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>PMDD</td>
+                            <td>11/15/2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card analytics-card">
+            <div class="card-header">Analytics & Insights</div>
+            <div class="card-content charts-grid">
+                <div class="chart-container">
+                    <h3>Quarterly Usage</h3>
+                    <div class="chart-wrapper">
+                        <canvas baseChart
+                            [data]="barChartData"
+                            [options]="barChartOptions"
+                            [type]="'bar'">
+                        </canvas>
+                    </div>
+                    <button class="bsp-btn">More Info</button>
+                </div>
+                <div class="chart-container">
+                    <h3>Stock Distribution by Office</h3>
+                    <div class="chart-wrapper">
+                        <canvas baseChart
+                            [data]="doughnutChartData"
+                            [options]="doughnutChartOptions"
+                            [type]="'doughnut'">
+                        </canvas>
+                    </div>
+                    <button class="bsp-btn">More Info</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-stacked">
+
+            <div class="card">
+                <div class="card-header">Quick Links</div>
+                <div class="card-content">
+                    <ul class="links-list">
+                        <li><a href="#">Generate Monthly Report</a></li>
+                        <li><a href="#">Replenish Stock</a></li>
+                        <li><a href="#">Add New Item</a></li>
+                        <li><a href="#">Track Inventory</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Recent Activity</div>
+                <div class="card-content">
+                    <ul class="activity-list">
+                        <li><span class="dot"></span> CPSMO Supply Request Approved - 10/18/25</li>
+                        <li><span class="dot"></span> Added White Board Marker</li>
+                        <li><span class="dot"></span> Replenish Items for PMDD Supplies</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>

@@ -1,5 +1,31 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    /* BSP-IMS Updated Color Palette from selection reference */
+    --bsp-dark-green: #005E38;
+    /* Sidebar, borders, main text, buttons */
+
+    /* Blend of bsp-dark-green on white at 20% opacity. Hex alpha: #005e3833
+     Solid hex equivalent for performance: #CCDFD7
+     Using RGBA for clarity and easy mapping to the 20% value
+  */
+    --bsp-light-green-bg: rgba(0, 94, 56, 0.2);
+    /* Card headers, page title */
+
+    --bsp-app-bg: #f4f6f5;
+    /* Main app background (off-white) */
+    --white: #ffffff;
+    /* Card content background */
+    --bsp-text-main: #333333;
+    --bsp-text-muted: #888888;
+    --bsp-alert-red: #d92d20;
+    /* Low stock percentage text */
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+}
+
 body {
     margin: 0;
-    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bsp-app-bg);
+    color: var(--bsp-text-main);
 }
