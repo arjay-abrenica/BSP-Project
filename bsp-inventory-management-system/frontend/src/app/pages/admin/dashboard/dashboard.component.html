@@ -87,7 +87,7 @@
                             [type]="'doughnut'">
                         </canvas>
                     </div>
-                    <button class="bsp-btn">More Info</button>
+                    <button class="bsp-btn" (click)="openStockDistributionModal()">More Info</button>
                 </div>
             </div>
         </div>
@@ -178,6 +178,118 @@
                 <button class="bsp-btn export-btn">Export Graph</button>
             </div>
         </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Distribution by Office Modal -->
+<div class="modal-overlay" *ngIf="isStockDistributionModalOpen" (click)="closeStockDistributionModal()">
+    <div class="modal-content stock-modal" (click)="$event.stopPropagation()">
+        <div class="modal-inner">
+            <div class="modal-header tabbed-header">
+                <div class="modal-tabs">
+                    <span class="modal-tab" 
+                          [class.active]="activeStockTab === 'distribution'"
+                          (click)="setActiveStockTab('distribution')">Stock Distribution by Office</span>
+                    <span class="modal-tab" 
+                          [class.active]="activeStockTab === 'allocation'"
+                          (click)="setActiveStockTab('allocation')">Supply Allocation Status</span>
+                </div>
+                <button class="close-btn" (click)="closeStockDistributionModal()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Stock Distribution Tab Content -->
+                <ng-container *ngIf="activeStockTab === 'distribution'">
+                    <div class="modal-left stock-left">
+                        <div class="year-block">
+                            <div class="year-highlight">2025</div>
+                            <div class="quarter-highlight">Quarter 1</div>
+                        </div>
+                        <div class="modal-chart-wrapper doughnut-wrapper">
+                            <canvas baseChart
+                                [data]="doughnutChartData"
+                                [options]="modalDoughnutChartOptions"
+                                [type]="'doughnut'">
+                            </canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-right">
+                        <div class="form-group">
+                            <label>View</label>
+                            <select class="bsp-select">
+                                <option>All Quarters</option>
+                                <option>Single Quarter</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Year</label>
+                            <select class="bsp-select">
+                                <option>2025</option>
+                                <option>2024</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Quarter</label>
+                            <select class="bsp-select" disabled>
+                                <option>Q1</option>
+                                <option>Q2</option>
+                                <option>Q3</option>
+                                <option>Q4</option>
+                            </select>
+                        </div>
+    
+                        <button class="bsp-btn export-btn">Export Chart</button>
+                    </div>
+                </ng-container>
+
+                <!-- Supply Allocation Tab Content -->
+                <ng-container *ngIf="activeStockTab === 'allocation'">
+                    <div class="modal-left stock-left">
+                        <div class="year-block">
+                            <div class="year-highlight">2025</div>
+                            <div class="quarter-highlight">Quarter 1</div>
+                        </div>
+                        <div class="modal-chart-wrapper bar-wrapper">
+                            <canvas baseChart
+                                [data]="allocationChartData"
+                                [options]="allocationChartOptions"
+                                [type]="'bar'">
+                            </canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-right">
+                        <div class="form-group">
+                            <label>Year</label>
+                            <select class="bsp-select">
+                                <option>2025</option>
+                                <option>2024</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Quarter</label>
+                            <select class="bsp-select">
+                                <option>Q1</option>
+                                <option>Q2</option>
+                                <option>Q3</option>
+                                <option>Q4</option>
+                            </select>
+                        </div>
+    
+                        <button class="bsp-btn export-btn">Export Graph</button>
+                    </div>
+                </ng-container>
+            </div>
         </div>
     </div>
 </div>

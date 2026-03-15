@@ -115,13 +115,17 @@
         margin-bottom: 0.5rem;
         display: flex;
         justify-content: center;
+        align-items: center;
+        /* Center the doughnut vertically */
         flex-grow: 1;
         position: relative;
+        overflow: hidden;
+        /* CRITICAL: prevents canvas from bursting grid bounds */
         min-height: 0;
 
         canvas {
-            width: 100% !important;
-            height: 100% !important;
+            max-width: 100%;
+            max-height: 100%;
         }
     }
 }
@@ -160,7 +164,7 @@
     -webkit-backdrop-filter: blur(16px);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.6);
-    width: 1150px;
+    width: 1250px;
     max-width: 95vw;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     display: flex;
@@ -174,7 +178,8 @@
     background-color: transparent;
     display: flex;
     flex-direction: column;
-    gap: 12px; /* This creates the physical gap between the header and body */
+    gap: 12px;
+    /* This creates the physical gap between the header and body */
     height: 100%;
 }
 
@@ -191,10 +196,12 @@
 }
 
 .modal-header {
-    background-color: rgba(0, 94, 56, 0.4); /* Frosted green */
+    background-color: rgba(0, 94, 56, 0.4);
+    /* Frosted green */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-radius: 8px; /* Rounded separated header */
+    border-radius: 8px;
+    /* Rounded separated header */
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -203,9 +210,8 @@
 
     h2 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
         color: #0d4a22;
-        /* Darker green */
         font-weight: 700;
     }
 
@@ -226,12 +232,14 @@
 }
 
 .modal-body {
-    background-color: rgba(255, 255, 255, 0.95); /* Solid white base */
-    border-radius: 8px; /* Rounded separated body block */
+    background-color: rgba(255, 255, 255, 0.95);
+    /* Solid white base */
+    border-radius: 8px;
+    /* Rounded separated body block */
     display: flex;
-    padding: 2.5rem 1.5rem 2rem 2.5rem;
+    padding: 1.5rem 2.5rem 2.5rem 2.5rem;
     gap: 2rem;
-    flex-grow: 1; /* Stretch to fill bottom */
+    flex-grow: 1;
 }
 
 .modal-left {
@@ -258,10 +266,87 @@
 
     .modal-chart-wrapper {
         width: 100%;
-        height: 400px;
+        height: 450px;
         position: relative;
         z-index: 10;
         flex-grow: 1;
+    }
+}
+
+/* Specific Stock Modal Styling overrides */
+.tabbed-header {
+    border-bottom: 2px solid rgba(0, 94, 56, 0.1) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    align-items: center;
+}
+
+.modal-tabs {
+    display: flex;
+    gap: 2rem;
+    align-items: stretch;
+    height: 100%;
+    width: 100%;
+}
+
+.modal-tab {
+    font-weight: 700;
+    cursor: pointer;
+    color: #82a88e;
+    font-size: 1.1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: -2px;
+    display: flex;
+    align-items: center; /* Center text vertically in the tab */
+    position: relative; /* For absolutely positioned underline */
+    transition: color 0.2s ease;
+
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0.5rem; /* Lift underline closer to the text */
+        left: 0;
+        right: 0;
+        height: 4px;
+        background-color: transparent;
+        border-radius: 2px;
+        transition: background-color 0.2s ease;
+    }
+
+    &:hover {
+        color: #0d4a22;
+    }
+
+    &.active {
+        color: #0d4a22;
+        &::after {
+            background-color: #0d4a22;
+        }
+    }
+}
+
+.stock-left {
+    .year-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-right: 1.5rem;
+        flex-shrink: 0;
+
+        .year-highlight {
+            margin-right: 0;
+            /* Reset generic margin */
+            font-size: 80px;
+            /* Slightly bigger to balance */
+        }
+
+        .quarter-highlight {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #0d4a22;
+            margin-top: -5px;
+        }
     }
 }
 
