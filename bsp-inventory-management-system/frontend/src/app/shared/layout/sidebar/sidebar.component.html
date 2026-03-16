@@ -84,7 +84,8 @@
 
         <div class="menu-content">
 
-            <div class="menu-group active-group">
+            <!-- Dashboard Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('dashboard') || router.url === '/'" [class.active-group]="true">
                 <div class="group-header">
                     <span>Dashboard</span>
                     <span class="indicator">-</span>
@@ -93,6 +94,23 @@
                 <ul class="sub-menu">
                     <li class="active-sub">
                         <span class="dot"></span> Overview
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Reports Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('reports')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Reports</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
+                        <span class="dot"></span> Monthly Report
+                    </li>
+                    <li routerLink="/reports/analysis" routerLinkActive="active-sub">
+                        <span class="dot"></span> Office Supply Analysis
                     </li>
                 </ul>
             </div>

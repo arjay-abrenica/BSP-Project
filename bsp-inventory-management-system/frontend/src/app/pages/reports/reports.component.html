@@ -1,12 +1,116 @@
 <div class="page-container">
     <div class="page-title-bar">
-        <h2>System Reports</h2>
+        <h2>Reports</h2>
     </div>
     
-    <div class="card">
-        <div class="card-header">Generate Reports</div>
-        <div class="card-content">
-            <p>This is a temporary placeholder for the Reports generator and export tools.</p>
+    <div class="reports-layout">
+        <!-- Left Column: List -->
+        <div class="bsp-panel list-panel">
+            <div class="panel-header">List of Reports</div>
+            
+            <div class="panel-body">
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" placeholder="Search by report name, date, or report #" [(ngModel)]="searchQuery">
+                    </div>
+                    <button class="bsp-btn search-btn">Search</button>
+                </div>
+                
+                <div class="reports-list">
+                    <div class="report-item" *ngFor="let report of filteredReports" [class.selected]="selectedReport === report" (click)="selectReport(report)">
+                        <div class="report-icon" [ngClass]="report.type">
+                            <!-- Basic doc icon + text styling -->
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            <span class="icon-text">{{report.type === 'pdf' ? 'PDF' : 'XLS'}}</span>
+                        </div>
+                        <div class="report-details">
+                            <div class="report-number">{{report.reportNumber}}</div>
+                            <div class="report-title">{{report.title}}</div>
+                            <div class="report-date">Date Generated: {{report.dateGenerated}}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel-footer">
+                <button class="bsp-btn generate-btn" (click)="openGenerateModal()">Generate Report</button>
+            </div>
+        </div>
+
+        <!-- Right Column: Preview -->
+        <div class="bsp-panel preview-panel">
+            <div class="panel-header">Preview</div>
+            <div class="panel-body preview-body">
+                <div class="empty-state" *ngIf="!selectedReport">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="#0f5b30" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="doc-icon">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <p>Select a file<br>to view</p>
+                </div>
+                <div class="preview-content" *ngIf="selectedReport">
+                   <p>Previewing: <strong>{{selectedReport.title}}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Generation Modal -->
+<div class="modal-overlay" *ngIf="isGenerateModalOpen" (click)="closeGenerateModal()">
+    <div class="modal-content generate-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Report Generation</h3>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-section">
+                <label class="section-label">Date Range</label>
+                <div class="date-dropdowns">
+                    <div class="form-group">
+                        <label class="sub-label">Month</label>
+                        <select class="bsp-select">
+                            <option>January</option>
+                            <option>February</option>
+                            <option>March</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="sub-label">Year</label>
+                        <select class="bsp-select">
+                            <option>2020</option>
+                            <option>2021</option>
+                            <option>2022</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <label class="section-label">File Type</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="fileType" value="pdf" checked>
+                        <span class="radio-custom"></span> PDF
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="fileType" value="excel">
+                        <span class="radio-custom"></span> Excel (.xlsx)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="bsp-btn outline-btn cancel-btn" (click)="closeGenerateModal()">Cancel</button>
+            <button class="bsp-btn solid-btn submit-btn">Generate</button>
         </div>
     </div>
 </div>
