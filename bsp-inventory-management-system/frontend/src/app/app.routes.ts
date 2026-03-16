@@ -48,6 +48,13 @@ export const routes: Routes = [
                     import('./pages/reports/reports.component').then(c => c.ReportsComponent)
             },
 
+            // Reports Analysis Page
+            {
+                path: 'reports/analysis',
+                loadComponent: () =>
+                    import('./pages/reports/analysis/analysis.component').then(c => c.AnalysisComponent)
+            },
+
             // History Page
             {
                 path: 'history',

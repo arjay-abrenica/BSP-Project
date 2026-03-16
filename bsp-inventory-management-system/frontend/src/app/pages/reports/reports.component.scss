@@ -1,6 +1,414 @@
+/* reports.component.scss */
+
 .page-container {
-    padding: 2rem;
-    h1 {
+    padding: 1.5rem 2.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.reports-layout {
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    /* Increased width to prevent aggressive text wrapping on long filenames */
+    gap: 1.5rem;
+    flex-grow: 1;
+    /* Stretch to fill remaining height */
+    min-height: 0;
+    /* Important for flex-child scrolling */
+}
+
+/* Custom Panel Container */
+.bsp-panel {
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid #c7d4cc;
+    /* Light sage green border */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .panel-header {
+        background-color: #c7d4cc;
+        /* Sage green matching the border */
         color: #0d4a22;
+        /* Dark green text */
+        font-size: 1.25rem;
+        font-weight: 700;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .panel-body {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+}
+
+/* Left Panel Specifics */
+.list-panel {
+    .panel-body {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .search-bar {
+        display: flex;
+        gap: 0.5rem;
+
+        .search-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+
+            .search-icon {
+                position: absolute;
+                left: 10px;
+                color: #0d4a22;
+                /* Icon color */
+            }
+
+            input {
+                width: 100%;
+                padding: 0.6rem 0.6rem 0.6rem 2.2rem;
+                /* Left padding for icon */
+                border: 1px solid #0d4a22;
+                /* Use dark green border like reference */
+                border-radius: 4px;
+                font-size: 0.85rem;
+                color: #333;
+                box-sizing: border-box;
+
+                &:focus {
+                    outline: none;
+                    border-width: 2px;
+                }
+
+                &::placeholder {
+                    color: #999;
+                }
+            }
+        }
+
+        .search-btn {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+    }
+
+    .reports-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #eaeaea;
+        border-radius: 4px;
+        padding-bottom: 0.5rem;
+
+        /* Custom scrollbar for list */
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 3px;
+        }
+    }
+
+    .report-item {
+        display: flex;
+        align-items: center;
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #eaeaea;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        gap: 1rem;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background-color: #f9fdfa;
+        }
+
+        &.selected {
+            background-color: #edf5f0;
+            border-left: 4px solid #0d4a22;
+        }
+
+        .report-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            flex-shrink: 0;
+
+            svg {
+                width: 22px;
+                height: 22px;
+                margin-bottom: 2px;
+            }
+
+            .icon-text {
+                font-size: 0.65rem;
+                font-weight: 800;
+                letter-spacing: 1px;
+            }
+
+            &.pdf {
+                background-color: #A62222;
+                /* Red PDF icon */
+            }
+
+            &.xls {
+                background-color: #166A3A;
+                /* Green XLS icon */
+            }
+        }
+
+        .report-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            /* For absolutely positioning the report number */
+            gap: 0.25rem;
+            min-height: 48px;
+            justify-content: center;
+
+            .report-number {
+                font-size: 0.65rem;
+                color: #a3b8ad;
+                /* Faint greenish text */
+                text-align: right;
+                position: absolute;
+                top: 0;
+                right: 0;
+            }
+
+            .report-title {
+                font-weight: 700;
+                color: #0d4a22;
+                font-size: 0.95rem;
+                padding-right: 120px;
+                /* Reserve space for the absolute-positioned report number */
+                word-wrap: break-word;
+                /* Wrap cleanly instead of strictly slicing letters */
+                line-height: 1.2;
+                margin-top: -2px;
+            }
+
+            .report-date {
+                font-size: 0.70rem;
+                color: #555;
+            }
+        }
+    }
+
+    .panel-footer {
+        padding: 1rem;
+
+        .generate-btn {
+            width: 100%;
+            font-size: 1rem;
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+    }
+}
+
+/* Right Panel Specifics */
+.preview-panel {
+    .preview-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #ffffff;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        opacity: 0.9;
+
+        .doc-icon {
+            color: #0d4a22;
+            /* Green outline icon */
+            width: 56px;
+            height: 56px;
+        }
+
+        p {
+            margin: 0;
+            text-align: center;
+            color: #0d4a22;
+            font-size: 1.05rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+    }
+
+    .preview-content {
+        /* Placeholder styling for when a report is actually selected */
+        padding: 2rem;
+        width: calc(100% - 4rem);
+        height: calc(100% - 4rem);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px dashed #c7d4cc;
+        border-radius: 8px;
+        background-color: #fcfcfc;
+        color: #555;
+        font-size: 1.2rem;
+    }
+}
+
+/* Modals & Forms Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content.generate-modal {
+    background-color: #ffffff;
+    border-radius: 12px;
+    width: 400px; /* Specific width for the small report generator */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .modal-header {
+        background-color: rgba(199, 212, 204, 0.9);
+        padding: 1rem 1.5rem;
+        
+        h3 {
+            margin: 0;
+            color: #0d4a22;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .section-label {
+            font-weight: 700;
+            color: #0d4a22;
+            font-size: 0.95rem;
+        }
+
+        .date-dropdowns {
+            display: flex;
+            gap: 1rem;
+            
+            .form-group {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+
+                .sub-label {
+                    font-size: 0.75rem;
+                    color: #555;
+                }
+
+                .bsp-select {
+                    width: 100%;
+                    padding: 0.5rem;
+                    border: 1px solid #0d4a22;
+                    border-radius: 4px;
+                    color: #333;
+                    background-color: transparent;
+                    outline: none;
+                    cursor: pointer;
+
+                    &:focus { border-width: 2px; }
+                }
+            }
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                font-size: 0.9rem;
+                color: #333;
+
+                input[type="radio"] {
+                    margin: 0;
+                    accent-color: #0d4a22; /* Use theme green for radio */
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between; /* Cancel left, Generate right */
+        
+        .bsp-btn {
+            padding: 0.6rem 2rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+
+            &.outline-btn.cancel-btn {
+                background: transparent;
+                border: 1px solid #0d4a22;
+                color: #0d4a22;
+
+                &:hover { background: #f0f5f2; }
+            }
+
+            &.solid-btn.submit-btn {
+                background: #0d4a22;
+                border: 1px solid #0d4a22;
+                color: white;
+
+                &:hover { background: #0a3d1c; }
+            }
+        }
     }
 }

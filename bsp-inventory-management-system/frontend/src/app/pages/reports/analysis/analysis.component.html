@@ -1,0 +1,303 @@
+<div class="analysis-page bsp-page-container">
+    <div class="page-header">
+        <h1>Analysis</h1>
+    </div>
+
+    <!-- Main Container -->
+    <div class="bsp-panel analysis-panel">
+
+        <!-- Tabbed Navigation -->
+        <div class="tabbed-header">
+            <div class="tabs-container">
+                <span class="modal-tab" [class.active]="activeAnalysisTab === 'trend'" (click)="setTab('trend')">Usage Trend</span>
+                <span class="modal-tab" [class.active]="activeAnalysisTab === 'distribution'" (click)="setTab('distribution')">Stock Distribution</span>
+                <span class="modal-tab" [class.active]="activeAnalysisTab === 'category'" (click)="setTab('category')">Supply Category Breakdown</span>
+                <span class="modal-tab" [class.active]="activeAnalysisTab === 'efficiency'" (click)="setTab('efficiency')">Allocation Efficiency</span>
+                <span class="modal-tab" [class.active]="activeAnalysisTab === 'detailed'" (click)="setTab('detailed')">Detailed Analysis View</span>
+            </div>
+        </div>
+
+        <div class="analysis-body">
+
+            <!-- ═══ TAB A: Detailed Analysis View ═══ -->
+            <ng-container *ngIf="activeAnalysisTab === 'detailed'">
+                <div class="detailed-header-section">
+                    <div class="title-block">
+                        <span class="year">2025</span>
+                        <span class="divider"></span>
+                        <span class="quarter">Quarter 1</span>
+                    </div>
+                    <fieldset class="filter-fieldset">
+                        <legend>Filter</legend>
+                        <div class="filter-controls">
+                            <div class="form-group">
+                                <label>View</label>
+                                <select class="bsp-select"><option>Quarter 1</option><option>Quarter 2</option><option>Quarter 3</option><option>Quarter 4</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Year</label>
+                                <select class="bsp-select"><option>2025</option><option>2024</option><option>2023</option></select>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="table-container">
+                    <table class="analysis-table">
+                        <thead>
+                            <tr>
+                                <th>Office <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Allocated Quantity <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Issued Quantity <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Remaining Stock <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Allocation Utilization (%) <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Reallocation Count <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Ave. Request Fulfillment (%) <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let row of detailedData">
+                                <td>{{ row.office }}</td>
+                                <td>{{ row.allocatedQuantity }}</td>
+                                <td>{{ row.issuedQuantity }}</td>
+                                <td>{{ row.remainingStock }}</td>
+                                <td>{{ row.allocationUtilization }}</td>
+                                <td>{{ row.reallocationCount }}</td>
+                                <td>{{ row.aveRequestFulfillment }}</td>
+                                <td class="remarks-cell">{{ row.remarks }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </ng-container>
+
+            <!-- ═══ TAB B: Usage Trend ═══ -->
+            <ng-container *ngIf="activeAnalysisTab === 'trend'">
+                <div class="chart-tab-layout">
+                    <div class="chart-area">
+                        <div class="chart-title-block">
+                            <div class="year-big">2025</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas baseChart [data]="trendChartData" type="bar" [options]="trendChartOptions"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <fieldset class="filter-fieldset">
+                            <legend>Filter</legend>
+                            <div class="filter-controls">
+                                <div class="form-group">
+                                    <label>View</label>
+                                    <select class="bsp-select"><option>All Quarters</option><option>Quarter 1</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Office</label>
+                                    <select class="bsp-select"><option>CPSMO</option><option>FOD</option></select>
+                                </div>
+                            </div>
+                            <div class="filter-controls" style="margin-top:0.5rem">
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select class="bsp-select"><option>2025</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select class="bsp-select"><option>Office Stationary</option></select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="sort-fieldset">
+                            <legend>Sort</legend>
+                            <div class="filter-controls">
+                                <div class="form-group">
+                                    <label>Usage</label>
+                                    <select class="bsp-select"><option>Descending</option><option>Ascending</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select class="bsp-select"><option>A-Z</option><option>Z-A</option></select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <button class="export-btn">Export Graph</button>
+
+                        <!-- Top 5 grid -->
+                        <div class="top5-grid">
+                            <div class="top5-col-header">Top 5 Most Used Supplies</div>
+                            <div class="top5-col-header">Top 5 Least Used Supplies</div>
+                            <ng-container *ngFor="let item of top5Most; let i = index">
+                                <div class="top5-cell">
+                                    <span class="item-name">{{ item.name }}</span>
+                                    <span class="item-value">{{ item.pct }}</span>
+                                </div>
+                                <div class="top5-cell">
+                                    <span class="item-value">{{ top5Least[i].pct }}</span>
+                                    <span class="item-name" style="text-align: right;">{{ top5Least[i].name }}</span>
+                                </div>
+                            </ng-container>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- ═══ TAB C: Stock Distribution ═══ -->
+            <ng-container *ngIf="activeAnalysisTab === 'distribution'">
+                <div class="chart-tab-layout">
+                    <div class="chart-area">
+                        <div class="chart-title-block">
+                            <div class="year-big">2025</div>
+                            <div class="quarter-sub">Quarter 1</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas baseChart [data]="distChartData" type="doughnut" [options]="distChartOptions"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item" *ngFor="let label of distChartData.labels; let i = index">
+                                <div class="legend-dot" [style.backgroundColor]="$any(distChartData.datasets[0].backgroundColor)[i]"></div>
+                                <span>{{ label }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <fieldset class="filter-fieldset">
+                            <legend>Filter</legend>
+                            <div class="filter-controls">
+                                <div class="form-group">
+                                    <label>View</label>
+                                    <select class="bsp-select"><option>Quarter 1</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select class="bsp-select"><option>2025</option></select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <button class="export-btn">Export Graph</button>
+
+                        <table class="mini-table">
+                            <thead>
+                                <tr>
+                                    <th>Office</th><th>Total Items Tracked</th><th>Total Allocated Quantity</th><th>Variance</th><th>Stock Condition</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let row of stockDistTable">
+                                    <td>{{ row.office }}</td>
+                                    <td>{{ row.totalItems }}</td>
+                                    <td>{{ row.allocated | number }}</td>
+                                    <td>{{ row.variance }}</td>
+                                    <td><span [class]="getBadgeClass(row.condition)">{{ row.condition }}</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- ═══ TAB D: Supply Category Breakdown ═══ -->
+            <ng-container *ngIf="activeAnalysisTab === 'category'">
+                <div class="chart-tab-layout">
+                    <div class="chart-area">
+                        <div class="chart-title-block">
+                            <div class="year-big">2025</div>
+                            <div class="quarter-sub">Quarter 1</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas baseChart [data]="catChartData" type="doughnut" [options]="catChartOptions"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item" *ngFor="let label of catChartData.labels; let i = index">
+                                <div class="legend-dot" [style.backgroundColor]="$any(catChartData.datasets[0].backgroundColor)[i]"></div>
+                                <span>{{ label }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <fieldset class="filter-fieldset">
+                            <legend>Filter</legend>
+                            <div class="filter-controls">
+                                <div class="form-group">
+                                    <label>View</label>
+                                    <select class="bsp-select"><option>Quarter 1</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select class="bsp-select"><option>2025</option></select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <button class="export-btn">Export Graph</button>
+
+                        <div class="ranked-list-section">
+                            <h4>Top Categories by Usage</h4>
+                            <ul>
+                                <li *ngFor="let c of topCatUsage">{{ c.name }}<span>{{ c.pct }}</span></li>
+                            </ul>
+                        </div>
+                        <div class="ranked-list-section">
+                            <h4>Top Categories by Stock Value</h4>
+                            <ul>
+                                <li *ngFor="let c of topCatValue">{{ c.name }}<span>{{ c.pct }}</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- ═══ TAB E: Allocation Efficiency ═══ -->
+            <ng-container *ngIf="activeAnalysisTab === 'efficiency'">
+                <div class="chart-tab-layout">
+                    <div class="chart-area">
+                        <div class="chart-title-block">
+                            <div class="year-big">2025</div>
+                            <div class="quarter-sub">Quarter 1</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas baseChart [data]="effChartData" type="line" [options]="effChartOptions"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="right-panel">
+                        <fieldset class="filter-fieldset">
+                            <legend>Filter</legend>
+                            <div class="filter-controls">
+                                <div class="form-group">
+                                    <label>View</label>
+                                    <select class="bsp-select"><option>Quarter 1</option></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Year</label>
+                                    <select class="bsp-select"><option>2025</option></select>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <button class="export-btn">Export Graph</button>
+
+                        <div class="summary-card">
+                            <h4>Average Processing Time</h4>
+                            <div class="card-value">3.5 days</div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Average Items Allocated per Request</h4>
+                            <div class="card-value">12 items</div>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Approval Rate (%)</h4>
+                            <div class="card-value">94.2%</div>
+                        </div>
+                    </div>
+                </div>
+            </ng-container>
+
+        </div>
+    </div>
+</div>

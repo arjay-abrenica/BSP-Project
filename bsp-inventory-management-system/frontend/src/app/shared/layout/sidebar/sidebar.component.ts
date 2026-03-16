@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
     selector: 'app-sidebar',
@@ -12,6 +12,8 @@ import { RouterModule } from '@angular/router';
 export class SidebarComponent {
     // You can add logic here later to toggle the secondary sidebar open/closed
     isSecondaryMenuOpen = true;
+
+    constructor(public router: Router) {}
 
     toggleMenu() {
         this.isSecondaryMenuOpen = !this.isSecondaryMenuOpen;
