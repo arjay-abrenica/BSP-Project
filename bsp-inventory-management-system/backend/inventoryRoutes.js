@@ -20,4 +20,8 @@ router.get('/scan/item/:code', inventoryController.getItemByCode);
 // Example usage: /api/scan/ris/24-05-0062
 router.get('/scan/ris/:ris_no', inventoryController.getTransactionByRis);
 
+// --- Authentication ---
+router.post('/auth/register', inventoryController.registerUser);
+router.post('/auth/login', inventoryController.loginUser);
+
 module.exports = router;

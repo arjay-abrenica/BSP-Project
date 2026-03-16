@@ -1,0 +1,171 @@
+<div class="add-item-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <h2>Add New Item(s)</h2>
+      <p class="subtitle">Enter the details of the new inventory item below. You can add multiple items before saving.</p>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <form [formGroup]="addItemForm">
+      <div class="form-grid">
+        
+        <!-- Section: Item Details -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+            Item Information
+          </h3>
+          
+          <div class="form-group">
+            <label>Stock Keeping Unit (SKU) <span class="required">*</span></label>
+            <input type="text" formControlName="item_code" placeholder="e.g. SKU-12345"
+              [class.error]="addItemForm.get('item_code')?.invalid && addItemForm.get('item_code')?.touched">
+            <span class="error-msg" *ngIf="addItemForm.get('item_code')?.invalid && addItemForm.get('item_code')?.touched">SKU is required</span>
+          </div>
+          
+          <div class="form-group">
+            <label>Item Name <span class="required">*</span></label>
+            <input type="text" formControlName="item_name" placeholder="Enter full item name"
+              [class.error]="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">
+            <span class="error-msg" *ngIf="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">Item name is required</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Category <span class="required">*</span></label>
+              <select formControlName="category_id" [class.error]="addItemForm.get('category_id')?.invalid && addItemForm.get('category_id')?.touched">
+                <option value="" disabled selected>Select Category</option>
+                <option value="1">Office Supplies</option>
+                <option value="2">Electrical</option>
+                <option value="3">Hardware</option>
+                <option value="4">Medical/Sanitary</option>
+              </select>
+            </div>
+
+            <div class="form-group half">
+              <label>Unit of Measure <span class="required">*</span></label>
+              <select formControlName="unit_of_measure" [class.error]="addItemForm.get('unit_of_measure')?.invalid && addItemForm.get('unit_of_measure')?.touched">
+                <option value="" disabled selected>Select Unit</option>
+                <option value="pcs">Pieces (pcs)</option>
+                <option value="box">Box (box)</option>
+                <option value="rms">Reams (rms)</option>
+                <option value="roll">Roll (roll)</option>
+                <option value="bot">Bottle (bot)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea formControlName="description" rows="3" placeholder="Optional details or specifications about the item..."></textarea>
+          </div>
+        </div>
+
+        <!-- Section: Stock & Delivery Details -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            Procurement & Stock Details
+          </h3>
+          
+          <div class="form-group">
+            <label>Supplier</label>
+            <input type="text" formControlName="supplier_name" placeholder="Enter supplier name" list="supplier-list">
+            <datalist id="supplier-list">
+              <option value="CHAMPION HARDWARE & CO. Inc."></option>
+              <option value="PS-PhilGEPS"></option>
+            </datalist>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Unit Cost (PHP)</label>
+              <div class="input-with-icon">
+                <span class="icon">₱</span>
+                <input type="number" formControlName="unit_price" placeholder="0.00" step="0.01" min="0">
+              </div>
+            </div>
+
+            <div class="form-group half">
+              <label>Initial Quantity</label>
+              <input type="number" formControlName="quantity" placeholder="0" min="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Reorder Threshold</label>
+              <input type="number" formControlName="reorder_level" placeholder="10" min="0">
+            </div>
+            
+            <div class="form-group half">
+              <label>Delivery Number</label>
+              <input type="text" formControlName="delivery_number" placeholder="Enter Delivery No.">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Delivery Receipt</label>
+            <div class="file-upload">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <div class="upload-text">
+                <span class="upload-link">Click to upload</span> or drag and drop
+              </div>
+              <p class="file-hint">PNG, JPG or PDF (max. 10MB)</p>
+              <input type="file" formControlName="delivery_receipt" accept=".png,.jpg,.jpeg,.pdf">
+            </div>
+          </div>
+        </div>
+
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting">Clear Form</button>
+        <div class="right-actions">
+          <button type="button" class="btn-secondary" routerLink="/inventory/catalog" [disabled]="isSubmitting">Cancel</button>
+          <button type="button" class="btn-primary-outline" (click)="addToBatch()" [disabled]="isSubmitting">
+            + Add to List
+          </button>
+          <button type="button" class="btn-primary" (click)="submitBatch()" [disabled]="isSubmitting || (batchItems.length === 0 && addItemForm.invalid)">
+            <span *ngIf="isSubmitting" class="spinner"></span>
+            Save Items
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Batch Items Table -->
+  <div class="batch-section" *ngIf="batchItems.length > 0">
+    <div class="batch-header">
+      <h3 class="batch-title">Items to be Saved ({{ batchItems.length }})</h3>
+    </div>
+    <div class="batch-table-container">
+      <table class="batch-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Unit</th>
+            <th>Qty</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of batchItems; let i = index">
+            <td class="font-medium">{{ item.item_code }}</td>
+            <td>{{ item.item_name }}</td>
+            <td>{{ item.category_id }}</td>
+            <td>{{ item.unit_of_measure }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>
+              <button class="btn-remove" (click)="removeFromBatch(i)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

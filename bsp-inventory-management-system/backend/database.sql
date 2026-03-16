@@ -61,6 +61,15 @@ CREATE TABLE Transaction_Details (
     FOREIGN KEY (item_id) REFERENCES Items(item_id)
 );
 
+-- 7. Create Users Table (For Login/Authentication)
+CREATE TABLE Users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL, -- In production, this should be hashed (e.g., bcrypt)
+    role VARCHAR(50) DEFAULT 'staff', -- 'admin' or 'staff'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- =========================================================
 -- STEP 2: INSERT SAMPLE DATA
 -- =========================================================
@@ -80,3 +89,6 @@ INSERT INTO Transactions (ris_no, transaction_type, transaction_date, department
 ('24-05-0062', 'OUT', '2024-05-31', 1, 'RSMI May 2024 Issuance');
 
 INSERT INTO Transaction_Details (transaction_id, item_id, quantity, unit_cost) VALUES (1, 4, 2, 0.00), (1, 3, 1, 55.62), (1, 5, 1, 0.00);
+
+-- Insert a Default Admin User (Password: admin123)
+INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'admin');

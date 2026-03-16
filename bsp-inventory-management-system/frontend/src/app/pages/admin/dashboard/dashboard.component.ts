@@ -37,7 +37,7 @@ export class DashboardComponent implements OnInit {
         ]
     };
 
-    public barChartOptions: ChartOptions<'bar'> = {
+    public barChartOptions: ChartOptions<'bar'> | any = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -103,7 +103,7 @@ export class DashboardComponent implements OnInit {
         ]
     };
 
-    public doughnutChartOptions: ChartOptions<'doughnut'> = {
+    public doughnutChartOptions: ChartOptions<'doughnut'> | any = {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '50%', // Make the hole size match the reference image
@@ -125,7 +125,7 @@ export class DashboardComponent implements OnInit {
         }
     };
 
-    public modalDoughnutChartOptions: ChartOptions<'doughnut'> = {
+    public modalDoughnutChartOptions: ChartOptions<'doughnut'> | any = {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '50%', // Make the hole size match the reference image
@@ -145,7 +145,7 @@ export class DashboardComponent implements OnInit {
                 display: true,
                 align: 'end',
                 anchor: 'end',
-                formatter: (value, context) => {
+                formatter: (value: any, context: any) => {
                     return context.chart.data.labels ? context.chart.data.labels[context.dataIndex] + '\n' + value + '%' : value + '%';
                 },
                 font: {
@@ -181,7 +181,7 @@ export class DashboardComponent implements OnInit {
         ]
     };
 
-    public allocationChartOptions: ChartOptions<'bar'> = {
+    public allocationChartOptions: ChartOptions<'bar'> | any = {
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'y', // CRITICAL: Makes the bar chart horizontal
@@ -216,7 +216,7 @@ export class DashboardComponent implements OnInit {
                 display: true,
                 color: '#333',
                 font: { size: 8, weight: 'bold' },
-                formatter: (value) => value > 0 ? value : '' // Only show label if > 0
+                formatter: (value: any) => value > 0 ? value : '' // Only show label if > 0
             }
         },
         layout: {
