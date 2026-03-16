@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config(); // Load environment variables from .env
 const db = require('./db');
 const inventoryRoutes = require('./inventoryRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 
 // --- API Routes ---
+app.use('/api/auth', authRoutes);
 app.use('/api', inventoryRoutes);
 
 // --- System Health Checks ---

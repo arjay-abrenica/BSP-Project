@@ -98,6 +98,26 @@
                 </ul>
             </div>
 
+            <!-- Inventory Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('inventory')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Inventory</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/inventory/catalog" routerLinkActive="active-sub">
+                        <span class="dot"></span> Supply Management
+                    </li>
+                    <li routerLink="/inventory/outflow" routerLinkActive="active-sub">
+                        <span class="dot"></span> Supply Outflow
+                    </li>
+                    <li routerLink="/inventory/track-item" routerLinkActive="active-sub">
+                        <span class="dot"></span> Track Inventory
+                    </li>
+                </ul>
+            </div>
+
             <!-- Reports Menu -->
             <div class="menu-group" *ngIf="router.url.includes('reports')" [class.active-group]="true">
                 <div class="group-header">

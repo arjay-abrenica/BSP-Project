@@ -22,16 +22,64 @@ exports.getAllItems = async (req, res) => {
 
 exports.createItem = async (req, res) => {
   if (!req.body) return res.status(400).json({ error: "Request body missing or not JSON" });
-  const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level } = req.body;
+  
+  const itemsToCreate = Array.isArray(req.body) ? req.body : [req.body];
+  let client;
+  
   try {
-    const result = await db.query(
-      `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level || 10]
-    );
-    res.status(201).json(result.rows[0]);
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    const createdItems = [];
+
+    for (const item of itemsToCreate) {
+      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number } = item;
+
+      let final_supplier_id = null;
+      if (supplier_name && supplier_name.trim() !== '') {
+        const supRes = await client.query('SELECT supplier_id FROM Suppliers WHERE supplier_name ILIKE $1', [supplier_name.trim()]);
+        if (supRes.rows.length > 0) {
+          final_supplier_id = supRes.rows[0].supplier_id;
+        } else {
+          const newSup = await client.query('INSERT INTO Suppliers (supplier_name) VALUES ($1) RETURNING supplier_id', [supplier_name.trim()]);
+          final_supplier_id = newSup.rows[0].supplier_id;
+        }
+      }
+
+      // 1. Insert Item
+      const result = await client.query(
+        `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+        [item_code, item_name, description, unit_of_measure, unit_price, category_id || null, final_supplier_id, reorder_level || 10, quantity || 0]
+      );
+      
+      const newItem = result.rows[0];
+
+      // 2. If quantity > 0, create a Transaction IN
+      if (quantity > 0) {
+        const transRes = await client.query(
+          `INSERT INTO Transactions (transaction_type, transaction_date, remarks) 
+           VALUES ('IN', CURRENT_DATE, $1) RETURNING transaction_id`,
+          [`Initial Stock. Delivery No: ${delivery_number || 'N/A'}`]
+        );
+        const transactionId = transRes.rows[0].transaction_id;
+
+        await client.query(
+          `INSERT INTO Transaction_Details (transaction_id, item_id, quantity, unit_cost) 
+           VALUES ($1, $2, $3, $4)`,
+          [transactionId, newItem.item_id, quantity, unit_price || 0]
+        );
+      }
+      createdItems.push(newItem);
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json(Array.isArray(req.body) ? createdItems : createdItems[0]);
   } catch (err) {
+    if (client) await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
   }
 };
 
@@ -235,6 +283,51 @@ exports.getTransactionByRis = async (req, res) => {
     delete transaction.quantity;
 
     res.status(200).json(transaction);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* =========================================
+   SECTION 5: AUTHENTICATION (Login/Register)
+   ========================================= */
+
+exports.registerUser = async (req, res) => {
+  // Simple registration logic
+  const { username, password, role } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  try {
+    // Check if user exists
+    const checkUser = await db.query('SELECT * FROM Users WHERE username = $1', [username]);
+    if (checkUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    // Insert new user
+    const result = await db.query(
+      'INSERT INTO Users (username, password, role) VALUES ($1, $2, $3) RETURNING user_id, username, role',
+      [username, password, role || 'staff'] 
+    );
+    res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.loginUser = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const result = await db.query('SELECT * FROM Users WHERE username = $1', [username]);
+    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const user = result.rows[0];
+    // Direct comparison for Phase 1 (TODO: Use bcrypt for hashing in Phase 3)
+    if (user.password !== password) return res.status(401).json({ error: 'Invalid credentials' });
+
+    res.status(200).json({ message: 'Login successful', user: { id: user.user_id, username: user.username, role: user.role } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

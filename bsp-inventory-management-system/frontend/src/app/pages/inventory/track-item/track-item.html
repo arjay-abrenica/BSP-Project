@@ -1,0 +1,79 @@
+<div class="track-container">
+  <div class="search-section">
+    <div class="qr-placeholder">
+      <div class="qr-icon-wrapper">
+        <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+      </div>
+      <p>Scan or upload qr code to track item</p>
+    </div>
+    
+    <div class="divider">
+      <span>or</span>
+    </div>
+
+    <div class="search-input-group">
+      <label>Item Tracking Number</label>
+      <div class="input-with-button">
+        <div class="input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" [(ngModel)]="trackingCode" placeholder="Search">
+        </div>
+        <button class="btn-primary" (click)="onSearch()">Search</button>
+      </div>
+      @if (errorMsg) {
+        <p class="error-msg">{{errorMsg}}</p>
+      }
+    </div>
+  </div>
+
+  @if (itemDetails) {
+    <div class="details-section">
+      <div class="details-header">
+        <h3>Item Details</h3>
+        <div class="actions">
+          <button class="btn-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit Item
+          </button>
+          <button class="btn-text">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            View Transactions
+          </button>
+        </div>
+      </div>
+      
+      <div class="details-card">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">SKU</span>
+            <span class="value">{{itemDetails.item_code || 'N/A'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Item Name</span>
+            <span class="value">{{itemDetails.item_name}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Category</span>
+            <span class="value">{{itemDetails.category_id}}</span>
+          </div>
+          <div class="info-item full-width">
+            <span class="label">Description</span>
+            <span class="value text-muted">{{itemDetails.description}}</span>
+          </div>
+        </div>
+        
+        <div class="stock-info">
+          <div class="stock-amount">
+            <span class="number">{{itemDetails.current_stock}}</span>
+            <span class="unit">{{itemDetails.unit_of_measure}}</span>
+          </div>
+          <div class="stock-label">Available Stocks</div>
+          <div class="stock-actions">
+            <button class="btn-secondary">Log Transaction</button>
+            <button class="btn-secondary">View Allocation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
