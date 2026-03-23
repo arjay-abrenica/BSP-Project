@@ -20,6 +20,11 @@ router.get('/scan/item/:code', inventoryController.getItemByCode);
 // Example usage: /api/scan/ris/24-05-0062
 router.get('/scan/ris/:ris_no', inventoryController.getTransactionByRis);
 
+// --- History & Activity Log ---
+router.get('/history/requests', inventoryController.getRequestsHistory);
+router.get('/history/activity', inventoryController.getActivityLog);
+router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
+
 // --- Authentication ---
 router.post('/auth/register', inventoryController.registerUser);
 router.post('/auth/login', inventoryController.loginUser);

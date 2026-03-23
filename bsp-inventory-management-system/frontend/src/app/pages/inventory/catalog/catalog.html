@@ -73,7 +73,7 @@
     </thead>
     <tbody>
       @for (item of filteredItems; track item.item_id) {
-        <tr>
+        <tr (click)="openModal(item)" class="clickable-row">
           <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
           <td class="col-item font-medium">{{ item.item_name }}</td>
           <td class="col-desc text-muted">{{ item.description }}</td>
@@ -98,3 +98,77 @@
     </tbody>
   </table>
 </div>
+
+<!-- Modal -->
+@if (showModal && intakeSummaryData) {
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Inventory Intake Summary</h2>
+    </div>
+    
+    <div class="modal-body">
+      <div class="summary-top">
+        <div class="summary-field" style="flex: 2;">
+          <label>Supplier</label>
+          <input type="text" readonly [value]="intakeSummaryData.supplier" class="summary-input" />
+        </div>
+        <div class="summary-field" style="flex: 1.5;">
+          <label>Delivery Receipt</label>
+          <div class="receipt-input-wrapper">
+            <input type="text" readonly [value]="intakeSummaryData.deliveryReceipt" class="summary-input receipt-input" />
+            <a href="#" class="review-link">review receipt</a>
+          </div>
+        </div>
+        <div class="summary-field" style="flex: 1;">
+          <label>Delivery Number</label>
+          <input type="text" readonly [value]="intakeSummaryData.deliveryNumber" class="summary-input" />
+        </div>
+      </div>
+
+      <div class="summary-table-wrapper">
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Item Name</th>
+              <th>Category</th>
+              <th>Unit</th>
+              <th class="text-center">Quantity</th>
+              <th class="text-right">Unit Cost</th>
+              <th class="text-right">Total Cost</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of intakeSummaryData.items; track item.sku) {
+            <tr>
+              <td>{{ item.sku }}</td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.category }}</td>
+              <td>{{ item.unit }}</td>
+              <td class="text-center">{{ item.qty }}</td>
+              <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
+              <td class="text-right">{{ item.totalCost | number:'1.2-2' }}</td>
+              <td>{{ item.status }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6" class="text-right grand-total-label">Grand Total</td>
+              <td class="text-right grand-total-val">{{ intakeGrandTotal | number:'1.2-2' }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-edit" (click)="closeModal()">Edit</button>
+        <button class="btn-confirm" (click)="closeModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+}

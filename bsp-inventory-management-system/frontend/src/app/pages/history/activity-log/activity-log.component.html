@@ -1,7 +1,7 @@
 <div class="page-container">
     <!-- Header -->
     <div class="header-container">
-        <h2><strong>History</strong> <span class="separator">|</span> <span class="sub-title">Requests History</span></h2>
+        <h2><strong>History</strong> <span class="separator">|</span> <span class="sub-title">Activity Log</span></h2>
     </div>
 
     <!-- Search & Filter -->
@@ -11,7 +11,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" placeholder="Search by RIS, Requesting Office">
+            <input type="text" placeholder="Search by Activity Log ID, ">
         </div>
         
         <div class="filter-wrapper">
@@ -116,10 +116,12 @@
                     </div>
 
                     <div class="filter-group">
-                        <label class="filter-label">Status</label>
+                        <label class="filter-label">Role</label>
                         <select class="filter-select">
-                            <option>Released</option>
-                            <option>Pending</option>
+                            <option>Admin</option>
+                            <option>System</option>
+                            <option>Requester</option>
+                            <option>Superadmin</option>
                         </select>
                     </div>
 
@@ -138,24 +140,24 @@
         <table class="history-table">
             <thead>
                 <tr>
-                    <th>RIS No.</th>
-                    <th>Requesting Office</th>
-                    <th class="text-center">Date Requested</th>
-                    <th class="text-center">Date Released</th>
-                    <th class="text-center">No. of Items</th>
-                    <th>Status</th>
+                    <th>Activity Log ID</th>
+                    <th class="text-center">Timestamp</th>
+                    <th class="text-center">Office</th>
+                    <th class="text-center">Role</th>
+                    <th>Activity</th>
+                    <th>Details/References</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @for (item of historyData; track item.risNo) {
+                @for (item of activityData; track item.activityLogId) {
                 <tr>
-                    <td>{{ item.risNo }}</td>
-                    <td>{{ item.requestingOffice }}</td>
-                    <td class="text-center">{{ item.dateRequested }}</td>
-                    <td class="text-center">{{ item.dateReleased }}</td>
-                    <td class="text-center">{{ item.noOfItems }}</td>
-                    <td>{{ item.status }}</td>
+                    <td>{{ item.activityLogId }}</td>
+                    <td class="text-center">{{ item.timestamp }}</td>
+                    <td class="text-center">{{ item.office }}</td>
+                    <td class="text-center">{{ item.role }}</td>
+                    <td>{{ item.activity }}</td>
+                    <td>{{ item.details }}</td>
                     <td class="text-right">
                         <button class="action-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
