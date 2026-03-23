@@ -124,13 +124,13 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/inventory/catalog" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/catalog" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Supply Management
                     </li>
-                    <li routerLink="/inventory/outflow" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/outflow" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Supply Outflow
                     </li>
-                    <li routerLink="/inventory/track-item" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/track-item" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Track Inventory
                     </li>
                 </ul>
@@ -153,14 +153,27 @@
                 </ul>
             </div>
 
-            <!-- Settings Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('settings') && !router.url.includes('profile')" [class.active-group]="true">
-                <div class="group-header">
-                    <span>Settings</span>
             <!-- History Menu -->
             <div class="menu-group" *ngIf="router.url.includes('history')" [class.active-group]="true">
                 <div class="group-header">
                     <span>History</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Requests History
+                    </li>
+                    <li routerLink="/history/activity-log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Activity Log
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Settings Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('settings') && !router.url.includes('profile')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Settings</span>
                     <span class="indicator">-</span>
                 </div>
 
@@ -187,11 +200,6 @@
                     </li>
                     <li class="logout-link" (click)="triggerLogOut()">
                         Log Out
-                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
-                        <span class="dot"></span> Requests History
-                    </li>
-                    <li routerLink="/history/activity-log" routerLinkActive="active-sub">
-                        <span class="dot"></span> Activity Log
                     </li>
                 </ul>
             </div>
