@@ -48,6 +48,20 @@ export const routes: Routes = [
                 ]
             },
 
+            // Property Redirect
+            {
+                path: 'property',
+                redirectTo: 'property/overview',
+                pathMatch: 'full'
+            },
+            
+            // Property > Property Overview
+            {
+                path: 'property/overview',
+                loadComponent: () =>
+                    import('./pages/property/property-overview/property-overview').then(c => c.PropertyOverview)
+            },
+
             // Reports Page
             {
                 path: 'reports',

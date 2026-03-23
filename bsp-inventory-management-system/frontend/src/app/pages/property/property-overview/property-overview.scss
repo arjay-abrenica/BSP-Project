@@ -1,0 +1,51 @@
+/* Inherits global card/table/button tokens from styles.css */
+.property-table-card {
+    margin-top: 1.5rem;
+    overflow: hidden;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        
+        h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--bsp-dark-green);
+            font-weight: 700;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            
+            .search-bar {
+                position: relative;
+                
+                svg {
+                    position: absolute;
+                    left: 1rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #888;
+                }
+                
+                input {
+                    padding: 0.5rem 1rem 0.5rem 2.5rem;
+                    border: 1px solid #ddd;
+                    border-radius: var(--radius-sm);
+                    font-size: 0.9rem;
+                    outline: none;
+                    width: 250px;
+                    transition: border-color 0.2s;
+                    
+                    &:focus {
+                        border-color: var(--bsp-dark-green);
+                    }
+                }
+            }
+        }
+    }
+}

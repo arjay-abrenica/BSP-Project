@@ -9,7 +9,7 @@
     </button>
     <div class="brand-logo-mobile">
         <img src="assets/img/bspLogo.png" alt="BSP Logo">
-        <span>BSP-IMS</span>
+        <span>BSP-IPMS</span>
     </div>
 </div>
 
@@ -37,11 +37,17 @@
             <li title="Inventory" routerLinkActive="active">
                 <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                        </path>
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </a>
+            </li>
+            <li title="Property" routerLinkActive="active">
+                <a routerLink="/property" (click)="isSecondaryMenuOpen = true">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                 </a>
             </li>
@@ -90,8 +96,8 @@
 
         <div class="menu-header">
             <div class="title-text">
-                <h1>BSP-IMS</h1>
-                <p>Inventory Management System</p>
+                <h1>BSP-IPMS</h1>
+                <p>Inventory & Property Management</p>
             </div>
             <button class="collapse-btn" (click)="toggleMenu()" title="Collapse Menu">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -132,6 +138,20 @@
                     </li>
                     <li routerLink="/inventory/track-item" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Track Inventory
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Property Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('property')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Property</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/property/overview" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Property Overview
                     </li>
                 </ul>
             </div>
