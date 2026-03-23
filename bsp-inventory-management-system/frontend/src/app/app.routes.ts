@@ -68,6 +68,11 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./pages/history/history.component').then(c => c.HistoryComponent)
             },
+            {
+                path: 'history/activity-log',
+                loadComponent: () =>
+                    import('./pages/history/activity-log/activity-log.component').then(c => c.ActivityLogComponent)
+            },
 
             // Settings Page
             {

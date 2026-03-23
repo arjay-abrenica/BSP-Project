@@ -135,6 +135,23 @@
                 </ul>
             </div>
 
+            <!-- History Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('history')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>History</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
+                        <span class="dot"></span> Requests History
+                    </li>
+                    <li routerLink="/history/activity-log" routerLinkActive="active-sub">
+                        <span class="dot"></span> Activity Log
+                    </li>
+                </ul>
+            </div>
+
         </div>
     </aside>
 </div>

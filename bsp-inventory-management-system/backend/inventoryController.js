@@ -289,8 +289,119 @@ exports.getTransactionByRis = async (req, res) => {
 };
 
 /* =========================================
-   SECTION 5: AUTHENTICATION (Login/Register)
+   SECTION 6: HISTORY & ACTIVITY LOG
    ========================================= */
+
+exports.getRequestsHistory = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        t.ris_no as "risNo",
+        COALESCE(d.department_name, 'Unknown Office') as "requestingOffice",
+        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
+        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
+        (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
+        'Released' as status
+      FROM Transactions t
+      LEFT JOIN Departments d ON t.department_id = d.department_id
+      WHERE t.transaction_type = 'OUT'
+      ORDER BY t.transaction_date DESC, t.transaction_id DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getActivityLog = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        'ALOG-' || TO_CHAR(t.transaction_date, 'YYYY') || '-' || LPAD(t.transaction_id::text, 3, '0') as "activityLogId",
+        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') || ' 09:00 AM' as timestamp,
+        COALESCE(d.department_name, '-') as office,
+        'System' as role,
+        CASE 
+          WHEN t.transaction_type = 'IN' THEN 'Added new stock delivery' 
+          ELSE 'Approved supply request' 
+        END as activity,
+        t.remarks as details
+      FROM Transactions t
+      LEFT JOIN Departments d ON t.department_id = d.department_id
+      ORDER BY t.transaction_date DESC, t.transaction_id DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getLatestIntakeForItem = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Find the latest IN transaction for this item
+    const transQuery = `
+      SELECT t.transaction_id, t.transaction_date, t.remarks 
+      FROM Transactions t
+      JOIN Transaction_Details td ON t.transaction_id = td.transaction_id
+      WHERE t.transaction_type = 'IN' AND td.item_id = $1
+      ORDER BY t.transaction_date DESC, t.transaction_id DESC
+      LIMIT 1
+    `;
+    const transResult = await db.query(transQuery, [id]);
+    
+    if (transResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No intake history found for this item' });
+    }
+    
+    const transactionId = transResult.rows[0].transaction_id;
+    const transactionDate = transResult.rows[0].transaction_date;
+    const remarks = transResult.rows[0].remarks;
+
+    // Get all items in this transaction
+    const detailsQuery = `
+      SELECT 
+        i.item_code as sku,
+        i.item_name as name,
+        c.category_name as category,
+        i.unit_of_measure as unit,
+        td.quantity as qty,
+        td.unit_cost as "unitCost",
+        (td.quantity * td.unit_cost) as "totalCost",
+        'Existing' as status,
+        s.supplier_name
+      FROM Transaction_Details td
+      JOIN Items i ON td.item_id = i.item_id
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      LEFT JOIN Suppliers s ON i.supplier_id = s.supplier_id
+      WHERE td.transaction_id = $1
+    `;
+    const detailsResult = await db.query(detailsQuery, [transactionId]);
+    
+    const supplierName = detailsResult.rows.length > 0 && detailsResult.rows[0].supplier_name 
+      ? detailsResult.rows[0].supplier_name 
+      : 'Unknown Supplier';
+
+    // Parse Delivery Number from remarks (e.g., "Initial Stock. Delivery No: DEL-123")
+    let deliveryNumber = 'Unknown';
+    if (remarks && remarks.includes('Delivery No:')) {
+      deliveryNumber = remarks.split('Delivery No:')[1].trim();
+    }
+
+    res.status(200).json({
+      supplier: supplierName,
+      deliveryReceipt: \`\${transactionId}-DR.jpg\`,
+      deliveryNumber: deliveryNumber,
+      items: detailsResult.rows
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 exports.registerUser = async (req, res) => {
   // Simple registration logic

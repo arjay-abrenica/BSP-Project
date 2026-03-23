@@ -27,6 +27,35 @@ export class Catalog implements OnInit {
   selectedCategory: string = '';
   selectedSupplier: string = '';
 
+  // Modal State
+  showModal: boolean = false;
+  selectedItem: any = null;
+  intakeSummaryData: any = null;
+  intakeGrandTotal: number = 0;
+
+  openModal(item: any): void {
+    this.selectedItem = item;
+    
+    this.http.get<any>(`http://localhost:5000/api/items/${item.item_id}/latest-intake`).subscribe({
+      next: (data) => {
+        this.intakeSummaryData = data;
+        this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
+        this.showModal = true;
+      },
+      error: (err) => {
+        console.error('Failed to fetch intake summary', err);
+        alert('No recent intake history found for this item.');
+      }
+    });
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedItem = null;
+    this.intakeSummaryData = null;
+    this.intakeGrandTotal = 0;
+  }
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
