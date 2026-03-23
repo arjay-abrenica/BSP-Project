@@ -64,19 +64,21 @@
         <th class="col-sku">SKU</th>
         <th class="col-item">Item Name</th>
         <th class="col-desc">Description</th>
+        <th class="col-qty text-center">Quantity</th>
         <th class="col-unit">Unit</th>
         <th class="col-stock">Stock Number</th>
         <th class="col-status">Stock Status</th>
-        <th class="col-category">Category</th>
+        <!-- <th class="col-category">Category</th> -->
         <th class="col-supplier">Supplier</th>
       </tr>
     </thead>
     <tbody>
-      @for (item of filteredItems; track item.item_id) {
-        <tr (click)="openModal(item)" class="clickable-row">
+      @for (item of paginatedItems; track item.item_id) {
+        <tr (click)="openItemDetails(item)" class="clickable-row">
           <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
           <td class="col-item font-medium">{{ item.item_name }}</td>
           <td class="col-desc text-muted">{{ item.description }}</td>
+          <td class="col-qty text-center">{{ item.current_stock }}</td>
           <td class="col-unit">{{ item.unit_of_measure }}</td>
           <td class="col-stock">{{ item.item_id + 200000 }}</td>
           <td class="col-status">
@@ -84,9 +86,9 @@
               {{ getStockStatus(item) }}
             </span>
           </td>
-          <td class="col-category">
+          <!-- <td class="col-category">
             <span class="category-pill">{{ item.category_name || 'N/A' }}</span>
-          </td>
+          </td> -->
           <td class="col-supplier">{{ item.supplier_name || 'N/A' }}</td>
         </tr>
       }
@@ -97,76 +99,67 @@
       }
     </tbody>
   </table>
+
+  <div class="pagination-controls">
+    <div class="page-info-detailed">
+      Showing {{ filteredItems.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }} entries
+    </div>
+    <div class="page-buttons">
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">Next</button>
+    </div>
+  </div>
 </div>
 
-<!-- Modal -->
-@if (showModal && intakeSummaryData) {
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<!-- Item Details Modal -->
+@if (showItemDetailsModal && selectedItemDetails) {
+<div class="modal-overlay" (click)="closeItemDetails()">
+  <div class="modal-content item-details-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Inventory Intake Summary</h2>
+      <h2>Item Details</h2>
+      <button class="btn-close" (click)="closeItemDetails()">×</button>
     </div>
     
     <div class="modal-body">
-      <div class="summary-top">
-        <div class="summary-field" style="flex: 2;">
-          <label>Supplier</label>
-          <input type="text" readonly [value]="intakeSummaryData.supplier" class="summary-input" />
+      <div class="details-main">
+        <div class="item-image-container">
+          <!-- Placeholder for Item Image -->
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+            <rect width="200" height="200" fill="#f9fafb"/>
+            <path d="M60 140L90 100L110 120L140 80L160 140H60Z" fill="#d1d5db"/>
+            <circle cx="80" cy="80" r="10" fill="#d1d5db"/>
+          </svg>
         </div>
-        <div class="summary-field" style="flex: 1.5;">
-          <label>Delivery Receipt</label>
-          <div class="receipt-input-wrapper">
-            <input type="text" readonly [value]="intakeSummaryData.deliveryReceipt" class="summary-input receipt-input" />
-            <a href="#" class="review-link">review receipt</a>
+        <div class="info-stacked">
+          <div class="info-item">
+            <span class="label">SKU</span>
+            <span class="value">{{selectedItemDetails.item_code || 'N/A'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Item Name</span>
+            <span class="value">{{selectedItemDetails.item_name}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Description</span>
+            <span class="value">{{selectedItemDetails.description}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Category</span>
+            <span class="value">{{selectedItemDetails.category_name || 'Office Supply'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Available Stock</span>
+            <span class="value">{{selectedItemDetails.current_stock}} {{selectedItemDetails.unit_of_measure}}</span>
           </div>
         </div>
-        <div class="summary-field" style="flex: 1;">
-          <label>Delivery Number</label>
-          <input type="text" readonly [value]="intakeSummaryData.deliveryNumber" class="summary-input" />
-        </div>
       </div>
-
-      <div class="summary-table-wrapper">
-        <table class="summary-table">
-          <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Unit</th>
-              <th class="text-center">Quantity</th>
-              <th class="text-right">Unit Cost</th>
-              <th class="text-right">Total Cost</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of intakeSummaryData.items; track item.sku) {
-            <tr>
-              <td>{{ item.sku }}</td>
-              <td>{{ item.name }}</td>
-              <td>{{ item.category }}</td>
-              <td>{{ item.unit }}</td>
-              <td class="text-center">{{ item.qty }}</td>
-              <td class="text-right">{{ item.unitCost | number:'1.2-2' }}</td>
-              <td class="text-right">{{ item.totalCost | number:'1.2-2' }}</td>
-              <td>{{ item.status }}</td>
-            </tr>
-            }
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="6" class="text-right grand-total-label">Grand Total</td>
-              <td class="text-right grand-total-val">{{ intakeGrandTotal | number:'1.2-2' }}</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-edit" (click)="closeModal()">Edit</button>
-        <button class="btn-confirm" (click)="closeModal()">Confirm</button>
+      
+      <div class="action-buttons-grid">
+        <button class="btn-primary">Edit Item</button>
+        <button class="btn-primary">Log Transaction</button>
+        <button class="btn-primary">View Transactions</button>
+        <button class="btn-primary">View Allocation</button>
       </div>
     </div>
   </div>

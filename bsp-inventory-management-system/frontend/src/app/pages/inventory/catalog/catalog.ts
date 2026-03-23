@@ -14,7 +14,13 @@ import { FormsModule } from '@angular/forms';
 export class Catalog implements OnInit {
   items: any[] = [];
   filteredItems: any[] = [];
+  paginatedItems: any[] = [];
   searchTerm: string = '';
+
+  // Pagination state
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalPages: number = 1;
 
   // Filter Dropdown state
   showFilterDropdown: boolean = false;
@@ -27,33 +33,20 @@ export class Catalog implements OnInit {
   selectedCategory: string = '';
   selectedSupplier: string = '';
 
-  // Modal State
-  showModal: boolean = false;
-  selectedItem: any = null;
-  intakeSummaryData: any = null;
-  intakeGrandTotal: number = 0;
+  // Item Details Modal State
+  showItemDetailsModal: boolean = false;
+  selectedItemDetails: any = null;
 
-  openModal(item: any): void {
-    this.selectedItem = item;
-    
-    this.http.get<any>(`http://localhost:5000/api/items/${item.item_id}/latest-intake`).subscribe({
-      next: (data) => {
-        this.intakeSummaryData = data;
-        this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
-        this.showModal = true;
-      },
-      error: (err) => {
-        console.error('Failed to fetch intake summary', err);
-        alert('No recent intake history found for this item.');
-      }
-    });
+  Math = Math; // Make Math available to template
+
+  openItemDetails(item: any): void {
+    this.selectedItemDetails = item;
+    this.showItemDetailsModal = true;
   }
 
-  closeModal(): void {
-    this.showModal = false;
-    this.selectedItem = null;
-    this.intakeSummaryData = null;
-    this.intakeGrandTotal = 0;
+  closeItemDetails(): void {
+    this.showItemDetailsModal = false;
+    this.selectedItemDetails = null;
   }
 
   constructor(private http: HttpClient) {}
@@ -68,6 +61,7 @@ export class Catalog implements OnInit {
         this.items = data;
         this.filteredItems = data;
         this.extractFilterOptions(data);
+        this.updatePagination();
       },
       error: (err) => console.error('Failed to fetch items', err)
     });
@@ -121,6 +115,22 @@ export class Catalog implements OnInit {
 
     this.filteredItems = result;
     this.showFilterDropdown = false; // Close dropdown after applying
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredItems.length / this.itemsPerPage) || 1;
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedItems = this.filteredItems.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
   }
 
   clearFilters(): void {

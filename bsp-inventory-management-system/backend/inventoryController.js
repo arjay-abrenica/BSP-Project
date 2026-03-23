@@ -33,15 +33,16 @@ exports.createItem = async (req, res) => {
     const createdItems = [];
 
     for (const item of itemsToCreate) {
-      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number } = item;
+      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number, delivery_receipt } = item;
 
       let final_supplier_id = null;
       if (supplier_name && supplier_name.trim() !== '') {
-        const supRes = await client.query('SELECT supplier_id FROM Suppliers WHERE supplier_name ILIKE $1', [supplier_name.trim()]);
+        const supNameUpper = supplier_name.trim().toUpperCase();
+        const supRes = await client.query('SELECT supplier_id FROM Suppliers WHERE supplier_name = $1', [supNameUpper]);
         if (supRes.rows.length > 0) {
           final_supplier_id = supRes.rows[0].supplier_id;
         } else {
-          const newSup = await client.query('INSERT INTO Suppliers (supplier_name) VALUES ($1) RETURNING supplier_id', [supplier_name.trim()]);
+          const newSup = await client.query('INSERT INTO Suppliers (supplier_name) VALUES ($1) RETURNING supplier_id', [supNameUpper]);
           final_supplier_id = newSup.rows[0].supplier_id;
         }
       }
@@ -50,7 +51,17 @@ exports.createItem = async (req, res) => {
       const result = await client.query(
         `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-        [item_code, item_name, description, unit_of_measure, unit_price, category_id || null, final_supplier_id, reorder_level || 10, quantity || 0]
+        [
+          item_code ? item_code.toUpperCase() : null, 
+          item_name ? item_name.toUpperCase() : null, 
+          description ? description.toUpperCase() : null, 
+          unit_of_measure ? unit_of_measure.toUpperCase() : null, 
+          unit_price, 
+          category_id || null, 
+          final_supplier_id, 
+          reorder_level || 10, 
+          quantity || 0
+        ]
       );
       
       const newItem = result.rows[0];
@@ -58,9 +69,13 @@ exports.createItem = async (req, res) => {
       // 2. If quantity > 0, create a Transaction IN
       if (quantity > 0) {
         const transRes = await client.query(
-          `INSERT INTO Transactions (transaction_type, transaction_date, remarks) 
-           VALUES ('IN', CURRENT_DATE, $1) RETURNING transaction_id`,
-          [`Initial Stock. Delivery No: ${delivery_number || 'N/A'}`]
+          `INSERT INTO Transactions (transaction_type, transaction_date, delivery_number, delivery_receipt, remarks) 
+           VALUES ('IN', CURRENT_DATE, $1, $2, $3) RETURNING transaction_id`,
+          [
+            delivery_number ? delivery_number.toUpperCase() : null,
+            delivery_receipt || null,
+            'INITIAL STOCK'
+          ]
         );
         const transactionId = transRes.rows[0].transaction_id;
 
@@ -92,7 +107,17 @@ exports.updateItem = async (req, res) => {
       `UPDATE Items 
        SET item_code = $1, item_name = $2, description = $3, unit_of_measure = $4, unit_price = $5, category_id = $6, supplier_id = $7, reorder_level = $8
        WHERE item_id = $9 RETURNING *`,
-      [item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, id]
+      [
+        item_code ? item_code.toUpperCase() : null, 
+        item_name ? item_name.toUpperCase() : null, 
+        description ? description.toUpperCase() : null, 
+        unit_of_measure ? unit_of_measure.toUpperCase() : null, 
+        unit_price, 
+        category_id, 
+        supplier_id, 
+        reorder_level, 
+        id
+      ]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.status(200).json(result.rows[0]);
@@ -125,8 +150,8 @@ exports.restockItems = async (req, res) => {
     });
   }
 
-  // Expected body: { transaction_date, remarks, items: [{ item_id, quantity, unit_cost }] }
-  const { transaction_date, remarks, items } = req.body;
+  // Expected body: { transaction_date, remarks, delivery_number, delivery_receipt, items: [{ item_id, quantity, unit_cost }] }
+  const { transaction_date, remarks, delivery_number, delivery_receipt, items } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Request must include a non-empty 'items' array." });
@@ -140,9 +165,14 @@ exports.restockItems = async (req, res) => {
     
     // 1. Create Transaction Header
     const transRes = await client.query(
-      `INSERT INTO Transactions (transaction_type, transaction_date, remarks) 
-       VALUES ('IN', $1, $2) RETURNING transaction_id`,
-      [transaction_date || new Date(), remarks]
+      `INSERT INTO Transactions (transaction_type, transaction_date, delivery_number, delivery_receipt, remarks) 
+       VALUES ('IN', $1, $2, $3, $4) RETURNING transaction_id`,
+      [
+        transaction_date || new Date(), 
+        delivery_number ? delivery_number.toUpperCase() : null,
+        delivery_receipt || null,
+        remarks ? remarks.toUpperCase() : null
+      ]
     );
     const transactionId = transRes.rows[0].transaction_id;
 
@@ -183,8 +213,8 @@ exports.issueItems = async (req, res) => {
     });
   }
 
-  // Expected body: { ris_no, department_id, transaction_date, remarks, items: [{ item_id, quantity }] }
-  const { ris_no, department_id, transaction_date, remarks, items } = req.body;
+  // Expected body: { ris_no, office_id, received_by, transaction_date, remarks, items: [{ item_id, quantity }] }
+  const { ris_no, office_id, received_by, transaction_date, remarks, items } = req.body;
   
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Request must include a non-empty 'items' array." });
@@ -198,9 +228,15 @@ exports.issueItems = async (req, res) => {
 
     // 1. Create Transaction Header
     const transRes = await client.query(
-      `INSERT INTO Transactions (ris_no, transaction_type, transaction_date, department_id, remarks) 
-       VALUES ($1, 'OUT', $2, $3, $4) RETURNING transaction_id`,
-      [ris_no, transaction_date || new Date(), department_id, remarks]
+      `INSERT INTO Transactions (ris_no, transaction_type, transaction_date, office_id, received_by, remarks) 
+       VALUES ($1, 'OUT', $2, $3, $4, $5) RETURNING transaction_id`,
+      [
+        ris_no ? ris_no.toUpperCase() : null, 
+        transaction_date || new Date(), 
+        office_id, 
+        received_by ? received_by.toUpperCase() : null,
+        remarks ? remarks.toUpperCase() : null
+      ]
     );
     const transactionId = transRes.rows[0].transaction_id;
 
@@ -256,10 +292,10 @@ exports.getTransactionByRis = async (req, res) => {
   const { ris_no } = req.params;
   try {
     const result = await db.query(
-      `SELECT t.*, d.department_name, 
+      `SELECT t.*, o.office_name, 
               td.item_id, i.item_name, td.quantity 
        FROM Transactions t
-       LEFT JOIN Departments d ON t.department_id = d.department_id
+       LEFT JOIN Offices o ON t.office_id = o.office_id
        LEFT JOIN Transaction_Details td ON t.transaction_id = td.transaction_id
        LEFT JOIN Items i ON td.item_id = i.item_id
        WHERE t.ris_no = $1`, 
@@ -297,13 +333,13 @@ exports.getRequestsHistory = async (req, res) => {
     const query = `
       SELECT 
         t.ris_no as "risNo",
-        COALESCE(d.department_name, 'Unknown Office') as "requestingOffice",
+        COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
         TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
         TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
         (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
-        'Released' as status
+        'RELEASED' as status
       FROM Transactions t
-      LEFT JOIN Departments d ON t.department_id = d.department_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
       WHERE t.transaction_type = 'OUT'
       ORDER BY t.transaction_date DESC, t.transaction_id DESC
     `;
@@ -320,15 +356,15 @@ exports.getActivityLog = async (req, res) => {
       SELECT 
         'ALOG-' || TO_CHAR(t.transaction_date, 'YYYY') || '-' || LPAD(t.transaction_id::text, 3, '0') as "activityLogId",
         TO_CHAR(t.transaction_date, 'MM/DD/YYYY') || ' 09:00 AM' as timestamp,
-        COALESCE(d.department_name, '-') as office,
-        'System' as role,
+        COALESCE(o.office_name, '-') as office,
+        'SYSTEM' as role,
         CASE 
-          WHEN t.transaction_type = 'IN' THEN 'Added new stock delivery' 
-          ELSE 'Approved supply request' 
+          WHEN t.transaction_type = 'IN' THEN 'ADDED NEW STOCK DELIVERY' 
+          ELSE 'APPROVED SUPPLY REQUEST' 
         END as activity,
         t.remarks as details
       FROM Transactions t
-      LEFT JOIN Departments d ON t.department_id = d.department_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
       ORDER BY t.transaction_date DESC, t.transaction_id DESC
     `;
     const result = await db.query(query);
@@ -392,7 +428,7 @@ exports.getLatestIntakeForItem = async (req, res) => {
 
     res.status(200).json({
       supplier: supplierName,
-      deliveryReceipt: \`\${transactionId}-DR.jpg\`,
+      deliveryReceipt: `${transactionId}-DR.jpg`,
       deliveryNumber: deliveryNumber,
       items: detailsResult.rows
     });
