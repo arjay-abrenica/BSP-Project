@@ -62,11 +62,36 @@ export const routes: Routes = [
                     import('./pages/history/history.component').then(c => c.HistoryComponent)
             },
 
-            // Settings Page
+            // Settings Redirect
             {
                 path: 'settings',
+                redirectTo: 'settings/system',
+                pathMatch: 'full'
+            },
+            // Settings > System Settings
+            {
+                path: 'settings/system',
                 loadComponent: () =>
-                    import('./pages/settings/settings.component').then(c => c.SettingsComponent)
+                    import('./pages/settings/system-settings/system-settings').then(c => c.SystemSettings)
+            },
+            // Settings > Account Management
+            {
+                path: 'settings/accounts',
+                loadComponent: () =>
+                    import('./pages/settings/account-management/account-management').then(c => c.AccountManagement)
+            },
+            
+            // Profile Redirect
+            {
+                path: 'profile',
+                redirectTo: 'profile/settings',
+                pathMatch: 'full'
+            },
+            // Profile > Profile Settings
+            {
+                path: 'profile/settings',
+                loadComponent: () =>
+                    import('./pages/profile/profile-settings/profile-settings').then(c => c.ProfileSettings)
             }
         ]
     },

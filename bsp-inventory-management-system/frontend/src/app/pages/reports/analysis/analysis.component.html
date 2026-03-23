@@ -28,7 +28,7 @@
                         <span class="quarter">Quarter 1</span>
                     </div>
                     <fieldset class="filter-fieldset">
-                        <legend>Filter</legend>
+                        <legend><img src="/Icons/filter-6555.png" alt="Filter" class="filter-icon"> Filter</legend>
                         <div class="filter-controls">
                             <div class="form-group">
                                 <label>View</label>
@@ -46,18 +46,18 @@
                     <table class="analysis-table">
                         <thead>
                             <tr>
-                                <th>Office <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Allocated Quantity <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Issued Quantity <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Remaining Stock <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Allocation Utilization (%) <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Reallocation Count <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
-                                <th>Ave. Request Fulfillment (%) <svg class="sort-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"></path></svg></th>
+                                <th>Office</th>
+                                <th>Allocated Quantity</th>
+                                <th>Issued Quantity</th>
+                                <th>Remaining Stock</th>
+                                <th>Allocation Utilization (%)</th>
+                                <th>Reallocation Count</th>
+                                <th>Ave. Request Fulfillment (%)</th>
                                 <th>Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let row of detailedData">
+                            <tr *ngFor="let row of detailedData" class="clickable-row" (click)="openModal(row)">
                                 <td>{{ row.office }}</td>
                                 <td>{{ row.allocatedQuantity }}</td>
                                 <td>{{ row.issuedQuantity }}</td>
@@ -300,4 +300,62 @@
 
         </div>
     </div>
+
+    <!-- ═══ Modal Overlay ═══ -->
+    <div class="analysis-modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+        <div class="analysis-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Detailed View</h3>
+                <button class="close-btn" (click)="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-top-section">
+                    <div class="office-info">
+                        <h2>{{ selectedRow?.office }}</h2>
+                        <p>{{ getOfficeFullName(selectedRow?.office) }}</p>
+                    </div>
+                    <div class="remarks-box">
+                        <span class="remarks-label">Remarks</span>
+                        <div class="remarks-value" [ngClass]="getRemarksClass(selectedRow?.remarks)">
+                            {{ selectedRow?.remarks }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item-breakdown-section">
+                    <h4>Item Breakdown</h4>
+                    <div class="breakdown-table-wrapper">
+                        <table class="breakdown-table">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Item Name</th>
+                                    <th>Allocated Qty</th>
+                                    <th>Issued Qty</th>
+                                    <th>Remaining</th>
+                                    <th>Utilization (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let item of mockItemBreakdown">
+                                    <td>{{ item.sku }}</td>
+                                    <td>{{ item.itemName }}</td>
+                                    <td>{{ item.allocatedQty }}</td>
+                                    <td>{{ item.issuedQty }}</td>
+                                    <td>{{ item.remaining }}</td>
+                                    <td>{{ item.utilization }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-outline-green" (click)="closeModal()">Edit</button>
+                    <button class="btn-solid-green" (click)="closeModal()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
