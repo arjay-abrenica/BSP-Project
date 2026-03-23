@@ -1,0 +1,99 @@
+<div class="bsp-page-container">
+    <div class="settings-title-bar">
+        <h2><strong>Settings</strong> <span class="divider">|</span> <span class="sub-page">Account Management</span></h2>
+    </div>
+
+    <!-- Search & Action Bar -->
+    <div class="action-top-bar">
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#2c7a4b" stroke-width="3"><circle cx="10.5" cy="10.5" r="7.5"></circle><line x1="21" y1="21" x2="15.8" y2="15.8"></line></svg>
+            <input type="text" placeholder="Search by name, email, or office" [(ngModel)]="searchQuery">
+        </div>
+        <button class="btn-solid-green" (click)="openAddModal()">
+            <span class="plus-icon">+</span> Add Account
+        </button>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="table-container">
+        <table class="account-table">
+            <thead>
+                <tr>
+                    <th>Account ID <svg class="sort-icon" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor"/></svg></th>
+                    <th>Name <svg class="sort-icon" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor"/></svg></th>
+                    <th>Email <svg class="sort-icon" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor"/></svg></th>
+                    <th>Office <svg class="sort-icon" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="currentColor"/></svg></th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let acc of accounts">
+                    <td>{{ acc.accountId }}</td>
+                    <td>{{ acc.name }}</td>
+                    <td>{{ acc.email }}</td>
+                    <td>{{ acc.office }}</td>
+                    <td>{{ acc.role }}</td>
+                    <td>
+                        <span class="status-badge" [class.active]="acc.status === 'Active'" [class.inactive]="acc.status === 'Inactive'">
+                            {{ acc.status }}
+                        </span>
+                    </td>
+                    <td class="action-cell">
+                        <button class="menu-dots">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="#2c7a4b"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Account Modal Overlay -->
+<div class="account-modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+    <div class="account-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Add Account</h3>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" [(ngModel)]="newFullName" class="bsp-input">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="newEmail" class="bsp-input">
+            </div>
+            <div class="form-group">
+                <label>Office</label>
+                <select [(ngModel)]="newOffice" class="bsp-select">
+                    <option value="CPSMO">CPSMO</option>
+                    <option value="ICTU">ICTU</option>
+                    <option value="Finance">Finance</option>
+                    <option value="PMDD">PMDD</option>
+                    <option value="Admin">Admin</option>
+                    <option value="OSG">OSG</option>
+                    <option value="ONP">ONP</option>
+                    <option value="IAC">IAC</option>
+                    <option value="NSS">NSS</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Role</label>
+                <select [(ngModel)]="newRole" class="bsp-select">
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Superadmin">Superadmin</option>
+                    <option value="Inventory Officer">Inventory Officer</option>
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="closeAddModal()">Cancel</button>
+                <button class="btn-solid-green" (click)="addAccount()">Add</button>
+            </div>
+        </div>
+    </div>
+</div>

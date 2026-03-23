@@ -1,4 +1,22 @@
-<div class="sidebar-wrapper" [class.collapsed]="!isSecondaryMenuOpen">
+<!-- Mobile Top App Bar (Only visible < 768px) -->
+<div class="mobile-app-bar" [class.hidden-header]="isHeaderHidden">
+    <button class="hamburger-btn" (click)="toggleMobileSidebar()">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="brand-logo-mobile">
+        <img src="assets/img/bspLogo.png" alt="BSP Logo">
+        <span>BSP-IMS</span>
+    </div>
+</div>
+
+<!-- Optional overlay background when the menu is open on small screens -->
+<div class="sidebar-overlay" *ngIf="isSecondaryMenuOpen || isMobileSidebarOpen" [class.mobile-visible]="isMobileSidebarOpen" (click)="closeMenuOnMobile()"></div>
+
+<div class="sidebar-wrapper" [class.collapsed]="!isSecondaryMenuOpen" [class.mobile-open]="isMobileSidebarOpen">
 
     <nav class="primary-rail">
         <div class="brand-logo">
@@ -46,8 +64,8 @@
                     </svg>
                 </a>
             </li>
-            <li title="Settings" routerLinkActive="active">
-                <a routerLink="/settings" (click)="isSecondaryMenuOpen = true">
+            <li title="Settings" [class.active]="router.url.includes('settings') && !router.url.includes('profile')">
+                <a routerLink="/settings/system" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path
@@ -58,8 +76,8 @@
             </li>
         </ul>
 
-        <div class="user-profile">
-            <a routerLink="/profile">
+        <div class="user-profile" [class.active]="router.url.includes('profile')">
+            <a routerLink="/profile" (click)="isSecondaryMenuOpen = true">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
@@ -126,15 +144,19 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
+                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Monthly Report
                     </li>
-                    <li routerLink="/reports/analysis" routerLinkActive="active-sub">
+                    <li routerLink="/reports/analysis" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Office Supply Analysis
                     </li>
                 </ul>
             </div>
 
+            <!-- Settings Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('settings') && !router.url.includes('profile')" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Settings</span>
             <!-- History Menu -->
             <div class="menu-group" *ngIf="router.url.includes('history')" [class.active-group]="true">
                 <div class="group-header">
@@ -143,6 +165,28 @@
                 </div>
 
                 <ul class="sub-menu">
+                    <li routerLink="/settings/system" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> System Settings
+                    </li>
+                    <li routerLink="/settings/accounts" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Account Management
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Profile Menu -->
+            <div class="menu-group profile-group" *ngIf="router.url.includes('profile')" [class.active-group]="true">
+                <div class="profile-card-header">
+                    <div class="name">Alyssa R. Mendoza</div>
+                    <div class="email">armendoza@scouts.gov.ph</div>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/profile/settings" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Account Settings
+                    </li>
+                    <li class="logout-link" (click)="triggerLogOut()">
+                        Log Out
                     <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
                         <span class="dot"></span> Requests History
                     </li>
@@ -154,4 +198,20 @@
 
         </div>
     </aside>
+</div>
+
+<!-- ═══ Logout Modal Overlay ═══ -->
+<div class="logout-modal-overlay" *ngIf="showLogoutModal" (click)="cancelLogOut()">
+    <div class="logout-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Log Out?</h3>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to log out your account?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="cancelLogOut()">Cancel</button>
+                <button class="btn-logout" (click)="confirmLogOut()">Log Out</button>
+            </div>
+        </div>
+    </div>
 </div>

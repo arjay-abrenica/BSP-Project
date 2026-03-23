@@ -13,12 +13,24 @@
 .supplies-grid {
     display: flex;
     gap: 2rem;
+    
+    @media (max-width: 1024px) {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
 }
 
 .supply-section {
     flex: 1;
     border-left: 2px solid var(--bsp-dark-green);
     padding-left: 1rem;
+    
+    @media (max-width: 1024px) {
+        border-left: none;
+        border-top: 2px solid var(--bsp-dark-green);
+        padding-left: 0;
+        padding-top: 0.5rem;
+    }
 }
 
 .supply-stats {
@@ -30,6 +42,13 @@
     .stat-block {
         border-left: 2px solid var(--bsp-dark-green);
         padding-left: 1rem;
+        
+        @media (max-width: 1024px) {
+            border-left: none;
+            border-top: 2px solid var(--bsp-dark-green);
+            padding-left: 0;
+            padding-top: 0.5rem;
+        }
     }
 }
 
@@ -90,6 +109,12 @@
     height: 100%;
     min-height: 0;
     padding-bottom: 0.5rem;
+    
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: 350px;
+    }
 }
 
 .chart-container {
@@ -102,6 +127,14 @@
     min-width: 0;
     min-height: 0;
     box-sizing: border-box;
+
+    @media (max-width: 1024px) {
+        border-left: none;
+        border-top: 2px solid var(--bsp-dark-green);
+        padding-left: 0;
+        padding-top: 1rem;
+        min-height: 300px;
+    }
 
     h3 {
         color: var(--bsp-text-muted);
