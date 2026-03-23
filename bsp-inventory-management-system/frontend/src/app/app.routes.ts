@@ -38,7 +38,14 @@ export const routes: Routes = [
             {
                 path: 'inventory',
                 loadComponent: () =>
-                    import('./pages/inventory/inventory.component').then(c => c.InventoryComponent)
+                    import('./pages/inventory/inventory').then(c => c.Inventory),
+                children: [
+                    { path: '', redirectTo: 'catalog', pathMatch: 'full' },
+                    { path: 'catalog', loadComponent: () => import('./pages/inventory/catalog/catalog').then(c => c.Catalog) },
+                    { path: 'add-item', loadComponent: () => import('./pages/inventory/add-item/add-item').then(c => c.AddItem) },
+                    { path: 'outflow', loadComponent: () => import('./pages/inventory/outflow/outflow.component').then(c => c.OutflowComponent) },
+                    { path: 'track-item', loadComponent: () => import('./pages/inventory/track-item/track-item').then(c => c.TrackItem) }
+                ]
             },
 
             // Reports Page
@@ -60,6 +67,11 @@ export const routes: Routes = [
                 path: 'history',
                 loadComponent: () =>
                     import('./pages/history/history.component').then(c => c.HistoryComponent)
+            },
+            {
+                path: 'history/activity-log',
+                loadComponent: () =>
+                    import('./pages/history/activity-log/activity-log.component').then(c => c.ActivityLogComponent)
             },
 
             // Settings Redirect

@@ -1,0 +1,250 @@
+<div class="outflow-page">
+
+  <div class="main-content">
+    
+    <!-- Left Panel: Requests Navigation -->
+    <div class="panel requests-panel">
+      <div class="panel-header">
+        <h3>Requests</h3>
+      </div>
+      
+      <div class="tabs-nav">
+        <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="setTab('pending')">Pending</button>
+        <button class="tab-btn disabled">Approved</button>
+        <button class="tab-btn" [class.active]="activeTab === 'direct'" (click)="setTab('direct')">Direct Allocation</button>
+      </div>
+
+      <!-- Pending Tab Content -->
+      <div class="requests-list" *ngIf="activeTab === 'pending'">
+        <div class="request-card" *ngFor="let req of requests" [class.selected]="selectedRequest?.id === req.id" (click)="selectRequest(req.id)">
+          <div class="req-avatar" [ngClass]="'avatar-' + req.acronym.toLowerCase()">{{ req.acronym }}</div>
+          <div class="req-info">
+            <div class="req-title">{{ req.deptCode }}</div>
+            <div class="req-items">{{ req.itemsCount }} Items</div>
+            <div class="req-date">{{ req.date }}</div>
+          </div>
+          <div class="req-number">{{ req.reqNumber }}</div>
+        </div>
+      </div>
+
+      <!-- Direct Allocation Tab Content -->
+      <div class="direct-nav-content" *ngIf="activeTab === 'direct'">
+        <button class="btn-add-issuance">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Issuance
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel details-panel">
+      
+      <!-- PENDING TAB RIGHT PANEL -->
+      <ng-container *ngIf="activeTab === 'pending' && selectedRequest">
+        <div class="panel-header">
+          <h3>Request Details</h3>
+        </div>
+        
+        <div class="details-content">
+          <div class="details-info-grid">
+            <div class="info-block">
+              <label>Requesting Office</label>
+              <div class="info-value">{{ selectedRequest.officeName || selectedRequest.deptName }}</div>
+            </div>
+            <div class="info-block">
+              <label>Date Requested</label>
+              <div class="info-value">{{ selectedRequest.date }}</div>
+            </div>
+            <div class="info-block">
+              <label>Request Number</label>
+              <div class="info-value">{{ selectedRequest.reqNumber }}</div>
+            </div>
+          </div>
+          
+          <div class="info-block full-width">
+            <label>Purpose of the Request</label>
+            <div class="info-value">{{ selectedRequest.purpose }}</div>
+          </div>
+
+          <hr class="separator">
+
+          <h4 class="table-title">List of Item/s Requested</h4>
+          
+          <table class="request-table">
+            <thead>
+              <tr>
+                <th>Item No.</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Description</th>
+                <th>In Stock Qty</th>
+                <th>Qty to Issue</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of selectedRequest.items; let i = index">
+                <td class="center-text">{{ i + 1 }}</td>
+                <td class="center-text">{{ item.reqQty }}</td>
+                <td>{{ item.unit }}</td>
+                <td>{{ item.description }}</td>
+                <td class="center-text">{{ item.inStock }}</td>
+                <td>
+                  <input type="number" class="issue-input" [name]="'issueQty_' + i" [(ngModel)]="item.issueQty" min="0" [max]="item.inStock">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="table-footer-text">x x x Nothing Follows x x x</div>
+
+          <div class="issue-request-box">
+            <div class="panel-header inner-header">
+              <h3>Issue Request</h3>
+            </div>
+            
+            <form [formGroup]="issueForm" class="issue-form" (ngSubmit)="approveRequest()">
+              <div class="form-inputs">
+                <div class="input-group">
+                  <label>RIS Number</label>
+                  <div class="input-with-clear">
+                    <input type="text" formControlName="ris_no">
+                    <button type="button" class="clear-btn" (click)="issueForm.get('ris_no')?.setValue('')">×</button>
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label>Remarks</label>
+                  <div class="input-with-clear">
+                    <input type="text" formControlName="remarks">
+                    <button type="button" class="clear-btn" (click)="clearRemarks()">×</button>
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label>Issued by / Certify by:</label>
+                  <input type="text" formControlName="issued_by">
+                </div>
+              </div>
+
+              <div class="form-actions-vertical">
+                <div class="btn-wrapper tooltip-wrapper">
+                  <button type="button" class="btn btn-print">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Print RIS
+                  </button>
+                  <span class="btn-note">Note: Approve the request first to enable RIS printing.</span>
+                </div>
+                <button type="button" class="btn btn-reject">Reject Request</button>
+                <button type="submit" class="btn btn-approve" [disabled]="isSubmitting">
+                  <span *ngIf="isSubmitting" class="spinner"></span>
+                  Approve Request
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- DIRECT ALLOCATION TAB RIGHT PANEL -->
+      <ng-container *ngIf="activeTab === 'direct'">
+        <div class="panel-header">
+          <h3>Item Issuance</h3>
+        </div>
+
+        <form [formGroup]="issueForm" (ngSubmit)="proceedDirectAllocation()">
+          <div class="details-content direct-allocation-content">
+            
+            <div class="direct-info-grid">
+              <div class="info-block">
+                <label>Recipient Office</label>
+                <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched">
+                  <option value="" disabled selected>Select Office</option>
+                  <option value="1">National Scout Shop</option>
+                  <option value="2">Supply Unit/Admin</option>
+                  <option value="3">OSG</option>
+                  <option value="4">CPSMO</option>
+                  <option value="5">LSO</option>
+                  <option value="6">IAO</option>
+                  <option value="7">Finance</option>
+                  <option value="8">PMDD</option>
+                  <option value="9">ONP</option>
+                </select>
+              </div>
+              <div class="info-block">
+                <label>Date Requested</label>
+                <div class="info-value-bold">{{ currentDate }}</div>
+              </div>
+              <div class="info-block right-align">
+                <label>Issuance Number</label>
+                <div class="info-value-bold">{{ generatedIssuanceNumber }}</div>
+              </div>
+            </div>
+
+            <div class="info-block full-width" style="margin-bottom: 20px;">
+              <label>Purpose of the Issuance</label>
+              <div class="input-with-clear">
+                <input type="text" formControlName="remarks" class="direct-input">
+                <button type="button" class="clear-btn" (click)="clearRemarks()">×</button>
+              </div>
+            </div>
+
+            <hr class="separator">
+
+            <div class="section-header-flex">
+              <h4 class="table-title">Item Selection List</h4>
+              <div class="search-wrapper">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
+              </div>
+            </div>
+
+            <div class="table-container">
+              <table class="request-table direct-table">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Item Name</th>
+                    <th class="center-text">In Stock Qty</th>
+                    <th>Unit</th>
+                    <th class="center-text">Qty to Issue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of filteredItems">
+                    <td class="font-medium">{{ item.item_code || 'N/A' }}</td>
+                    <td>{{ item.item_name }}</td>
+                    <td class="center-text">{{ item.current_stock }}</td>
+                    <td>{{ item.unit_of_measure }}</td>
+                    <td class="center-text">
+                      <input type="number" class="issue-input" min="0" [max]="item.current_stock" [value]="getQty(item.item_id)" (change)="onQuantityChange(item, $event)">
+                    </td>
+                  </tr>
+                  <tr *ngIf="filteredItems.length === 0">
+                    <td colspan="5" class="empty-state">No items found matching your search.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="direct-footer">
+              <div class="allocatable-count">Allocatable Items: {{ inventoryItems.length }} Items</div>
+              <div class="pagination">
+                <span class="page-arrow">&lt;</span>
+                <span class="page-num active">1</span>
+                <span class="page-num">2</span>
+                <span class="page-num">3</span>
+                <span class="page-dots">...</span>
+                <span class="page-num">8</span>
+                <span class="page-num">9</span>
+                <span class="page-arrow">&gt;</span>
+              </div>
+              <button type="submit" class="btn btn-approve btn-proceed" [disabled]="isSubmitting">
+                <span *ngIf="isSubmitting" class="spinner"></span>
+                Proceed
+              </button>
+            </div>
+          </div>
+        </form>
+      </ng-container>
+
+    </div>
+  </div>
+</div>
