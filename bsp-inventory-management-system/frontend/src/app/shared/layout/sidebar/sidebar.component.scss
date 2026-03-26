@@ -113,13 +113,13 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 1.5rem 1rem 2rem 1rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid #e0e0e0;
 
     .title-text {
         h1 {
             color: var(--bsp-dark-green);
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin: 0 0 0.2rem 0;
             font-weight: 700;
         }
@@ -154,12 +154,12 @@
         background-color: var(--bsp-light-green-bg);
         color: var(--bsp-dark-green);
         border-radius: var(--radius-sm);
-        padding: 0.6rem 1rem;
+        padding: 0.5rem 1rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-weight: 600;
-        font-size: 0.95rem;
+        font-weight: 700;
+        font-size: 1rem;
         margin-bottom: 0.5rem;
     }
 }

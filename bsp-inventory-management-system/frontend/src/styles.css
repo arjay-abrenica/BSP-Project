@@ -10,6 +10,9 @@
     --bsp-light-green-bg: rgba(0, 94, 56, 0.2);
     /* Card headers, page title */
 
+    --bsp-light-green-solid: #CCDFD7;
+    /* Solid version for modals and opaque headers */
+
     --bsp-app-bg: #f4f6f5;
     /* Main app background (off-white) */
     --white: #ffffff;

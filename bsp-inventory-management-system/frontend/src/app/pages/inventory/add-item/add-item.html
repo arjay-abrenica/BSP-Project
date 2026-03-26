@@ -26,8 +26,20 @@
           
           <div class="form-group">
             <label>Item Name <span class="required">*</span></label>
-            <input type="text" formControlName="item_name" placeholder="Enter full item name"
-              [class.error]="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">
+            <div class="suggestions-container">
+              <input type="text" formControlName="item_name" placeholder="Enter full item name"
+                (input)="onItemNameInput($event)"
+                (blur)="hideSuggestions()"
+                autocomplete="off"
+                [class.error]="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">
+              
+              <ul class="suggestions-list" *ngIf="showSuggestions">
+                <li *ngFor="let item of filteredSuggestions" (click)="selectSuggestion(item)">
+                  <span class="suggestion-name">{{ item.item_name }}</span>
+                  <span class="suggestion-meta">{{ item.item_code }} • {{ item.unit_of_measure }}</span>
+                </li>
+              </ul>
+            </div>
             <span class="error-msg" *ngIf="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">Item name is required</span>
           </div>
 

@@ -6,15 +6,15 @@
 }
 
 .page-header {
-  background-color: #D5E5DA;
-  padding: 12px 24px;
+  background-color: var(--bsp-light-green-bg);
+  padding: 0.5rem 1rem;
   border-radius: 8px;
 }
 
 .page-header h2 {
   margin: 0;
-  color: #005C38;
-  font-size: 20px;
+  color: var(--bsp-dark-green);
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -27,7 +27,7 @@
 .panel {
   border: 1px solid #B4CEBE;
   border-radius: 8px;
-  background-color: #FFFFFF;
+  background-color: var(--white);
   display: flex;
   flex-direction: column;
 }
@@ -41,10 +41,10 @@
 }
 
 .panel-header {
-  background-color: #D5E5DA;
-  color: #005C38;
-  padding: 12px 24px;
-  font-size: 18px;
+  background-color: var(--bsp-light-green-bg);
+  color: var(--bsp-dark-green);
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
   font-weight: 700;
   margin: 16px;
   border-radius: 4px;
@@ -62,8 +62,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #DCE7E0;
-  border: 2px dashed #005C38;
+  background-color: var(--bsp-light-green-bg);
+  border: 2px dashed var(--bsp-dark-green);
   border-radius: 8px;
   height: 200px;
   margin-top: 8px;
@@ -80,7 +80,7 @@
 }
 
 .qr-placeholder p {
-  color: #005C38;
+  color: var(--bsp-dark-green);
   font-size: 14px;
   font-weight: 600;
   margin: 0;
@@ -90,7 +90,7 @@
   display: flex;
   align-items: center;
   text-align: center;
-  color: #005C38;
+  color: var(--bsp-dark-green);
   margin: 24px 0;
 }
 
@@ -113,7 +113,7 @@
 }
 
 .search-input-group label {
-  color: #005C38;
+  color: var(--bsp-dark-green);
   font-weight: 700;
   font-size: 16px;
 }
@@ -139,7 +139,7 @@
 }
 
 .input-wrapper input:focus {
-  border-color: #005C38;
+  border-color: var(--bsp-dark-green);
 }
 
 .clear-btn {
@@ -160,8 +160,8 @@
 }
 
 .btn-primary {
-  background-color: #005C38;
-  color: #FFFFFF;
+  background-color: var(--bsp-dark-green);
+  color: var(--white);
   border: none;
   border-radius: 4px;
   padding: 12px 16px;
@@ -177,7 +177,7 @@
 }
 
 .error-msg {
-  color: #EF4444;
+  color: var(--bsp-alert-red);
   font-size: 13px;
   margin: 4px 0 0 0;
 }
@@ -220,7 +220,7 @@
 }
 
 .info-item .value {
-  color: #005C38;
+  color: var(--bsp-dark-green);
   font-size: 18px;
   font-weight: 600;
 }

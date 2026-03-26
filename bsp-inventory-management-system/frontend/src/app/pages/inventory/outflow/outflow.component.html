@@ -10,7 +10,7 @@
       
       <div class="tabs-nav">
         <button class="tab-btn" [class.active]="activeTab === 'pending'" (click)="setTab('pending')">Pending</button>
-        <button class="tab-btn disabled">Approved</button>
+        <button class="tab-btn" [class.active]="activeTab === 'approved'" (click)="setTab('approved')">Approved</button>
         <button class="tab-btn" [class.active]="activeTab === 'direct'" (click)="setTab('direct')">Direct Allocation</button>
       </div>
 
@@ -27,12 +27,50 @@
         </div>
       </div>
 
-      <!-- Direct Allocation Tab Content -->
-      <div class="direct-nav-content" *ngIf="activeTab === 'direct'">
-        <button class="btn-add-issuance">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Add Issuance
-        </button>
+      <!-- Approved Tab Content (Left Panel) -->
+      <div class="requests-list" *ngIf="activeTab === 'approved'">
+        <div class="request-card" *ngFor="let office of approvedOffices" 
+             [class.selected]="selectedApprovedOfficeId === office.id" (click)="selectApprovedOffice(office.id)">
+          <div class="req-avatar" [ngClass]="'avatar-' + office.acronym.toLowerCase()">{{ office.acronym }}</div>
+          <div class="req-info">
+            <div class="req-title">{{ office.deptCode }}</div>
+            <div class="req-items">{{ office.transactionCount }} Issuance(s)</div>
+            <div class="req-date">Last: {{ office.lastDate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Direct Allocation Tab Content (Left Panel) -->
+      <div class="requests-list staged-list" *ngIf="activeTab === 'direct'">
+        <div class="staged-header">
+          <span>Queued Issuances ({{ stagedIssuances.length }})</span>
+        </div>
+        
+        <div class="request-card staged-card" *ngFor="let staged of stagedIssuances; let i = index" 
+             [class.selected]="selectedStagedIndex === i" (click)="selectStaged(i)">
+          <div class="req-avatar avatar-direct">{{ staged.acronym }}</div>
+          <div class="req-info">
+            <div class="req-title">{{ staged.office_name }}</div>
+            <div class="req-items">{{ staged.itemsCount }} Items</div>
+            <div class="req-date">{{ staged.date }}</div>
+          </div>
+          <div class="staged-actions">
+            <div class="req-number">{{ staged.ris_no }}</div>
+            <button class="btn-remove" (click)="removeFromCart(i, $event)" title="Remove from queue">×</button>
+          </div>
+        </div>
+
+        <div class="empty-staged" *ngIf="stagedIssuances.length === 0">
+          <p>Your queue is empty.</p>
+          <small>Fill the form and click "Add Issuance" to add to this list.</small>
+        </div>
+
+        <div class="direct-nav-content" *ngIf="stagedIssuances.length > 0">
+          <button class="btn-add-issuance btn-proceed-bulk" (click)="proceedDirectAllocation()" [disabled]="isSubmitting">
+            <span *ngIf="isSubmitting" class="spinner"></span>
+            Proceed ({{ stagedIssuances.length }})
+          </button>
+        </div>
       </div>
     </div>
 
@@ -40,12 +78,12 @@
     <div class="panel details-panel">
       
       <!-- PENDING TAB RIGHT PANEL -->
-      <ng-container *ngIf="activeTab === 'pending' && selectedRequest">
+      <ng-container *ngIf="activeTab === 'pending'">
         <div class="panel-header">
           <h3>Request Details</h3>
         </div>
         
-        <div class="details-content">
+        <div class="details-content" *ngIf="selectedRequest">
           <div class="details-info-grid">
             <div class="info-block">
               <label>Requesting Office</label>
@@ -106,8 +144,7 @@
                 <div class="input-group">
                   <label>RIS Number</label>
                   <div class="input-with-clear">
-                    <input type="text" formControlName="ris_no">
-                    <button type="button" class="clear-btn" (click)="issueForm.get('ris_no')?.setValue('')">×</button>
+                    <input type="text" formControlName="ris_no" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
                   </div>
                 </div>
                 <div class="input-group">
@@ -119,7 +156,7 @@
                 </div>
                 <div class="input-group">
                   <label>Issued by / Certify by:</label>
-                  <input type="text" formControlName="issued_by">
+                  <input type="text" formControlName="issued_by" readonly style="background-color: #f3f4f6; cursor: not-allowed;">
                 </div>
               </div>
 
@@ -131,7 +168,7 @@
                   </button>
                   <span class="btn-note">Note: Approve the request first to enable RIS printing.</span>
                 </div>
-                <button type="button" class="btn btn-reject">Reject Request</button>
+                <button type="button" class="btn btn-reject" (click)="rejectRequest()">Reject Request</button>
                 <button type="submit" class="btn btn-approve" [disabled]="isSubmitting">
                   <span *ngIf="isSubmitting" class="spinner"></span>
                   Approve Request
@@ -141,108 +178,249 @@
 
           </div>
         </div>
+
+        <!-- Empty State for Pending Tab -->
+        <div class="details-content empty-requests" *ngIf="!selectedRequest">
+          <div class="empty-state-container">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h4>No Pending Request Selected</h4>
+            <p>Select a supply request from the left list to view its details and process issuance.</p>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- APPROVED TAB RIGHT PANEL -->
+      <ng-container *ngIf="activeTab === 'approved'">
+        <div class="panel-header">
+          <h3>Issuance History by Office</h3>
+        </div>
+        
+        <div class="details-content" *ngIf="selectedApprovedOfficeId !== -1">
+          <div class="office-header-summary">
+            <h2 class="office-name-title">{{ officeTransactions[0]?.deptName }}</h2>
+            <div class="office-stats-row">
+              <span class="stat-pill">{{ officeTransactions.length }} Total Issuance(s)</span>
+              <span class="stat-pill">{{ officeTransactions[0]?.deptCode }}</span>
+            </div>
+          </div>
+
+          <div class="transactions-timeline">
+            <div class="transaction-record-box" *ngFor="let trans of officeTransactions">
+              <div class="record-header">
+                <div class="record-ris">
+                  <span class="label">RIS No.</span>
+                  <span class="value">{{ trans.risNo }}</span>
+                </div>
+                <div class="record-datetime">
+                  <span class="date">{{ trans.date }}</span>
+                  <span class="time">{{ trans.time }}</span>
+                </div>
+              </div>
+
+              <div class="record-remarks">
+                <label>Remarks / Purpose:</label>
+                <p>{{ trans.remarks || trans.purpose || 'N/A' }}</p>
+              </div>
+
+              <div class="record-items-list">
+                <div class="loading-overlay" *ngIf="trans.loadingItems">
+                  <span class="spinner green"></span>
+                  Loading items...
+                </div>
+                
+                <table class="request-table minimal-table" *ngIf="!trans.loadingItems">
+                  <thead>
+                    <tr>
+                      <th>Qty</th>
+                      <th>Unit</th>
+                      <th>Item Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of trans.items">
+                      <td class="center-text">{{ item.issueQty }}</td>
+                      <td>{{ item.unit }}</td>
+                      <td>{{ item.description }}</td>
+                    </tr>
+                    <tr *ngIf="trans.items.length === 0">
+                      <td colspan="3" class="center-text">No items recorded.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="record-footer">
+                <button class="btn-print-mini">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                  Print RIS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State for Approved Tab -->
+        <div class="details-content empty-requests" *ngIf="selectedApprovedOfficeId === -1">
+          <div class="empty-state-container">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <h4>No Office Selected</h4>
+            <p>Select an office from the left list to view their complete issuance history and RIS records.</p>
+          </div>
+        </div>
       </ng-container>
 
       <!-- DIRECT ALLOCATION TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'direct'">
-        <div class="panel-header">
-          <h3>Item Issuance</h3>
-        </div>
-
-        <form [formGroup]="issueForm" (ngSubmit)="proceedDirectAllocation()">
-          <div class="details-content direct-allocation-content">
-            
-            <div class="direct-info-grid">
+        
+        <!-- View Staged Details if one is selected -->
+        <div class="staged-details-view" *ngIf="selectedStagedIndex !== -1">
+          <div class="panel-header">
+            <div class="header-with-back" style="display: flex; align-items: center; gap: 15px;">
+              <button class="back-link" (click)="selectedStagedIndex = -1" style="background: none; border: none; color: #2563eb; cursor: pointer; font-weight: 500;">← Back to Form</button>
+              <h3 style="margin: 0;">Queued Issuance Details</h3>
+            </div>
+          </div>
+          
+          <div class="details-content">
+            <div class="details-info-grid">
               <div class="info-block">
                 <label>Recipient Office</label>
-                <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched">
-                  <option value="" disabled selected>Select Office</option>
-                  <option value="1">National Scout Shop</option>
-                  <option value="2">Supply Unit/Admin</option>
-                  <option value="3">OSG</option>
-                  <option value="4">CPSMO</option>
-                  <option value="5">LSO</option>
-                  <option value="6">IAO</option>
-                  <option value="7">Finance</option>
-                  <option value="8">PMDD</option>
-                  <option value="9">ONP</option>
-                </select>
+                <div class="info-value">{{ stagedIssuances[selectedStagedIndex].office_name }}</div>
               </div>
               <div class="info-block">
-                <label>Date Requested</label>
-                <div class="info-value-bold">{{ currentDate }}</div>
+                <label>Date Staged</label>
+                <div class="info-value">{{ stagedIssuances[selectedStagedIndex].date }}</div>
               </div>
-              <div class="info-block right-align">
-                <label>Issuance Number</label>
-                <div class="info-value-bold">{{ generatedIssuanceNumber }}</div>
+              <div class="info-block">
+                <label>RIS Number</label>
+                <div class="info-value-bold" style="color: #2563eb;">{{ stagedIssuances[selectedStagedIndex].ris_no }}</div>
               </div>
             </div>
 
-            <div class="info-block full-width" style="margin-bottom: 20px;">
-              <label>Purpose of the Issuance</label>
-              <div class="input-with-clear">
-                <input type="text" formControlName="remarks" class="direct-input">
-                <button type="button" class="clear-btn" (click)="clearRemarks()">×</button>
-              </div>
+            <div class="info-block full-width">
+              <label>Purpose / Remarks</label>
+              <div class="info-value">{{ stagedIssuances[selectedStagedIndex].remarks || '(No remarks)' }}</div>
             </div>
 
             <hr class="separator">
 
-            <div class="section-header-flex">
-              <h4 class="table-title">Item Selection List</h4>
-              <div class="search-wrapper">
-                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
-              </div>
-            </div>
-
-            <div class="table-container">
-              <table class="request-table direct-table">
-                <thead>
-                  <tr>
-                    <th>SKU</th>
-                    <th>Item Name</th>
-                    <th class="center-text">In Stock Qty</th>
-                    <th>Unit</th>
-                    <th class="center-text">Qty to Issue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let item of filteredItems">
-                    <td class="font-medium">{{ item.item_code || 'N/A' }}</td>
-                    <td>{{ item.item_name }}</td>
-                    <td class="center-text">{{ item.current_stock }}</td>
-                    <td>{{ item.unit_of_measure }}</td>
-                    <td class="center-text">
-                      <input type="number" class="issue-input" min="0" [max]="item.current_stock" [value]="getQty(item.item_id)" (change)="onQuantityChange(item, $event)">
-                    </td>
-                  </tr>
-                  <tr *ngIf="filteredItems.length === 0">
-                    <td colspan="5" class="empty-state">No items found matching your search.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="direct-footer">
-              <div class="allocatable-count">Allocatable Items: {{ inventoryItems.length }} Items</div>
-              <div class="pagination">
-                <span class="page-arrow">&lt;</span>
-                <span class="page-num active">1</span>
-                <span class="page-num">2</span>
-                <span class="page-num">3</span>
-                <span class="page-dots">...</span>
-                <span class="page-num">8</span>
-                <span class="page-num">9</span>
-                <span class="page-arrow">&gt;</span>
-              </div>
-              <button type="submit" class="btn btn-approve btn-proceed" [disabled]="isSubmitting">
-                <span *ngIf="isSubmitting" class="spinner"></span>
-                Proceed
-              </button>
+            <h4 class="table-title">Items in this Issuance</h4>
+            <table class="request-table">
+              <thead>
+                <tr>
+                  <th>Item No.</th>
+                  <th>Qty to Issue</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of stagedIssuances[selectedStagedIndex].items; let idx = index">
+                  <td class="center-text">{{ idx + 1 }}</td>
+                  <td class="center-text">{{ item.quantity }}</td>
+                  <td>{{ item.item_name }}</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div class="form-actions-vertical" style="margin-top: 20px;">
+              <button class="btn btn-reject" (click)="removeFromCart(selectedStagedIndex, $event); selectedStagedIndex = -1">Remove from Queue</button>
             </div>
           </div>
-        </form>
+        </div>
+
+        <!-- Default Form View -->
+        <ng-container *ngIf="selectedStagedIndex === -1">
+          <div class="panel-header">
+            <h3>Item Issuance Form</h3>
+          </div>
+
+          <form [formGroup]="issueForm" (ngSubmit)="addToCart()">
+            <div class="details-content direct-allocation-content">
+              
+              <div class="direct-info-grid">
+                <div class="info-block">
+                  <label>Recipient Office</label>
+                  <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched">
+                    <option value="" disabled selected>Select Office</option>
+                    <option *ngFor="let office of offices" [value]="office.office_id">{{ office.office_name }}</option>
+                  </select>
+                </div>
+                <div class="info-block">
+                  <label>Date Requested</label>
+                  <div class="info-value-bold">{{ currentDate }}</div>
+                </div>
+                <div class="info-block right-align">
+                  <label>RIS Number</label>
+                  <div class="info-value-bold">{{ generatedIssuanceNumber }}</div>
+                </div>
+              </div>
+
+              <div class="info-block full-width" style="margin-bottom: 20px;">
+                <label>Purpose of the Issuance</label>
+                <div class="input-with-clear">
+                  <input type="text" formControlName="remarks" class="direct-input">
+                  <button type="button" class="clear-btn" (click)="clearRemarks()">×</button>
+                </div>
+              </div>
+
+              <hr class="separator">
+
+              <div class="section-header-flex">
+                <h4 class="table-title">Item Selection List</h4>
+                <div class="search-wrapper">
+                  <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="request-table direct-table">
+                  <thead>
+                    <tr>
+                      <th>SKU</th>
+                      <th>Item Name</th>
+                      <th class="center-text">In Stock Qty</th>
+                      <th>Unit</th>
+                      <th class="center-text">Qty to Issue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of filteredItems">
+                      <td class="font-medium">{{ item.item_code || 'N/A' }}</td>
+                      <td>{{ item.item_name }}</td>
+                      <td class="center-text">{{ item.current_stock }}</td>
+                      <td>{{ item.unit_of_measure }}</td>
+                      <td class="center-text">
+                        <input type="number" class="issue-input" min="0" [max]="item.current_stock" [value]="getQty(item.item_id)" (change)="onQuantityChange(item, $event)">
+                      </td>
+                    </tr>
+                    <tr *ngIf="filteredItems.length === 0">
+                      <td colspan="5" class="empty-state">No items found matching your search.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="direct-footer">
+                <div class="allocatable-count">Allocatable Items: {{ inventoryItems.length }} Items</div>
+                <button type="submit" class="btn btn-approve btn-proceed">
+                  Add Issuance
+                </button>
+              </div>
+            </div>
+          </form>
+        </ng-container>
       </ng-container>
 
     </div>
