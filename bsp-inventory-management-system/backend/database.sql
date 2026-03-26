@@ -20,7 +20,9 @@ CREATE TABLE Suppliers (
 -- 3. Create Offices Table (For RSMI Responsibility Centers)
 CREATE TABLE Offices (
     office_id SERIAL PRIMARY KEY,
-    office_name VARCHAR(150) NOT NULL
+    office_name VARCHAR(150) NOT NULL,
+    acronym VARCHAR(20),
+    dept_code VARCHAR(20)
 );
 
 -- 4. Create Items Table (The core inventory)
@@ -50,6 +52,7 @@ CREATE TABLE Transactions (
     delivery_receipt VARCHAR(255),
     delivery_number VARCHAR(100),
     remarks TEXT,
+    request_id INT,
     FOREIGN KEY (office_id) REFERENCES Offices(office_id)
 );
 
@@ -64,7 +67,28 @@ CREATE TABLE Transaction_Details (
     FOREIGN KEY (item_id) REFERENCES Items(item_id)
 );
 
--- 7. Create Users Table (For Login/Authentication)
+-- 7. Create Requests Table (For Pending Supply Requests)
+CREATE TABLE Requests (
+    request_id SERIAL PRIMARY KEY,
+    request_number VARCHAR(50) UNIQUE NOT NULL,
+    office_id INT NOT NULL,
+    request_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    purpose TEXT,
+    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'CANCELLED')),
+    FOREIGN KEY (office_id) REFERENCES Offices(office_id)
+);
+
+-- 8. Create Request Details Table (Items requested)
+CREATE TABLE Request_Details (
+    rd_id SERIAL PRIMARY KEY,
+    request_id INT NOT NULL,
+    item_id INT NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (request_id) REFERENCES Requests(request_id),
+    FOREIGN KEY (item_id) REFERENCES Items(item_id)
+);
+
+-- 9. Create Users Table (For Login/Authentication)
 CREATE TABLE Users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -79,7 +103,12 @@ CREATE TABLE Users (
 
 INSERT INTO Categories (category_name) VALUES ('OFFICE SUPPLIES'), ('ELECTRICAL'), ('HARDWARE'), ('MEDICAL/SANITARY');
 INSERT INTO Suppliers (supplier_name) VALUES ('CHAMPION HARDWARE & CO. INC.'), ('PS-PHILGEPS');
-INSERT INTO Offices (office_name) VALUES ('NATIONAL SCOUT SHOP'), ('SUPPLY UNIT/ADMIN');
+INSERT INTO Offices (office_name, acronym, dept_code) VALUES 
+('NATIONAL SCOUT SHOP', 'SS', 'NSS'), 
+('SUPPLY UNIT/ADMIN', 'SU', 'ADMIN'),
+('OFFICE OF THE SECRETARY GENERAL', 'SG', 'OSG'),
+('CORPORATE PLANNING AND STRATEGY MANAGEMENT OFFICE', 'CO', 'CPSMO'),
+('INTERNAL AUDIT OFFICE', 'IA', 'IAO');
 
 INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, current_stock) VALUES 
 ('494', 'FLOURESCENT LAMP (40WATTS) O/T', 'CITY LIGHT', 'PCS', 180.00, 2, 1, 17),
@@ -92,6 +121,17 @@ INSERT INTO Transactions (ris_no, transaction_type, transaction_date, office_id,
 ('24-05-0062', 'OUT', '2024-05-31', 1, 'JUAN DELA CRUZ', 'RSMI MAY 2024 ISSUANCE');
 
 INSERT INTO Transaction_Details (transaction_id, item_id, quantity, unit_cost) VALUES (1, 4, 2, 0.00), (1, 3, 1, 55.62), (1, 5, 1, 0.00);
+
+-- Insert Sample Requests
+INSERT INTO Requests (request_number, office_id, request_date, purpose) VALUES 
+('REQ-2025-001', 3, '2025-09-29', 'Daily office operations and documentation requirements'),
+('REQ-2025-002', 1, '2025-09-25', 'Restocking retail supplies'),
+('REQ-2025-003', 5, '2025-09-23', 'Audit fieldwork supplies');
+
+INSERT INTO Request_Details (request_id, item_id, quantity) VALUES 
+(1, 4, 10), (1, 5, 5),
+(2, 3, 8),
+(3, 1, 5), (3, 2, 2);
 
 -- Insert a Default Admin User (Password: admin123)
 INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'Superadmin');

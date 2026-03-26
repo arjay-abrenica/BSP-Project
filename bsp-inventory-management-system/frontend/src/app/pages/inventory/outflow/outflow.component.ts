@@ -20,48 +20,24 @@ export class OutflowComponent implements OnInit {
   inventoryItems: any[] = [];
   filteredItems: any[] = [];
   issueQuantities: { [key: number]: number } = {};
+  offices: any[] = [];
 
-  // Mock data for requests (Pending tab)
-  requests = [
-    {
-      id: 1, acronym: 'CO', deptCode: 'CPSMO', deptName: 'Corporate Planning and Strategy Management Office',
-      itemsCount: 5, date: 'September 20, 2025', reqNumber: 'Req # 2025-05542a', purpose: 'Regular office use',
-      items: []
-    },
-    {
-      id: 2, acronym: 'IA', deptCode: 'IAO', deptName: 'Internal Audit Office',
-      itemsCount: 8, date: 'September 23, 2025', reqNumber: 'Req # 2025-05562c', purpose: 'Audit fieldwork supplies',
-      items: []
-    },
-    {
-      id: 3, acronym: 'SS', deptCode: 'NSS', deptName: 'National Scout Shop',
-      itemsCount: 3, date: 'September 29, 2025', reqNumber: 'Req # 2025-45142a', purpose: 'Restocking retail supplies',
-      items: []
-    },
-    {
-      id: 4, acronym: 'SG', deptCode: 'OSG', officeName: 'Office of the Secretary General',
-      itemsCount: 4, date: 'September 29, 2025', reqNumber: '2025-02956s', reqDisplay: 'Req # 2025-02956s',
-      purpose: 'For daily office operations and documentation requirements.',
-      department_id: 3,
-      items: [
-        { item_id: 1, reqQty: 4, unit: 'pcs', description: 'Compatible ink cartridge for HP LaserJet', inStock: 8, issueQty: null },
-        { item_id: 2, reqQty: 10, unit: 'reams', description: 'Multipurpose 80gsm white bond paper A4', inStock: 25, issueQty: null },
-        { item_id: 3, reqQty: 5, unit: 'pcs', description: 'Heavy-duty metal stapler (desktop)', inStock: 10, issueQty: null },
-        { item_id: 4, reqQty: 30, unit: 'box', description: 'Medium tip 0.7mm smooth writing', inStock: 150, issueQty: null }
-      ]
-    },
-    {
-      id: 5, acronym: 'PD', deptCode: 'PMDD', deptName: 'Program Management and Development Division',
-      itemsCount: 7, date: 'September 30, 2025', reqNumber: 'Req # 2025-08812a', purpose: 'Project management supplies',
-      items: []
-    }
-  ];
-
+  // Requests state
+  requests: any[] = [];
+  approvedRequests: any[] = [];
+  approvedOffices: any[] = [];
+  selectedApprovedOfficeId: number = -1;
+  officeTransactions: any[] = [];
   selectedRequest: any = null;
+  searchQuery: string = '';
+  
+  // Cart/Staging state for Direct Allocation
+  stagedIssuances: any[] = [];
+  selectedStagedIndex: number = -1;
 
   // Direct Allocation state
-  currentDate = 'September 29, 2025';
-  generatedIssuanceNumber = '2025-04512p';
+  currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  generatedIssuanceNumber = 'Loading...';
 
   constructor(
     private fb: FormBuilder,
@@ -72,31 +48,175 @@ export class OutflowComponent implements OnInit {
       ris_no: ['', Validators.required],
       department_id: ['', Validators.required],
       remarks: [''],
-      issued_by: ['']
+      issued_by: ['Servillano J. Bajora']
+    });
+
+    // Listen to office changes to update RIS number
+    this.issueForm.get('department_id')?.valueChanges.subscribe(officeId => {
+      if (officeId) {
+        this.updateRisNo(officeId);
+      }
     });
   }
 
   ngOnInit() {
     this.fetchInventory();
-    this.selectRequest(4);
-    // Setup initial values for direct allocation
-    this.issueForm.patchValue({
-      ris_no: this.generatedIssuanceNumber
+    this.fetchOffices();
+    this.fetchRequests();
+    this.fetchApprovedRequests();
+  }
+
+  fetchRequests(): void {
+    this.http.get<any[]>('http://localhost:5000/api/requests/pending').subscribe({
+      next: (res) => {
+        this.requests = res;
+        if (this.activeTab === 'pending' && this.requests.length > 0 && !this.selectedRequest) {
+          this.selectRequest(this.requests[0].id);
+        }
+      },
+      error: (err) => console.error('Failed to fetch requests', err)
+    });
+  }
+
+  fetchApprovedRequests(selectLatestId?: number): void {
+    this.http.get<any[]>('http://localhost:5000/api/requests/approved').subscribe({
+      next: (res) => {
+        this.approvedRequests = res;
+        
+        // Group by office to show unique offices on the left
+        const officeMap = new Map();
+        res.forEach(item => {
+          if (!officeMap.has(item.office_id)) {
+            officeMap.set(item.office_id, {
+              id: item.office_id,
+              deptName: item.deptName,
+              deptCode: item.deptCode,
+              acronym: item.acronym,
+              lastDate: item.date,
+              transactionCount: 0
+            });
+          }
+          officeMap.get(item.office_id).transactionCount++;
+        });
+        
+        this.approvedOffices = Array.from(officeMap.values());
+
+        if (this.activeTab === 'approved' && this.approvedOffices.length > 0) {
+          if (selectLatestId) {
+            // Find the office of this transaction and select it
+            const trans = res.find(r => r.id === selectLatestId);
+            if (trans) {
+              this.selectApprovedOffice(trans.office_id);
+            }
+          } else if (this.selectedApprovedOfficeId === -1) {
+            this.selectApprovedOffice(this.approvedOffices[0].id);
+          }
+        }
+      },
+      error: (err) => console.error('Failed to fetch approved requests', err)
+    });
+  }
+
+  selectApprovedOffice(officeId: number) {
+    this.selectedApprovedOfficeId = officeId;
+    // Filter transactions for this office
+    this.officeTransactions = this.approvedRequests
+      .filter(t => t.office_id === officeId)
+      .map(t => ({ ...t, items: [], loadingItems: false }));
+    
+    // For each transaction, fetch its items
+    this.officeTransactions.forEach(trans => {
+      trans.loadingItems = true;
+      this.http.get<any>(`http://localhost:5000/api/scan/ris/${trans.risNo}`).subscribe({
+        next: (data) => {
+          trans.items = data.details.map((d: any) => ({
+            description: d.item_name,
+            unit: d.unit_of_measure || 'PCS',
+            issueQty: d.quantity
+          }));
+          trans.loadingItems = false;
+        },
+        error: (err) => {
+          console.error('Failed to fetch items for RIS', trans.risNo, err);
+          trans.loadingItems = false;
+        }
+      });
+    });
+  }
+
+  fetchOffices(): void {
+    this.http.get<any[]>('http://localhost:5000/api/offices').subscribe({
+      next: (res) => {
+        this.offices = res;
+      },
+      error: (err) => console.error('Failed to fetch offices', err)
+    });
+  }
+
+  updateRisNo(officeId: number): void {
+    this.http.get<{nextRis: string}>(`http://localhost:5000/api/transactions/next-ris/${officeId}`).subscribe({
+      next: (res) => {
+        this.generatedIssuanceNumber = res.nextRis;
+        this.issueForm.patchValue({
+          ris_no: res.nextRis
+        }, { emitEvent: false }); // Don't trigger valueChanges recursively
+      },
+      error: (err) => console.error('Failed to fetch next RIS number', err)
     });
   }
 
   setTab(tab: 'pending' | 'approved' | 'direct') {
     this.activeTab = tab;
+    this.selectedRequest = null;
+    this.selectedStagedIndex = -1; // Also reset cart selection
+    
+    if (tab === 'pending') {
+      this.fetchRequests();
+    } else if (tab === 'approved') {
+      this.fetchApprovedRequests();
+    }
   }
 
   selectRequest(id: number) {
-    this.selectedRequest = this.requests.find(r => r.id === id);
-    if (this.activeTab === 'pending') {
-       this.issueForm.patchValue({
-         ris_no: '',
-         remarks: '',
-         issued_by: ''
-       });
+    const list = this.activeTab === 'pending' ? this.requests : this.approvedRequests;
+    const request = list.find(r => r.id === id);
+    if (!request) return;
+
+    this.selectedRequest = request;
+    
+    // For approved requests, we want to show the ACTUAL issued quantities from Transactions
+    if (this.activeTab === 'approved') {
+      this.http.get<any>(`http://localhost:5000/api/scan/ris/${this.selectedRequest.risNo}`).subscribe({
+        next: (transaction) => {
+          this.selectedRequest.items = transaction.details.map((d: any) => ({
+            description: d.item_name,
+            unit: d.unit_of_measure || 'PCS',
+            reqQty: d.quantity, // In approved view, reqQty and issueQty are usually displayed as the same issued qty
+            issueQty: d.quantity,
+            inStock: 'Released'
+          }));
+        },
+        error: (err) => console.error('Failed to fetch transaction details', err)
+      });
+    } else {
+      // Fetch details for the selected pending request
+      this.http.get<any[]>(`http://localhost:5000/api/requests/${id}/details`).subscribe({
+        next: (details) => {
+          this.selectedRequest.items = details.map(item => ({
+            ...item,
+            issueQty: item.reqQty // Default to full requested quantity
+          }));
+          this.issueForm.patchValue({
+            ris_no: '',
+            remarks: ''
+          }, { emitEvent: false });
+          
+          if (this.selectedRequest && this.selectedRequest.department_id) {
+            this.updateRisNo(this.selectedRequest.department_id);
+          }
+        },
+        error: (err) => console.error('Failed to fetch request details', err)
+      });
     }
   }
 
@@ -143,6 +263,18 @@ export class OutflowComponent implements OnInit {
     this.issueForm.get('remarks')?.setValue('');
   }
 
+  startNewIssuance() {
+    this.selectedRequest = null;
+    this.issueQuantities = {};
+    this.issueForm.reset({
+      issued_by: 'Servillano J. Bajora'
+    });
+    this.generatedIssuanceNumber = 'Select an office...';
+    this.searchQuery = '';
+    // Clear search and reset filtered items
+    this.filteredItems = [...this.inventoryItems];
+  }
+
   approveRequest(): void {
     // Used for Pending tab
     if (this.issueForm.get('ris_no')?.invalid) {
@@ -158,47 +290,159 @@ export class OutflowComponent implements OnInit {
         quantity: item.issueQty
       }));
 
-    this.submitIssuance(itemsToIssue, this.selectedRequest.department_id || 1, this.selectedRequest.purpose);
+    if (itemsToIssue.length === 0) {
+      alert('Please specify a quantity to issue for at least one item.');
+      return;
+    }
+
+    this.submitIssuance(itemsToIssue, this.selectedRequest.department_id || 1, this.selectedRequest.purpose, this.selectedRequest.id);
+  }
+
+  rejectRequest(): void {
+    if (!this.selectedRequest) return;
+    
+    if (confirm(`Are you sure you want to REJECT request ${this.selectedRequest.reqNumber}?`)) {
+      this.isSubmitting = true;
+      this.http.put(`http://localhost:5000/api/requests/${this.selectedRequest.id}/reject`, {}).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          alert('Request rejected.');
+          this.fetchRequests();
+          this.selectedRequest = null;
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          alert('Failed to reject request: ' + (err.error?.error || 'Unknown error'));
+        }
+      });
+    }
   }
 
   proceedDirectAllocation(): void {
-    // Used for Direct Allocation tab
+    if (this.stagedIssuances.length === 0) {
+      alert('Your cart is empty. Please add at least one issuance first.');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to proceed with ${this.stagedIssuances.length} issuance(s)?`)) {
+      this.isSubmitting = true;
+      this.saveStagedSequentially(0);
+    }
+  }
+
+  saveStagedSequentially(index: number) {
+    if (index >= this.stagedIssuances.length) {
+      this.isSubmitting = false;
+      alert('All issuances recorded successfully!');
+      this.stagedIssuances = [];
+      this.activeTab = 'approved';
+      this.fetchApprovedRequests();
+      this.fetchInventory();
+      return;
+    }
+
+    const staged = this.stagedIssuances[index];
+    const payload = {
+      ris_no: staged.ris_no,
+      office_id: staged.office_id,
+      transaction_date: new Date().toISOString().split('T')[0],
+      remarks: staged.remarks,
+      items: staged.items
+    };
+
+    this.http.post('http://localhost:5000/api/transactions/issue', payload).subscribe({
+      next: () => this.saveStagedSequentially(index + 1),
+      error: (err) => {
+        this.isSubmitting = false;
+        alert(`Failed at issuance #${index + 1}: ${err.error?.error || 'Unknown error'}`);
+      }
+    });
+  }
+
+  addToCart(): void {
     if (this.issueForm.get('department_id')?.invalid) {
       this.issueForm.get('department_id')?.markAsTouched();
       alert('Please select a Recipient Office.');
       return;
     }
 
-    const itemsToIssue = Object.keys(this.issueQuantities).map(key => ({
-      item_id: parseInt(key, 10),
-      quantity: this.issueQuantities[parseInt(key, 10)]
-    }));
+    const officeId = Number(this.issueForm.value.department_id);
+    const itemsToIssue = Object.keys(this.issueQuantities).map(key => {
+      const itemId = parseInt(key, 10);
+      const item = this.inventoryItems.find(i => i.item_id === itemId);
+      return {
+        item_id: itemId,
+        item_name: item ? item.item_name : 'Unknown Item',
+        quantity: this.issueQuantities[itemId]
+      };
+    });
 
     if (itemsToIssue.length === 0) {
-      alert('Please specify a quantity to issue for at least one item.');
+      alert('Please specify a quantity for at least one item.');
       return;
     }
 
-    this.submitIssuance(itemsToIssue, this.issueForm.value.department_id, this.issueForm.value.remarks);
+    const office = this.offices.find(o => o.office_id == officeId);
+    console.log('Adding to cart for office:', office);
+
+    const newStaged = {
+      ris_no: this.generatedIssuanceNumber,
+      office_id: officeId,
+      office_name: office ? office.office_name : 'Unknown Office',
+      acronym: office ? office.acronym : '??',
+      remarks: this.issueForm.value.remarks,
+      items: itemsToIssue,
+      itemsCount: itemsToIssue.length,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    };
+
+    this.stagedIssuances.push(newStaged);
+    this.startNewIssuance(); // Clear form for next issuance
   }
 
-  submitIssuance(itemsToIssue: any[], departmentId: number, fallbackRemarks: string) {
+  removeFromCart(index: number, event: Event) {
+    event.stopPropagation();
+    this.stagedIssuances.splice(index, 1);
+    if (this.selectedStagedIndex === index) {
+      this.selectedStagedIndex = -1;
+    }
+  }
+
+  selectStaged(index: number) {
+    this.selectedStagedIndex = index;
+  }
+
+  submitIssuance(itemsToIssue: any[], departmentId: number, fallbackRemarks: string, requestId?: number) {
     if (itemsToIssue.length === 0) return;
 
     const payload = {
       ris_no: this.issueForm.value.ris_no || this.generatedIssuanceNumber,
-      department_id: departmentId,
+      office_id: departmentId,
       transaction_date: new Date().toISOString().split('T')[0],
       remarks: this.issueForm.value.remarks || fallbackRemarks,
-      items: itemsToIssue
+      items: itemsToIssue,
+      request_id: requestId
     };
 
     this.isSubmitting = true;
     this.http.post('http://localhost:5000/api/transactions/issue', payload).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.isSubmitting = false;
         alert('Issuance recorded successfully!');
-        this.router.navigate(['/inventory/catalog']);
+        
+        const newTransactionId = res.transaction_id;
+
+        // Refresh data
+        this.fetchRequests();
+        this.fetchInventory();
+        this.issueQuantities = {};
+        this.issueForm.reset({
+          issued_by: 'Servillano J. Bajora'
+        });
+
+        // Switch to Approved tab and select the new record
+        this.activeTab = 'approved';
+        this.fetchApprovedRequests(newTransactionId);
       },
       error: (err) => {
         this.isSubmitting = false;

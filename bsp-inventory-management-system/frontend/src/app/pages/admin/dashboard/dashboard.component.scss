@@ -184,7 +184,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(220, 230, 255, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -192,11 +192,9 @@
 }
 
 .modal-content {
-    background-color: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background-color: var(--white);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #ccc;
     width: 1250px;
     max-width: 95vw;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -205,6 +203,7 @@
     padding: 12px;
     /* Thick frosted glass frame gap */
     animation: modalFadeIn 0.2s ease-out;
+    opacity: 1.0;
 }
 
 .modal-inner {
@@ -229,13 +228,11 @@
 }
 
 .modal-header {
-    background-color: rgba(0, 94, 56, 0.4);
-    /* Frosted green */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background-color: var(--bsp-light-green-bg);
+    /* Solid light green */
     border-radius: 8px;
     /* Rounded separated header */
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -243,15 +240,15 @@
 
     h2 {
         margin: 0;
-        font-size: 1.25rem;
-        color: #0d4a22;
+        font-size: 1rem;
+        color: var(--bsp-dark-green);
         font-weight: 700;
     }
 
     .close-btn {
         background: none;
         border: none;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -287,7 +284,7 @@
     .year-highlight {
         font-size: 70px;
         font-weight: 900;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         line-height: 1;
         letter-spacing: -2px;
         margin-right: 1.5rem;
@@ -348,13 +345,13 @@
     }
 
     &:hover {
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
     }
 
     &.active {
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         &::after {
-            background-color: #0d4a22;
+            background-color: var(--bsp-dark-green);
         }
     }
 }
@@ -377,7 +374,7 @@
         .quarter-highlight {
             font-size: 1.7rem;
             font-weight: 700;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             margin-top: -5px;
         }
     }
@@ -398,7 +395,7 @@
         label {
             font-size: 0.9rem;
             font-weight: 700;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
         }
 
         .bsp-select {
@@ -406,7 +403,7 @@
             border: 1px solid #ccc;
             border-radius: var(--radius-sm);
             font-size: 0.9rem;
-            color: #333;
+            color: var(--bsp-text-main);
             background-color: var(--white);
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -416,7 +413,7 @@
 
             &:disabled {
                 background-color: #f5f5f5;
-                color: #999;
+                color: var(--bsp-text-muted);
             }
         }
     }
@@ -428,8 +425,8 @@
         border-radius: 4px;
         font-size: 0.9rem;
         font-weight: 600;
-        background-color: #0d4a22;
-        color: #fff;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         cursor: pointer;
     }
 }

@@ -20,22 +20,22 @@
 
 /* Custom Panel Container */
 .bsp-panel {
-    background-color: #fff;
+    background-color: var(--white);
     border-radius: 8px;
-    border: 1px solid #c7d4cc;
+    border: 1px solid var(--bsp-light-green-bg);
     /* Light sage green border */
     display: flex;
     flex-direction: column;
     overflow: hidden;
 
     .panel-header {
-        background-color: #c7d4cc;
+        background-color: var(--bsp-light-green-bg);
         /* Sage green matching the border */
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         /* Dark green text */
-        font-size: 1.25rem;
+        font-size: 1rem;
         font-weight: 700;
-        padding: 0.75rem 1.25rem;
+        padding: 0.5rem 1rem;
     }
 
     .panel-body {
@@ -66,7 +66,7 @@
             .search-icon {
                 position: absolute;
                 left: 10px;
-                color: #0d4a22;
+                color: var(--bsp-dark-green);
                 /* Icon color */
             }
 
@@ -74,11 +74,11 @@
                 width: 100%;
                 padding: 0.6rem 0.6rem 0.6rem 2.2rem;
                 /* Left padding for icon */
-                border: 1px solid #0d4a22;
+                border: 1px solid var(--bsp-dark-green);
                 /* Use dark green border like reference */
                 border-radius: 4px;
                 font-size: 0.85rem;
-                color: #333;
+                color: var(--bsp-text-main);
                 box-sizing: border-box;
 
                 &:focus {
@@ -87,7 +87,7 @@
                 }
 
                 &::placeholder {
-                    color: #999;
+                    color: var(--bsp-text-muted);
                 }
             }
         }
@@ -138,8 +138,8 @@
         }
 
         &.selected {
-            background-color: #edf5f0;
-            border-left: 4px solid #0d4a22;
+            background-color: var(--bsp-light-green-bg);
+            border-left: 4px solid var(--bsp-dark-green);
         }
 
         .report-icon {
@@ -150,7 +150,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: white;
+            color: var(--white);
             flex-shrink: 0;
 
             svg {
@@ -198,7 +198,7 @@
 
             .report-title {
                 font-weight: 700;
-                color: #0d4a22;
+                color: var(--bsp-dark-green);
                 font-size: 0.95rem;
                 padding-right: 120px;
                 /* Reserve space for the absolute-positioned report number */
@@ -233,7 +233,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #ffffff;
+        background-color: var(--white);
     }
 
     .empty-state {
@@ -244,7 +244,7 @@
         opacity: 0.9;
 
         .doc-icon {
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             /* Green outline icon */
             width: 56px;
             height: 56px;
@@ -253,7 +253,7 @@
         p {
             margin: 0;
             text-align: center;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             font-size: 1.05rem;
             font-weight: 600;
             line-height: 1.4;
@@ -268,7 +268,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        border: 2px dashed #c7d4cc;
+        border: 2px dashed var(--bsp-light-green-bg);
         border-radius: 8px;
         background-color: #fcfcfc;
         color: #555;
@@ -283,7 +283,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(220, 230, 255, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -291,22 +291,23 @@
 }
 
 .modal-content.generate-modal {
-    background-color: #ffffff;
+    background-color: var(--white);
     border-radius: 12px;
     width: 400px; /* Specific width for the small report generator */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    opacity: 1.0;
 
     .modal-header {
-        background-color: rgba(199, 212, 204, 0.9);
-        padding: 1rem 1.5rem;
+        background-color: var(--bsp-light-green-bg);
+        padding: 0.5rem 1rem;
         
         h3 {
             margin: 0;
-            color: #0d4a22;
-            font-size: 1.1rem;
+            color: var(--bsp-dark-green);
+            font-size: 1rem;
             font-weight: 700;
         }
     }
@@ -325,7 +326,7 @@
 
         .section-label {
             font-weight: 700;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             font-size: 0.95rem;
         }
 
@@ -347,9 +348,9 @@
                 .bsp-select {
                     width: 100%;
                     padding: 0.5rem;
-                    border: 1px solid #0d4a22;
+                    border: 1px solid var(--bsp-dark-green);
                     border-radius: 4px;
-                    color: #333;
+                    color: var(--bsp-text-main);
                     background-color: transparent;
                     outline: none;
                     cursor: pointer;
@@ -371,11 +372,11 @@
                 gap: 0.5rem;
                 cursor: pointer;
                 font-size: 0.9rem;
-                color: #333;
+                color: var(--bsp-text-main);
 
                 input[type="radio"] {
                     margin: 0;
-                    accent-color: #0d4a22; /* Use theme green for radio */
+                    accent-color: var(--bsp-dark-green); /* Use theme green for radio */
                     cursor: pointer;
                 }
             }
@@ -396,16 +397,16 @@
 
             &.outline-btn.cancel-btn {
                 background: transparent;
-                border: 1px solid #0d4a22;
-                color: #0d4a22;
+                border: 1px solid var(--bsp-dark-green);
+                color: var(--bsp-dark-green);
 
                 &:hover { background: #f0f5f2; }
             }
 
             &.solid-btn.submit-btn {
-                background: #0d4a22;
-                border: 1px solid #0d4a22;
-                color: white;
+                background: var(--bsp-dark-green);
+                border: 1px solid var(--bsp-dark-green);
+                color: var(--white);
 
                 &:hover { background: #0a3d1c; }
             }

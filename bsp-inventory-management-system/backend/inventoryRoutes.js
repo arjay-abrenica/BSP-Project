@@ -3,6 +3,7 @@ const router = express.Router();
 const inventoryController = require('./inventoryController');
 
 // --- Item Management ---
+router.get('/offices', inventoryController.getAllOffices);
 router.get('/items', inventoryController.getAllItems);
 router.post('/items', inventoryController.createItem);
 router.put('/items/:id', inventoryController.updateItem);
@@ -13,6 +14,13 @@ router.post('/transactions/restock', inventoryController.restockItems);
 
 // --- Transactions: Issuance (OUT) ---
 router.post('/transactions/issue', inventoryController.issueItems);
+router.get('/transactions/next-ris/:officeId', inventoryController.getNextRisNo);
+
+// --- Requests ---
+router.get('/requests/pending', inventoryController.getPendingRequests);
+router.get('/requests/approved', inventoryController.getApprovedRequests);
+router.get('/requests/:id/details', inventoryController.getRequestDetails);
+router.put('/requests/:id/reject', inventoryController.rejectRequest);
 
 // --- Tracking & Scanners ---
 // Example usage: /api/scan/item/494
@@ -23,6 +31,7 @@ router.get('/scan/ris/:ris_no', inventoryController.getTransactionByRis);
 // --- History & Activity Log ---
 router.get('/history/requests', inventoryController.getRequestsHistory);
 router.get('/history/activity', inventoryController.getActivityLog);
+router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
 
 // --- Authentication ---

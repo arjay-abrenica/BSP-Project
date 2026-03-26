@@ -7,23 +7,23 @@
 }
 
 .page-header {
-    background-color: #c7d4cc;
+    background-color: var(--bsp-light-green-bg);
     padding: 0.8rem 1.5rem;
     border-radius: 4px;
     margin-bottom: 1rem;
 
     h1 {
         margin: 0;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         font-size: 1.6rem;
         font-weight: 800;
     }
 }
 
 .bsp-panel {
-    background-color: #fff;
+    background-color: var(--white);
     border-radius: 8px;
-    border: 1px solid #1a7a3e;
+    border: 1px solid var(--bsp-dark-green);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -33,7 +33,7 @@
 
 /* Custom Tab Navbar */
 .tabbed-header {
-    background-color: #c7d4cc;
+    background-color: var(--bsp-light-green-bg);
     padding: 0.25rem 1.5rem 0 1.5rem;
     border-bottom: 2px solid #a3b8ad;
     display: flex;
@@ -55,10 +55,10 @@
     transition: color 0.2s ease;
     white-space: nowrap;
 
-    &:hover { color: #0d4a22; }
+    &:hover { color: var(--bsp-dark-green); }
 
     &.active {
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         font-weight: 700;
 
         &::after {
@@ -68,7 +68,7 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background-color: #0d4a22;
+            background-color: var(--bsp-dark-green);
         }
     }
 }
@@ -97,14 +97,14 @@
         .year {
             font-size: 3rem;
             font-weight: 800;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             line-height: 1;
         }
 
         .divider {
             width: 2px;
-            height: 2.2rem;
-            background-color: #a3b8ad;
+            height: 2.5rem;
+            background-color: var(--bsp-light-green-bg);
         }
 
         .quarter {
@@ -118,14 +118,14 @@
 
 /* Shared Filter Panel (Right side) */
 .filter-fieldset {
-    border: 1px solid #1a7a3e;
+    border: 1px solid var(--bsp-dark-green);
     border-radius: 8px;
     padding: 0.5rem 0.75rem 0.75rem;
 
     legend {
         padding: 0 0.4rem;
         font-weight: 700;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         font-size: 1.1rem;
     }
 
@@ -148,11 +148,11 @@
 
         .bsp-select {
             padding: 0.4rem 0.6rem;
-            border: 1px solid #c7d4cc;
+            border: 1px solid var(--bsp-light-green-bg);
             border-radius: 6px;
             font-size: 0.8rem;
-            color: #333;
-            background: #fff;
+            color: var(--bsp-text-main);
+            background: var(--white);
             cursor: pointer;
             outline: none;
 
@@ -163,7 +163,7 @@
             background-size: 1em;
             padding-right: 2rem;
 
-            &:focus { border-color: #0d4a22; }
+            &:focus { border-color: var(--bsp-dark-green); }
         }
     }
 }
@@ -182,7 +182,7 @@
         background: transparent;
     }
     &::-webkit-scrollbar-thumb {
-        background: #0d4a22;
+        background: var(--bsp-dark-green);
         border-radius: 4px;
     }
 }
@@ -193,8 +193,8 @@
     font-size: 0.78rem;
 
     thead tr {
-        background-color: #c7d4cc;
-        color: #0d4a22;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
 
         th {
             padding: 0.6rem 0.4rem;
@@ -210,19 +210,21 @@
     }
 
     tbody tr {
-        border-bottom: none;
+        border-bottom: 1px solid #e8efeb;
+
+        &:nth-child(even) { background-color: #f5f9f6; }
         
         &.clickable-row {
             cursor: pointer;
             transition: background-color 0.2s ease;
             &:hover {
-                background-color: #f5f9f6;
+                background-color: #eaf2ec;
             }
         }
 
         td {
             padding: 0.8rem 0.5rem;
-            color: #000;
+            color: var(--bsp-text-main);
             font-weight: 500;
             text-align: center;
             border-right: none;
@@ -232,7 +234,7 @@
         }
         .remarks-cell {
             font-size: 0.75rem;
-            color: #000;
+            color: var(--bsp-text-main);
             white-space: normal;
         }
     }
@@ -277,7 +279,7 @@
     .year-big {
         font-size: 2.8rem;
         font-weight: 900;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         line-height: 1;
     }
     .quarter-sub {
@@ -302,8 +304,8 @@
     /* Export Button (Usage Trend) */
     .export-btn {
         align-self: flex-start;
-        background-color: #0d4a22;
-        color: #fff;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         border: none;
         border-radius: 6px;
         padding: 0.6rem 2.8rem;
@@ -315,7 +317,7 @@
         width: 100%;
 
         &:hover {
-            background-color: #0d4a22;
+            background-color: var(--bsp-dark-green);
             opacity: 0.9;
         }
     }
@@ -328,8 +330,8 @@
     font-size: 0.75rem;
 
     thead tr {
-        background-color: #0d4a22;
-        color: #fff;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         th {
             padding: 0.35rem 0.5rem;
             font-weight: 600;
@@ -339,23 +341,23 @@
     tbody tr {
         border-bottom: 1px solid #e8efeb;
         &:nth-child(even) { background-color: #f5f9f6; }
-        td { padding: 0.35rem 0.5rem; color: #333; }
+        td { padding: 0.4rem 0.6rem; color: var(--bsp-text-main); }
     }
 }
 
 .badge {
     font-size: 0.72rem;
     font-weight: 600;
-    &.normal { color: #0d4a22; }
+    &.normal { color: var(--bsp-dark-green); }
     &.overstock { color: #c47c00; }
-    &.low-stock { color: #c0392b; }
+    &.low-stock { color: var(--bsp-alert-red); }
 }
 
 /* ─── Ranked Lists (Supply Category Breakdown) ─── */
 .ranked-list-section {
     h4 {
-        background-color: #0d4a22;
-        color: #fff;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         margin: 0;
         padding: 0.45rem 0.75rem;
         font-size: 0.8rem;
@@ -365,7 +367,7 @@
         list-style: none;
         margin: 0;
         padding: 0;
-        border: 1px solid #c7d4cc;
+        border: 1px solid var(--bsp-light-green-bg);
         border-top: none;
         border-radius: 0 0 4px 4px;
         li {
@@ -375,27 +377,27 @@
             font-size: 0.78rem;
             border-bottom: 1px solid #e8efeb;
             &:last-child { border-bottom: none; }
-            span { color: #0d4a22; font-weight: 600; }
+            span { color: var(--bsp-dark-green); font-weight: 600; }
         }
     }
 }
 
 /* ─── Summary Cards (Allocation Efficiency) ─── */
 .summary-card {
-    background-color: #c7d4cc;
+    background-color: var(--bsp-light-green-bg);
     border-radius: 6px;
     padding: 0.75rem 1rem;
     h4 {
         margin: 0;
         font-size: 0.8rem;
         font-weight: 700;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
     }
     .card-value {
         margin-top: 0.25rem;
         font-size: 1.4rem;
         font-weight: 800;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
     }
 }
 
@@ -409,8 +411,8 @@
     font-size: 0.76rem;
 
     .top5-col-header {
-        background-color: #0d4a22;
-        color: #fff;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         padding: 0.6rem 0.6rem;
         font-weight: 700;
         font-size: 0.85rem;
@@ -422,8 +424,8 @@
     .top5-cell {
         padding: 0.5rem 0.6rem;
         border-bottom: 0px solid transparent; 
-        color: #333;
-        background-color: #c7d4cc;
+        color: var(--bsp-text-main);
+        background-color: var(--bsp-light-green-bg);
 
         display: flex;
         justify-content: space-between;
@@ -432,11 +434,11 @@
         &:nth-child(even) { border-right: 0px solid transparent; }
         
         .item-name {
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             font-weight: 600;
         }
         .item-value {
-            color: #333;
+            color: var(--bsp-text-main);
             font-weight: 700;
         }
     }
@@ -444,14 +446,14 @@
 
 /* Sort Panel (Usage Trend) */
 .sort-fieldset {
-    border: 1px solid #1a7a3e;
+    border: 1px solid var(--bsp-dark-green);
     border-radius: 8px;
     padding: 0.5rem 0.75rem 0.75rem;
 
     legend {
         padding: 0 0.4rem;
         font-weight: 700;
-        color: #0d4a22;
+        color: var(--bsp-dark-green);
         font-size: 1.1rem;
     }
 
@@ -474,11 +476,11 @@
 
         .bsp-select {
             padding: 0.4rem 0.6rem;
-            border: 1px solid #c7d4cc;
+            border: 1px solid var(--bsp-light-green-bg);
             border-radius: 6px;
             font-size: 0.8rem;
-            color: #333;
-            background: #fff;
+            color: var(--bsp-text-main);
+            background: var(--white);
             cursor: pointer;
             outline: none;
             
@@ -532,18 +534,18 @@
 }
 
 .analysis-modal {
-    background-color: #fff;
+    background-color: var(--white);
     border-radius: 12px;
     width: 90%;
     max-width: 750px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    border: 1px solid #c7d4cc;
+    border: 1px solid var(--bsp-light-green-bg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
 
     .modal-header {
-        background-color: #c7d4cc;
+        background-color: var(--bsp-light-green-bg);
         padding: 0.75rem 1.5rem;
         display: flex;
         justify-content: space-between;
@@ -551,7 +553,7 @@
 
         h3 {
             margin: 0;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             font-size: 1.1rem;
             font-weight: 800;
         }
@@ -560,7 +562,7 @@
             background: none;
             border: none;
             font-size: 1.8rem;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             cursor: pointer;
             line-height: 1;
             padding: 0;
@@ -587,7 +589,7 @@
                 margin: 0;
                 font-size: 3.2rem;
                 font-weight: 800;
-                color: #0d4a22;
+                color: var(--bsp-dark-green);
                 line-height: 1;
             }
             p {
@@ -607,7 +609,7 @@
             .remarks-label {
                 font-size: 0.8rem;
                 font-weight: 700;
-                color: #0d4a22;
+                color: var(--bsp-dark-green);
             }
 
             .remarks-value {
@@ -622,8 +624,8 @@
                     background-color: #fff;
                 }
                 &.normal {
-                    border: 1px solid #1a7a3e;
-                    color: #1a7a3e;
+                    border: 1px solid var(--bsp-dark-green);
+                    color: var(--bsp-dark-green);
                     background-color: #fff;
                 }
             }
@@ -633,7 +635,7 @@
     .item-breakdown-section {
         h4 {
             margin: 0 0 0.5rem 0;
-            color: #0d4a22;
+            color: var(--bsp-dark-green);
             font-size: 1.2rem;
             font-weight: 600;
         }
@@ -650,11 +652,11 @@
             font-size: 0.78rem;
 
             thead tr {
-                background-color: #c7d4cc;
+                background-color: var(--bsp-light-green-bg);
                 th {
                     padding: 0.6rem 0.5rem;
                     text-align: center;
-                    color: #0d4a22;
+                    color: var(--bsp-dark-green);
                     font-weight: 800;
                     white-space: nowrap;
                     &:first-child { text-align: left; padding-left: 1rem; }
@@ -691,14 +693,14 @@
 
             &.btn-outline-green {
                 background: #fff;
-                border: 1px solid #0d4a22;
-                color: #0d4a22;
-                &:hover { background: #f5f9f6; }
+                border: 1px solid var(--bsp-dark-green);
+                color: var(--bsp-dark-green);
+                &:hover { background: var(--bsp-light-green-bg); }
             }
 
             &.btn-solid-green {
-                background: #0d4a22;
-                border: 1px solid #0d4a22;
+                background: var(--bsp-dark-green);
+                border: 1px solid var(--bsp-dark-green);
                 color: #fff;
                 &:hover { background: #1a7a3e; border-color: #1a7a3e; }
             }

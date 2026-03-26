@@ -15,6 +15,9 @@ export class AddItem {
   addItemForm: FormGroup;
   isSubmitting = false;
   batchItems: any[] = [];
+  existingItems: any[] = [];
+  filteredSuggestions: any[] = [];
+  showSuggestions = false;
 
   // Modal State
   showModal: boolean = false;
@@ -39,6 +42,50 @@ export class AddItem {
       delivery_receipt: [''],
       delivery_number: ['']
     });
+
+    this.fetchExistingItems();
+  }
+
+  fetchExistingItems(): void {
+    this.http.get<any[]>('http://localhost:5000/api/items').subscribe({
+      next: (data) => {
+        this.existingItems = data;
+      },
+      error: (err) => {
+        console.error('Failed to fetch existing items', err);
+      }
+    });
+  }
+
+  onItemNameInput(event: any): void {
+    const query = event.target.value.toLowerCase();
+    if (query.length > 0) {
+      this.filteredSuggestions = this.existingItems.filter(item => 
+        item.item_name.toLowerCase().includes(query)
+      ).slice(0, 5); // Limit to 5 suggestions
+      this.showSuggestions = this.filteredSuggestions.length > 0;
+    } else {
+      this.showSuggestions = false;
+    }
+  }
+
+  selectSuggestion(item: any): void {
+    this.addItemForm.patchValue({
+      item_code: item.item_code,
+      item_name: item.item_name,
+      category_id: item.category_id,
+      unit_of_measure: item.unit_of_measure,
+      description: item.description,
+      reorder_level: item.reorder_level
+    });
+    this.showSuggestions = false;
+  }
+
+  hideSuggestions(): void {
+    // Delay hiding to allow click event on suggestion to fire
+    setTimeout(() => {
+      this.showSuggestions = false;
+    }, 200);
   }
 
   addToBatch(): void {

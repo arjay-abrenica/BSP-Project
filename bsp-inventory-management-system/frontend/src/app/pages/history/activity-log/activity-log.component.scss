@@ -5,23 +5,25 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background-color: var(--white, #ffffff);
+    background-color: var(--white);
 }
 
 /* Header */
 .header-container {
-    background-color: var(--bsp-light-green-bg, rgba(0, 94, 56, 0.2));
+    background-color: var(--bsp-light-green-bg);
     border-radius: var(--radius-sm, 6px);
-    padding: 0.75rem 1rem;
+    padding: 0;
     margin-bottom: 1rem;
 
     h2 {
         margin: 0;
-        color: var(--bsp-dark-green, #005E38);
+        color: var(--bsp-dark-green);
         font-size: 1.25rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        padding: 0.5rem 1rem;
         
         strong {
             font-weight: 700;
@@ -29,13 +31,13 @@
 
         .separator {
             font-weight: 300;
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             opacity: 0.5;
         }
 
         .sub-title {
             font-weight: 400;
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             opacity: 0.8;
         }
     }
@@ -52,15 +54,15 @@
         flex: 1;
         display: flex;
         align-items: center;
-        border: 1px solid #ccc;
+        border: 1px solid var(--bsp-dark-green);
         border-radius: var(--radius-sm, 6px);
         padding: 0.5rem 0.75rem;
-        background-color: var(--white, #ffffff);
+        background-color: var(--white);
 
         .search-icon {
             width: 1.2rem;
             height: 1.2rem;
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             margin-right: 0.5rem;
         }
 
@@ -69,10 +71,10 @@
             border: none;
             outline: none;
             font-size: 0.95rem;
-            color: var(--bsp-text-main, #333333);
+            color: var(--bsp-text-main);
             
             &::placeholder {
-                color: #999;
+                color: var(--bsp-text-muted);
             }
         }
     }
@@ -85,8 +87,8 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background-color: var(--bsp-dark-green, #005E38);
-        color: var(--white, #ffffff);
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
         border: none;
         border-radius: var(--radius-sm, 6px);
         padding: 0.5rem 1.5rem;
@@ -105,7 +107,8 @@
         }
 
         &.active {
-            background-color: #004227; /* Darker green */
+            background-color: var(--bsp-dark-green);
+            filter: brightness(0.8);
         }
     }
 
@@ -115,7 +118,7 @@
         top: calc(100% + 0.5rem);
         right: 0;
         width: 320px;
-        background-color: var(--white, #ffffff);
+        background-color: var(--white);
         border-radius: var(--radius-md, 10px);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         z-index: 100;
@@ -123,11 +126,11 @@
         border: 1px solid #e0e0e0;
 
         .filter-header {
-            background-color: var(--bsp-light-green-bg, rgba(0, 94, 56, 0.2));
-            color: var(--bsp-dark-green, #005E38);
+            background-color: var(--bsp-light-green-bg);
+            color: var(--bsp-dark-green);
             font-weight: 700;
-            padding: 0.75rem 1rem;
-            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
         }
 
         .filter-body {
@@ -145,7 +148,7 @@
         }
 
         .filter-label {
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             font-weight: 700;
             font-size: 0.95rem;
             display: block;
@@ -153,10 +156,10 @@
         }
 
         .filter-select {
-            border: 1px solid var(--bsp-dark-green, #005E38);
+            border: 1px solid var(--bsp-dark-green);
             border-radius: var(--radius-sm, 6px);
             padding: 0.35rem 0.5rem;
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             background-color: transparent;
             outline: none;
             font-size: 0.9rem;
@@ -189,11 +192,11 @@
                     
                     input {
                         width: 100%;
-                        border: 1px solid var(--bsp-dark-green, #005E38);
+                        border: 1px solid var(--bsp-dark-green);
                         border-radius: var(--radius-sm, 6px);
                         padding: 0.4rem 2rem 0.4rem 0.5rem;
                         font-size: 0.85rem;
-                        color: var(--bsp-dark-green, #005E38);
+                        color: var(--bsp-dark-green);
                         box-sizing: border-box;
                         outline: none;
                     }
@@ -205,14 +208,14 @@
                         transform: translateY(-50%);
                         width: 1rem;
                         height: 1rem;
-                        color: var(--bsp-dark-green, #005E38);
+                        color: var(--bsp-dark-green);
                         pointer-events: none;
                     }
                 }
             }
 
             .date-arrow {
-                color: var(--bsp-dark-green, #005E38);
+                color: var(--bsp-dark-green);
                 font-weight: bold;
                 margin-top: 1.2rem; /* align with input */
             }
@@ -226,7 +229,7 @@
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 0.5rem;
-                color: var(--bsp-dark-green, #005E38);
+                color: var(--bsp-dark-green);
 
                 .month-year {
                     font-size: 0.9rem;
@@ -271,15 +274,15 @@
                     }
 
                     &.selected-start, &.selected-end {
-                        background-color: var(--bsp-light-green-bg, rgba(0, 94, 56, 0.2));
-                        border: 1px solid var(--bsp-dark-green, #005E38);
+                        background-color: var(--bsp-light-green-bg);
+                        border: 1px solid var(--bsp-dark-green);
                         border-radius: 4px;
                         font-weight: bold;
-                        color: var(--bsp-dark-green, #005E38);
+                        color: var(--bsp-dark-green);
                     }
 
                     &.in-range {
-                        background-color: var(--bsp-light-green-bg, rgba(0, 94, 56, 0.2));
+                        background-color: var(--bsp-light-green-bg);
                         border-radius: 4px;
                     }
                     
@@ -293,7 +296,7 @@
 
         .filter-divider {
             border: 0;
-            border-top: 1px solid var(--bsp-dark-green, #005E38);
+            border-top: 1px solid var(--bsp-dark-green);
             margin: 1rem 0;
         }
 
@@ -324,13 +327,13 @@
                 text-align: center;
                 
                 &.btn-apply {
-                    background-color: var(--bsp-dark-green, #005E38);
-                    color: var(--white, #ffffff);
+                    background-color: var(--bsp-dark-green);
+                    color: var(--white);
                 }
                 
                 &.btn-clear {
-                    background-color: var(--bsp-dark-green, #005E38);
-                    color: var(--white, #ffffff);
+                    background-color: var(--bsp-dark-green);
+                    color: var(--white);
                 }
 
                 &:hover {
@@ -353,13 +356,13 @@
         font-size: 0.9rem;
 
         th, td {
-            padding: 1rem 2rem;
+            padding: 0.5rem 1rem;
             text-align: left;
         }
 
         th {
-            background-color: var(--bsp-light-green-bg, rgba(0, 94, 56, 0.2));
-            color: var(--bsp-dark-green, #005E38);
+            background-color: var(--bsp-light-green-bg);
+            color: var(--bsp-dark-green);
             font-weight: 700;
             position: sticky;
             top: 0;
@@ -379,7 +382,7 @@
 
         td {
             border-bottom: 1px solid #f0f0f0;
-            color: var(--bsp-text-main, #333333);
+            color: var(--bsp-text-main);
         }
 
         tr:last-child td {
@@ -398,7 +401,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: var(--bsp-dark-green, #005E38);
+            color: var(--bsp-dark-green);
             padding: 0.25rem;
             border-radius: 4px;
             display: inline-flex;

@@ -4,6 +4,15 @@ const db = require('./db');
    SECTION 1: ITEM MANAGEMENT (CRUD)
    ========================================= */
 
+exports.getAllOffices = async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM Offices ORDER BY office_name ASC');
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getAllItems = async (req, res) => {
   try {
     const query = `
@@ -200,6 +209,51 @@ exports.restockItems = async (req, res) => {
   }
 };
 
+exports.getNextRisNo = async (req, res) => {
+  const { officeId } = req.params;
+  try {
+    // 1. Get the office acronym
+    const officeRes = await db.query('SELECT acronym FROM Offices WHERE office_id = $1', [officeId]);
+    if (officeRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Office not found' });
+    }
+    const acronym = officeRes.rows[0].acronym || 'OSG'; 
+
+    // 2. Format Date
+    const today = new Date();
+    const YYYY = today.getFullYear();
+    const MM = String(today.getMonth() + 1).padStart(2, '0');
+    const DD = String(today.getDate()).padStart(2, '0');
+    
+    // We'll search for today's transactions to find the next number
+    const risPrefix = `${acronym}-${YYYY}-${MM}-${DD}`;
+
+    // 3. Find latest sequence number for today for THIS specific acronym
+    const latestRisRes = await db.query(
+      `SELECT ris_no FROM Transactions 
+       WHERE ris_no LIKE $1 
+       ORDER BY transaction_id DESC LIMIT 1`,
+      [`${acronym}-${YYYY}-${MM}-${DD}-%`]
+    );
+
+    let nextSequence = 1;
+    if (latestRisRes.rows.length > 0) {
+      const lastRis = latestRisRes.rows[0].ris_no;
+      const parts = lastRis.split('-');
+      const lastSeqStr = parts[parts.length - 1];
+      const lastSeq = parseInt(lastSeqStr, 10);
+      if (!isNaN(lastSeq)) {
+        nextSequence = lastSeq + 1;
+      }
+    }
+
+    const nextRis = `${risPrefix}-${String(nextSequence).padStart(2, '0')}`;
+    res.status(200).json({ nextRis });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 /* =========================================
    SECTION 3: ISSUANCE TRANSACTIONS (OUT/Issue)
    ========================================= */
@@ -213,8 +267,8 @@ exports.issueItems = async (req, res) => {
     });
   }
 
-  // Expected body: { ris_no, office_id, received_by, transaction_date, remarks, items: [{ item_id, quantity }] }
-  const { ris_no, office_id, received_by, transaction_date, remarks, items } = req.body;
+  // Expected body: { ris_no, office_id, received_by, transaction_date, remarks, items: [{ item_id, quantity }], request_id }
+  const { ris_no, office_id, received_by, transaction_date, remarks, items, request_id } = req.body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "Request must include a non-empty 'items' array." });
@@ -228,14 +282,15 @@ exports.issueItems = async (req, res) => {
 
     // 1. Create Transaction Header
     const transRes = await client.query(
-      `INSERT INTO Transactions (ris_no, transaction_type, transaction_date, office_id, received_by, remarks) 
-       VALUES ($1, 'OUT', $2, $3, $4, $5) RETURNING transaction_id`,
+      `INSERT INTO Transactions (ris_no, transaction_type, transaction_date, office_id, received_by, remarks, request_id) 
+       VALUES ($1, 'OUT', $2, $3, $4, $5, $6) RETURNING transaction_id`,
       [
         ris_no ? ris_no.toUpperCase() : null,
         transaction_date || new Date(),
         office_id,
         received_by ? received_by.toUpperCase() : null,
-        remarks ? remarks.toUpperCase() : null
+        remarks ? remarks.toUpperCase() : null,
+        request_id || null
       ]
     );
     const transactionId = transRes.rows[0].transaction_id;
@@ -260,6 +315,14 @@ exports.issueItems = async (req, res) => {
       await client.query(
         `UPDATE Items SET current_stock = current_stock - $1 WHERE item_id = $2`,
         [item.quantity, item.item_id]
+      );
+    }
+
+    // 3. If it was from a Request, update the request status
+    if (request_id) {
+      await client.query(
+        `UPDATE Requests SET status = 'APPROVED' WHERE request_id = $1`,
+        [request_id]
       );
     }
 
@@ -293,7 +356,7 @@ exports.getTransactionByRis = async (req, res) => {
   try {
     const result = await db.query(
       `SELECT t.*, o.office_name, 
-              td.item_id, i.item_name, td.quantity 
+              td.item_id, i.item_name, i.unit_of_measure, td.quantity 
        FROM Transactions t
        LEFT JOIN Offices o ON t.office_id = o.office_id
        LEFT JOIN Transaction_Details td ON t.transaction_id = td.transaction_id
@@ -309,6 +372,7 @@ exports.getTransactionByRis = async (req, res) => {
       details: result.rows.map(row => ({
         item_id: row.item_id,
         item_name: row.item_name,
+        unit_of_measure: row.unit_of_measure,
         quantity: row.quantity
       }))
     };
@@ -316,6 +380,7 @@ exports.getTransactionByRis = async (req, res) => {
     // Cleanup duplicate top-level fields
     delete transaction.item_id;
     delete transaction.item_name;
+    delete transaction.unit_of_measure;
     delete transaction.quantity;
 
     res.status(200).json(transaction);
@@ -327,6 +392,98 @@ exports.getTransactionByRis = async (req, res) => {
 /* =========================================
    SECTION 6: HISTORY & ACTIVITY LOG
    ========================================= */
+
+exports.getPendingRequests = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        r.request_id as id,
+        r.request_number as "reqNumber",
+        r.request_number as "reqDisplay",
+        r.purpose,
+        r.office_id as department_id,
+        o.office_name as "deptName",
+        o.office_name,
+        o.acronym,
+        o.dept_code as "deptCode",
+        TO_CHAR(r.request_date, 'Month DD, YYYY') as date,
+        (SELECT COUNT(*) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "itemsCount"
+      FROM Requests r
+      JOIN Offices o ON r.office_id = o.office_id
+      WHERE r.status = 'PENDING'
+      ORDER BY r.request_date DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getApprovedRequests = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        t.transaction_id as id,
+        t.office_id,
+        COALESCE(r.request_number, 'DIRECT') as "reqNumber",
+        t.ris_no as "risNo",
+        o.office_name as "deptName",
+        o.acronym,
+        o.dept_code as "deptCode",
+        TO_CHAR(t.transaction_date, 'Month DD, YYYY') as date,
+        TO_CHAR(t.transaction_date, 'HH:MI AM') as time,
+        (SELECT COUNT(*) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "itemsCount",
+        COALESCE(r.purpose, t.remarks) as purpose,
+        t.remarks,
+        t.transaction_id
+      FROM Transactions t
+      LEFT JOIN Requests r ON t.request_id = r.request_id
+      JOIN Offices o ON t.office_id = o.office_id
+      WHERE t.transaction_type = 'OUT'
+      ORDER BY t.transaction_date DESC, t.transaction_id DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getRequestDetails = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT 
+        rd.item_id,
+        rd.quantity as "reqQty",
+        i.item_name as description,
+        i.unit_of_measure as unit,
+        i.current_stock as "inStock"
+      FROM Request_Details rd
+      JOIN Items i ON rd.item_id = i.item_id
+      WHERE rd.request_id = $1
+    `;
+    const result = await db.query(query, [id]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.rejectRequest = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      "UPDATE Requests SET status = 'REJECTED' WHERE request_id = $1 RETURNING *",
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Request not found' });
+    res.status(200).json({ message: 'Request rejected successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.getRequestsHistory = async (req, res) => {
   try {
@@ -433,6 +590,32 @@ exports.getLatestIntakeForItem = async (req, res) => {
       items: detailsResult.rows
     });
 
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getItemTransactionHistory = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT 
+        t.transaction_id,
+        t.transaction_type,
+        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as date,
+        t.ris_no,
+        t.delivery_number,
+        o.office_name as recipient,
+        td.quantity,
+        t.remarks
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
+      WHERE td.item_id = $1
+      ORDER BY t.transaction_date DESC, t.transaction_id DESC
+    `;
+    const result = await db.query(query, [id]);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
