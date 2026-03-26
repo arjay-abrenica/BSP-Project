@@ -1,0 +1,49 @@
+<div class="bsp-page-container">
+    <div class="page-title-bar">
+        <h2><strong>Supply Requests</strong> <span class="divider">|</span> <span class="sub-page">Submit Request Form</span></h2>
+    </div>
+
+    <!-- Search & Action Bar -->
+    <div class="action-top-bar">
+        <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#2c7a4b" stroke-width="3"><circle cx="10.5" cy="10.5" r="7.5"></circle><line x1="21" y1="21" x2="15.8" y2="15.8"></line></svg>
+            <input type="text" placeholder="Search by item code, Name, or Category..." [(ngModel)]="searchQuery">
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="bsp-table">
+            <thead>
+                <tr>
+                    <th>Item Code</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th style="text-align: center; width: 15%">Req. QTY</th>
+                    <th style="text-align: right; width: 15%">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of filteredItems">
+                    <td><strong>{{ item.item_code }}</strong></td>
+                    <td>{{ item.item_name }}</td>
+                    <td>{{ item.category_name }}</td>
+                    <td>
+                        <span class="stock-badge" [class.low-stock]="item.current_stock <= (item.reorder_level || 10)" [class.in-stock]="item.current_stock > (item.reorder_level || 10)">
+                            {{ item.current_stock || 0 }} {{ item.unit }}
+                        </span>
+                    </td>
+                    <td style="text-align: center;">
+                        <input type="number" [(ngModel)]="item.requestQuantity" placeholder="1" min="1" style="width: 80px; text-align: center; padding: 0.35rem; border: 1px solid #c7d4cc; border-radius: 4px; outline: none;">
+                    </td>
+                    <td class="action-cell" style="text-align: right;">
+                        <button class="btn-request" (click)="submitRequest(item)" [disabled]="!item.requestQuantity">
+                            Request
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

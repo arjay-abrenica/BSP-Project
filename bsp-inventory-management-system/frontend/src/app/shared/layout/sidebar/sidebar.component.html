@@ -1,4 +1,22 @@
-<div class="sidebar-wrapper" [class.collapsed]="!isSecondaryMenuOpen">
+<!-- Mobile Top App Bar (Only visible < 768px) -->
+<div class="mobile-app-bar" [class.hidden-header]="isHeaderHidden">
+    <button class="hamburger-btn" (click)="toggleMobileSidebar()">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    <div class="brand-logo-mobile">
+        <img src="assets/img/bspLogo.png" alt="BSP Logo">
+        <span>BSP-IPMS</span>
+    </div>
+</div>
+
+<!-- Optional overlay background when the menu is open on small screens -->
+<div class="sidebar-overlay" *ngIf="isSecondaryMenuOpen || isMobileSidebarOpen" [class.mobile-visible]="isMobileSidebarOpen" (click)="closeMenuOnMobile()"></div>
+
+<div class="sidebar-wrapper" [class.collapsed]="!isSecondaryMenuOpen" [class.mobile-open]="isMobileSidebarOpen">
 
     <nav class="primary-rail">
         <div class="brand-logo">
@@ -16,14 +34,29 @@
                     </svg>
                 </a>
             </li>
-            <li title="Inventory" routerLinkActive="active">
+            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
                 <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                        </path>
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                         <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                </a>
+            </li>
+            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+                <a routerLink="/property" (click)="isSecondaryMenuOpen = true">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </a>
+            </li>
+            <li title="Requests" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'focal person'])">
+                <a routerLink="/focal/request" (click)="isSecondaryMenuOpen = true">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                 </a>
             </li>
@@ -46,8 +79,8 @@
                     </svg>
                 </a>
             </li>
-            <li title="Settings" routerLinkActive="active">
-                <a routerLink="/settings" (click)="isSecondaryMenuOpen = true">
+            <li title="Settings" [class.active]="router.url.includes('settings') && !router.url.includes('profile')" *ngIf="hasRole(['superadmin', 'admin'])">
+                <a routerLink="/settings/system" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path
@@ -58,8 +91,8 @@
             </li>
         </ul>
 
-        <div class="user-profile">
-            <a routerLink="/profile">
+        <div class="user-profile" [class.active]="router.url.includes('profile')">
+            <a routerLink="/profile" (click)="isSecondaryMenuOpen = true">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
@@ -72,8 +105,8 @@
 
         <div class="menu-header">
             <div class="title-text">
-                <h1>BSP-IMS</h1>
-                <p>Inventory Management System</p>
+                <h1>BSP-IPMS</h1>
+                <p>Inventory & Property Management</p>
             </div>
             <button class="collapse-btn" (click)="toggleMenu()" title="Collapse Menu">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -99,21 +132,49 @@
             </div>
 
             <!-- Inventory Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('inventory')" [class.active-group]="true">
+            <div class="menu-group" *ngIf="router.url.includes('inventory') && hasRole(['superadmin', 'admin', 'supply officer'])" [class.active-group]="true">
                 <div class="group-header">
                     <span>Inventory</span>
                     <span class="indicator">-</span>
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/inventory/catalog" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/catalog" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Supply Management
                     </li>
-                    <li routerLink="/inventory/outflow" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/outflow" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Supply Outflow
                     </li>
-                    <li routerLink="/inventory/track-item" routerLinkActive="active-sub">
+                    <li routerLink="/inventory/track-item" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Track Inventory
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Property Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('property') && hasRole(['superadmin', 'admin', 'supply officer'])" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Property</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/property/overview" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Property Overview
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Request Supplies Menu (Focal Person) -->
+            <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['superadmin', 'focal person'])" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Requests</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/focal/request" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Request Supplies
                     </li>
                 </ul>
             </div>
@@ -126,10 +187,10 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
+                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
                         <span class="dot"></span> Monthly Report
                     </li>
-                    <li routerLink="/reports/analysis" routerLinkActive="active-sub">
+                    <li routerLink="/reports/analysis" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Office Supply Analysis
                     </li>
                 </ul>
@@ -143,15 +204,65 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub">
+                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Requests History
                     </li>
-                    <li routerLink="/history/activity-log" routerLinkActive="active-sub">
+                    <li routerLink="/history/activity-log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
                         <span class="dot"></span> Activity Log
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Settings Menu -->
+            <div class="menu-group" *ngIf="router.url.includes('settings') && !router.url.includes('profile') && hasRole(['superadmin', 'admin'])" [class.active-group]="true">
+                <div class="group-header">
+                    <span>Settings</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/settings/system" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> System Settings
+                    </li>
+                    <li routerLink="/settings/accounts" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Account Management
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Profile Menu -->
+            <div class="menu-group profile-group" *ngIf="router.url.includes('profile')" [class.active-group]="true">
+                <div class="profile-card-header">
+                    <div class="name">{{ userName | titlecase }}</div>
+                    <div class="email">{{ userName | lowercase }}@scouts.gov.ph</div>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/profile/settings" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Account Settings
+                    </li>
+                    <li class="logout-link" (click)="triggerLogOut()">
+                        Log Out
                     </li>
                 </ul>
             </div>
 
         </div>
     </aside>
+</div>
+
+<!-- ═══ Logout Modal Overlay ═══ -->
+<div class="logout-modal-overlay" *ngIf="showLogoutModal" (click)="cancelLogOut()">
+    <div class="logout-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Log Out?</h3>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to log out your account?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel" (click)="cancelLogOut()">Cancel</button>
+                <button class="btn-logout" (click)="confirmLogOut()">Log Out</button>
+            </div>
+        </div>
+    </div>
 </div>

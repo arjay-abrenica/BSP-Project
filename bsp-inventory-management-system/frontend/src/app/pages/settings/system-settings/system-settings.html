@@ -1,0 +1,125 @@
+<div class="bsp-page-container">
+    <div class="settings-title-bar">
+        <h2><strong>Settings</strong> <span class="divider">|</span> <span class="sub-page">System Settings</span></h2>
+    </div>
+
+    <!-- MAIN SETTINGS CONTENT -->
+    <div class="settings-content">
+
+        <!-- NOTIFICATION SECTION -->
+        <div class="settings-section">
+            <h3 class="section-title">Notification</h3>
+
+            <!-- Item: Enable Email -->
+            <div class="settings-row align-top">
+                <div class="setting-info">
+                    <h4>Enable Email Notification</h4>
+                    <p>Receive automated emails for key supply transactions and status updates.</p>
+                </div>
+                <div class="setting-action checkbox-group">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" [(ngModel)]="emailNewRequests">
+                        <span class="checkmark"></span>
+                        On new requests
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" [(ngModel)]="emailOnApproval">
+                        <span class="checkmark"></span>
+                        On approval
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" [(ngModel)]="emailOnRelease">
+                        <span class="checkmark"></span>
+                        On release
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" [(ngModel)]="emailLowStock">
+                        <span class="checkmark"></span>
+                        On low stock alert
+                    </label>
+                </div>
+            </div>
+
+            <!-- Item: In-System Alert -->
+            <div class="settings-row">
+                <div class="setting-info">
+                    <h4>Enable In-System Alert</h4>
+                    <p>Show instant notifications within the app via the bell icon.</p>
+                </div>
+                <div class="setting-action">
+                    <div class="custom-toggle" [class.on]="inSystemAlert" (click)="toggleSetting('inSystemAlert')">
+                        <span class="toggle-text-left" *ngIf="inSystemAlert">ON</span>
+                        <div class="toggle-circle"></div>
+                        <span class="toggle-text-right" *ngIf="!inSystemAlert">OFF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item: Low Stock Alert -->
+            <div class="settings-row">
+                <div class="setting-info">
+                    <h4>Low Stock Alert Threshold</h4>
+                    <p>Receive update whenever a stock reaches low threshold .</p>
+                </div>
+                <div class="setting-action">
+                    <div class="custom-toggle" [class.on]="lowStockAlert" (click)="toggleSetting('lowStockAlert')">
+                        <span class="toggle-text-left" *ngIf="lowStockAlert">ON</span>
+                        <div class="toggle-circle"></div>
+                        <span class="toggle-text-right" *ngIf="!lowStockAlert">OFF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item: Notification Sound -->
+            <div class="settings-row">
+                <div class="setting-info">
+                    <h4>Enable Notification Sound</h4>
+                    <p>Play a sound when new notifications arrive.</p>
+                </div>
+                <div class="setting-action">
+                    <div class="custom-toggle" [class.on]="notificationSound" (click)="toggleSetting('notificationSound')">
+                        <span class="toggle-text-left" *ngIf="notificationSound">ON</span>
+                        <div class="toggle-circle"></div>
+                        <span class="toggle-text-right" *ngIf="!notificationSound">OFF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item: Email Server -->
+            <div class="settings-row">
+                <div class="setting-info">
+                    <h4>Email Server Setup</h4>
+                    <p>Configure email server details for sending notifications.</p>
+                </div>
+                <div class="setting-action">
+                    <div class="email-input-group">
+                        <label>Email</label>
+                        <input type="text" [(ngModel)]="emailServer" class="bsp-input">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- BACKUP SECTION -->
+        <div class="settings-section">
+            <h3 class="section-title">Backup & Maintenance</h3>
+
+            <!-- Item: Manual Backup -->
+            <div class="settings-row align-top">
+                <div class="setting-info">
+                    <h4>Manual Data Backup</h4>
+                    <p>Create a backup of the current inventory database, including supplies, equipment, and transaction records.</p>
+                    <span class="sub-text">Last backup performed on: March 12, 2025, 10:42 AM</span>
+                </div>
+                <div class="setting-action">
+                    <button class="btn-solid-green backup-btn">Backup Now</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>

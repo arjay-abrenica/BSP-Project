@@ -45,4 +45,12 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.currentUserValue;
   }
+
+  hasRole(allowedRoles: string[]): boolean {
+    const userRole = this.currentUserValue?.role;
+    if (!userRole) return false;
+    
+    const normalizedRole = userRole.toLowerCase();
+    return allowedRoles.some(role => role.toLowerCase() === normalizedRole);
+  }
 }

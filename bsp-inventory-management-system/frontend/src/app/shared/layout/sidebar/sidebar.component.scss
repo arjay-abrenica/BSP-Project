@@ -5,7 +5,112 @@
     top: 0;
     left: 0;
     border-right: 1px solid var(--bsp-dark-green);
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, left 0.3s ease;
+    z-index: 1000; /* Ensure it stays above content when absolute/fixed */
+
+    @media (max-width: 1024px) {
+        position: fixed;
+    }
+    
+    @media (max-width: 768px) {
+        /* Convert wrapper to a pull-out drawer mechanism */
+        position: fixed;
+        top: 60px; /* Start below the mobile app bar */
+        left: -100%; /* Hide completely off canvas by default */
+        width: 85vw; /* Take up 85% of screen when open */
+        height: calc(100vh - 60px);
+        flex-direction: row; /* Rail + secondary menu side-by-side inside drawer */
+        z-index: 1001; /* Under the mobile app bar, but above overlay */
+        border-right: 1px solid var(--bsp-dark-green);
+        border-top: none;
+        background-color: var(--white);
+        
+        &.mobile-open {
+            left: 0; /* Slide in! */
+            box-shadow: 4px 0 12px rgba(0,0,0,0.15); /* Show shadow only when open */
+        }
+    }
+}
+
+/* --- Mobile Top App Bar --- */
+.mobile-app-bar {
+    display: none;
+    
+    @media (max-width: 768px) {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 60px;
+        background-color: var(--bsp-dark-green);
+        color: var(--white);
+        justify-content: flex-start;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 0 1rem;
+        z-index: 1002;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+
+        &.hidden-header {
+            transform: translateY(-100%);
+            box-shadow: none;
+        }
+
+        .brand-logo-mobile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            
+            img {
+                height: 32px;
+                width: auto;
+            }
+            
+            span {
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+        }
+        
+        .hamburger-btn {
+            background: none;
+            border: none;
+            color: var(--white);
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+}
+
+/* Optional Overlay when menu is open on mobile/tablet */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    
+    @media (max-width: 1024px) {
+        display: block; // Shown unconditionally here via CSS, assuming ngIf rendered it
+    }
+
+    @media (max-width: 768px) {
+        top: 60px; // Under app bar
+        height: calc(100vh - 60px);
+        z-index: 1000;
+        display: none; // Hide by default on mobile so `isSecondaryMenuOpen` doesn't bleed through
+        &.mobile-visible {
+            display: block; // Show ONLY when mobile sidebar drawer is open
+        }
+    }
 }
 
 /* --- Primary Icon Rail --- */
@@ -17,10 +122,21 @@
     align-items: center;
     padding: 1rem 0;
     z-index: 2;
+    
+    @media (max-width: 768px) {
+        /* Keep it as a vertical pillar inside the slide-out drawer */
+        height: 100%;
+        width: 70px;
+        flex-shrink: 0;
+    }
 }
 
 .brand-logo {
     margin-bottom: 1rem;
+
+    @media (max-width: 768px) {
+        display: none;
+    }
 
     .logo-image {
         width: 38px;
@@ -41,6 +157,14 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    
+    @media (max-width: 768px) {
+        /* Maintain vertical column inside the rail */
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+        justify-content: flex-start;
+    }
 }
 
 .nav-icons li {
@@ -79,15 +203,40 @@
 
 .user-profile {
     margin-top: auto;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    margin-bottom: 1rem;
+    
+    @media (max-width: 768px) {
+        margin-top: auto;
+        padding-bottom: 2rem;
+    }
 
     a {
-        color: var(--white);
         display: flex;
+        color: var(--white);
+        text-decoration: none;
 
         .nav-icon {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
         }
+    }
+
+    &.active {
+        background-color: var(--white);
+        a {
+            color: var(--bsp-dark-green);
+        }
+    }
+
+    &:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.1);
     }
 }
 
@@ -98,8 +247,33 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: width 0.3s ease, opacity 0.3s ease;
+    transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
     white-space: nowrap;
+    
+    @media (max-width: 1024px) {
+        position: absolute;
+        left: 70px;
+        top: 0;
+        bottom: 0;
+        height: 100vh;
+        width: 0; /* Auto-collapse on tablet */
+        opacity: 0;
+        pointer-events: none;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    
+    @media (max-width: 768px) {
+        /* Fill the remaining mobile drawer space next to the slim rail */
+        position: relative;
+        left: 0;
+        height: 100%;
+        width: calc(85vw - 70px);
+        opacity: 1;
+        pointer-events: auto;
+        box-shadow: none;
+        overflow-y: auto;
+    }
 }
 
 /* Collapsed state logic */
@@ -107,6 +281,26 @@
     width: 0;
     opacity: 0;
     pointer-events: none;
+    
+    @media (max-width: 768px) {
+        /* On mobile, the drawer itself hides, so secondary menu stays fixed width relative to rail */
+        width: calc(85vw - 70px);
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+/* Open state overrides for tablet/mobile */
+.sidebar-wrapper:not(.collapsed) .secondary-menu {
+    @media (max-width: 1024px) {
+        width: 240px;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    @media (max-width: 768px) {
+        width: calc(85vw - 70px);
+        opacity: 1;
+    }
 }
 
 .menu-header {
@@ -115,6 +309,10 @@
     align-items: flex-start;
     padding: 0.5rem 1rem;
     border-bottom: 1px solid #e0e0e0;
+    
+    @media (max-width: 768px) {
+        display: none; // Already heavily represented in the top app bar
+    }
 
     .title-text {
         h1 {
@@ -144,6 +342,44 @@
     }
 }
 
+/* ─── Profile Menu Tree Structure ─── */
+.profile-group {
+    /* The main user block at the top of the menu */
+    .profile-card-header {
+        background-color: var(--bsp-light-green-bg);
+        border-radius: var(--radius-sm);
+        padding: 0.6rem 1rem;
+        margin-bottom: 0.8rem;
+        
+        .name {
+            color: var(--bsp-dark-green);
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-bottom: 0.2rem;
+        }
+        .email {
+            color: #555;
+            font-size: 0.7rem;
+        }
+    }
+
+    ul.sub-menu {
+        .logout-link {
+            padding: 0.5rem 1rem 0.5rem calc(1rem + 16px); /* Align text beautifully under the hidden dot offset */
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--bsp-text-muted);
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: var(--radius-sm);
+            transition: background-color 0.2s;
+
+            &:hover { background-color: #f5f5f5; }
+        }
+    }
+}
+
 .menu-content {
     padding: 1rem;
 }
@@ -151,7 +387,6 @@
 /* Active Menu Group Styling */
 .active-group {
     .group-header {
-        background-color: var(--bsp-light-green-bg);
         color: var(--bsp-dark-green);
         border-radius: var(--radius-sm);
         padding: 0.5rem 1rem;
@@ -199,6 +434,73 @@
 
         &:hover:not(.active-sub) {
             background-color: #f5f5f5;
+        }
+    }
+}
+
+/* ─── Logout Modal ─── */
+.logout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logout-modal {
+    background-color: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 360px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1px solid #c7d4cc;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .modal-header {
+        background-color: #c7d4cc;
+        padding: 0.6rem 1rem;
+        h3 { margin: 0; color: #0d4a22; font-size: 0.95rem; font-weight: 800; }
+    }
+
+    .modal-body {
+        padding: 1.5rem 1.5rem 1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.2rem;
+        p { margin: 0; font-size: 0.9rem; color: #333; text-align: left; line-height: 1.4; }
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        
+        button {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            
+            &.btn-cancel {
+                background: #fff; border: 1px solid #0d4a22; color: #0d4a22;
+                &:hover { background: #f5f9f6; }
+            }
+            &.btn-logout {
+                background: #9f1e1e; border: 1px solid #9f1e1e; color: #fff;
+                &:hover { background: #7c1616; border-color: #7c1616; }
+            }
         }
     }
 }

@@ -23,6 +23,15 @@ export interface StockDistRow {
   office: string; totalItems: number; allocated: number; variance: string; condition: string;
 }
 
+export interface ItemBreakdownRow {
+  sku: string;
+  itemName: string;
+  allocatedQty: number;
+  issuedQty: number;
+  remaining: number;
+  utilization: string;
+}
+
 @Component({
   selector: 'app-analysis',
   standalone: true,
@@ -46,6 +55,31 @@ export class AnalysisComponent implements OnInit {
     { office: 'Admin', allocatedQuantity: 600, issuedQuantity: 580, remainingStock: 20, allocationUtilization: '97%', reallocationCount: 3, aveRequestFulfillment: '96%', remarks: 'High Utilization' },
     { office: 'Finance', allocatedQuantity: 350, issuedQuantity: 312, remainingStock: 38, allocationUtilization: '89%', reallocationCount: 0, aveRequestFulfillment: '92%', remarks: 'Stable Usage' },
     { office: 'FOD', allocatedQuantity: 390, issuedQuantity: 278, remainingStock: 112, allocationUtilization: '71%', reallocationCount: 0, aveRequestFulfillment: '85%', remarks: 'Underused Allocation' }
+  ];
+
+  /* ── Modal State & Data ── */
+  isModalOpen: boolean = false;
+  selectedRow: DetailedAnalysisRow | null = null;
+  
+  officeNames: { [key: string]: string } = {
+    'PMDD': 'Property Management Development Division',
+    'CPSMO': 'Corporate Planning and Strategy Management Office',
+    'FOD': 'Facilities Operations Department',
+    'LSO': 'Logistics Support Office',
+    'IAO': 'Internal Audit Office',
+    'NSS': 'Network Security Services',
+    'Admin': 'Administration Office',
+    'Finance': 'Finance Department',
+    'ONP': 'Office of National Planning',
+    'OSG': 'Office of the Secretary General'
+  };
+
+  mockItemBreakdown: ItemBreakdownRow[] = [
+    { sku: 'STD-STP', itemName: 'Stapler - Standard', allocatedQty: 20, issuedQty: 18, remaining: 2, utilization: '90%' },
+    { sku: 'BND-PPRA4', itemName: 'Bond Paper A4', allocatedQty: 80, issuedQty: 75, remaining: 5, utilization: '93.75%' },
+    { sku: 'BLK-INK', itemName: 'Black Ink Cartridge', allocatedQty: 15, issuedQty: 13, remaining: 2, utilization: '86.67%' },
+    { sku: 'WHT-BRD', itemName: 'White Board Marker Set', allocatedQty: 10, issuedQty: 8, remaining: 2, utilization: '80%' },
+    { sku: 'CLP-MTL', itemName: 'Paper Clips (Large)', allocatedQty: 20, issuedQty: 17, remaining: 3, utilization: '85%' }
   ];
 
   /* ── Tab B: Usage Trend ── */
@@ -176,5 +210,29 @@ export class AnalysisComponent implements OnInit {
     if (condition === 'Overstock') return 'badge overstock';
     if (condition === 'Low Stock') return 'badge low-stock';
     return 'badge normal';
+  }
+
+  /* ── Modal Methods ── */
+  openModal(row: DetailedAnalysisRow): void {
+    this.selectedRow = row;
+    this.isModalOpen = true;
+  }
+
+  closeModal(): void {
+    this.isModalOpen = false;
+    this.selectedRow = null;
+  }
+
+  getOfficeFullName(abbr: string | undefined): string {
+    if (!abbr) return '';
+    return this.officeNames[abbr] || 'Department Office';
+  }
+
+  getRemarksClass(remarks: string | undefined): string {
+    if (!remarks) return 'normal';
+    if (remarks.includes('High Utilization') || remarks.includes('Near Depletion')) {
+      return 'high-util';
+    }
+    return 'normal';
   }
 }

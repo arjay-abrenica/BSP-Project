@@ -1,0 +1,115 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+
+export interface AccountRow {
+    rawId: number;
+    accountId: string;
+    name: string;
+    email: string;
+    office: string;
+    role: string;
+    status: 'Active' | 'Inactive';
+}
+
+@Component({
+  selector: 'app-account-management',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './account-management.html',
+  styleUrl: './account-management.scss'
+})
+export class AccountManagement implements OnInit {
+    searchQuery = '';
+    showAddModal = false;
+
+    // Form fields for Add Account modal
+    newFullName = '';
+    newEmail = '';
+    newOffice = 'CPSMO';
+    newRole = 'User';
+
+    // Edit Modal State
+    showEditModal = false;
+    editAccountId = 0;
+    editFullName = '';
+    editEmail = '';
+    editOffice = '';
+    editRole = '';
+    editStatus = 'Active';
+
+    accounts: AccountRow[] = [];
+
+    constructor(private http: HttpClient) {}
+
+    ngOnInit() {
+        this.fetchUsers();
+    }
+
+    fetchUsers() {
+        this.http.get<any[]>('http://localhost:5000/api/users').subscribe({
+            next: (data) => {
+                this.accounts = data.map(user => ({
+                    rawId: user.user_id,
+                    accountId: `ACC-${user.user_id.toString().padStart(3, '0')}`,
+                    name: user.username,
+                    email: user.email || '-',
+                    office: user.office || '-',
+                    role: user.role,
+                    status: user.status || 'Active'
+                }));
+            },
+            error: (err) => {
+                console.error("Failed to load users", err);
+            }
+        });
+    }
+
+    openAddModal() {
+        this.showAddModal = true;
+    }
+
+    closeAddModal() {
+        this.showAddModal = false;
+    }
+
+    addAccount() {
+        console.log("Added:", this.newFullName, this.newEmail, this.newOffice, this.newRole);
+        this.showAddModal = false;
+    }
+
+    openEditModal(acc: AccountRow) {
+        this.editAccountId = acc.rawId;
+        this.editFullName = acc.name;
+        this.editEmail = acc.email === '-' ? '' : acc.email;
+        this.editOffice = acc.office === '-' ? 'CPSMO' : acc.office;
+        this.editRole = acc.role;
+        this.editStatus = acc.status;
+        this.showEditModal = true;
+    }
+
+    closeEditModal() {
+        this.showEditModal = false;
+    }
+
+    saveEdit() {
+        const payload = {
+            username: this.editFullName,
+            email: this.editEmail,
+            office: this.editOffice,
+            role: this.editRole,
+            status: this.editStatus
+        };
+
+        this.http.put(`http://localhost:5000/api/users/${this.editAccountId}`, payload).subscribe({
+            next: () => {
+                this.showEditModal = false;
+                this.fetchUsers();
+            },
+            error: (err) => {
+                console.error("Failed to update user", err);
+            }
+        });
+    }
+}

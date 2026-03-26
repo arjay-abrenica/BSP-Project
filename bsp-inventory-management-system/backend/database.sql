@@ -134,4 +134,4 @@ INSERT INTO Request_Details (request_id, item_id, quantity) VALUES
 (3, 1, 5), (3, 2, 2);
 
 -- Insert a Default Admin User (Password: admin123)
-INSERT INTO Users (username, password, role) VALUES ('ADMIN', 'admin123', 'ADMIN');
+INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'Superadmin');
