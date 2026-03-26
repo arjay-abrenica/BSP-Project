@@ -31,6 +31,10 @@ export class OutflowComponent implements OnInit {
   selectedRequest: any = null;
   searchQuery: string = '';
   
+  // Print state
+  printData: any = null;
+  Math = Math;
+
   // Cart/Staging state for Direct Allocation
   stagedIssuances: any[] = [];
   selectedStagedIndex: number = -1;
@@ -410,6 +414,17 @@ export class OutflowComponent implements OnInit {
 
   selectStaged(index: number) {
     this.selectedStagedIndex = index;
+  }
+
+  printRis(data: any) {
+    this.printData = data;
+    
+    // We need to wait for the view to update before calling print
+    setTimeout(() => {
+      window.print();
+      // Optional: Clear printData after printing to save memory
+      // this.printData = null;
+    }, 100);
   }
 
   submitIssuance(itemsToIssue: any[], departmentId: number, fallbackRemarks: string, requestId?: number) {

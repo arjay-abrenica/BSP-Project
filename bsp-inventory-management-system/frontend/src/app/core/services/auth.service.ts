@@ -11,7 +11,8 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
 
   constructor(private http: HttpClient, private router: Router) {
-    const storedUser = localStorage.getItem('currentUser');
+    // Check if there is a user in session storage
+    const storedUser = sessionStorage.getItem('currentUser');
     if (storedUser) {
       this.currentUserSubject.next(JSON.parse(storedUser));
     }
@@ -26,9 +27,10 @@ export class AuthService {
       .pipe(
         tap(response => {
           if (response && response.token) {
-            // Store user details and jwt token in local storage to keep user logged in between page refreshes
+            // Store user details and jwt token in session storage 
+            // session storage clears when the tab/browser is closed
             const user = { ...response.user, token: response.token };
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            sessionStorage.setItem('currentUser', JSON.stringify(user));
             this.currentUserSubject.next(user);
           }
         })
@@ -36,8 +38,8 @@ export class AuthService {
   }
 
   logout() {
-    // Remove user from local storage and set current user to null
-    localStorage.removeItem('currentUser');
+    // Remove user from storage and set current user to null
+    sessionStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
