@@ -19,8 +19,9 @@
         </div>
 
         <div class="user-details">
-            <h2>Alyssa R. Mendoza</h2>
-            <p>armendoza@scouts.gov.ph</p>
+            <h2>{{ userName | titlecase }}</h2>
+            <p>{{ userName | lowercase }}@scouts.gov.ph</p>
+            <p class="user-role">Role: {{ userRole | titlecase }}</p>
         </div>
 
         <div class="password-section">
