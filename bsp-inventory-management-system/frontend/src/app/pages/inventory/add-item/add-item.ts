@@ -16,6 +16,11 @@ export class AddItem {
   isSubmitting = false;
   batchItems: any[] = [];
 
+  // Modal State
+  showModal: boolean = false;
+  intakeSummaryData: any = null;
+  intakeGrandTotal: number = 0;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -62,13 +67,32 @@ export class AddItem {
 
     this.isSubmitting = true;
     
-    this.http.post('http://localhost:5000/api/items', this.batchItems).subscribe({
+    this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
       next: (res) => {
         console.log('Items added successfully', res);
         this.isSubmitting = false;
-        alert(`${this.batchItems.length} item(s) added successfully!`);
-        this.batchItems = [];
-        this.router.navigate(['/inventory/catalog']);
+        
+        if (res && res.length > 0) {
+          const firstItemId = res[0].item_id;
+          this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
+            next: (data) => {
+              this.intakeSummaryData = data;
+              this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
+              this.showModal = true;
+              this.batchItems = []; // Clear the batch after success
+            },
+            error: (err) => {
+              console.error('Failed to fetch intake summary', err);
+              alert(`${res.length} item(s) added successfully!`);
+              this.batchItems = [];
+              this.router.navigate(['/inventory/catalog']);
+            }
+          });
+        } else {
+          alert('Item(s) added successfully!');
+          this.batchItems = [];
+          this.router.navigate(['/inventory/catalog']);
+        }
       },
       error: (err) => {
         console.error('Error adding items', err);
@@ -76,6 +100,13 @@ export class AddItem {
         alert('Failed to add items. Please try again.');
       }
     });
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.intakeSummaryData = null;
+    this.intakeGrandTotal = 0;
+    this.router.navigate(['/inventory/catalog']);
   }
 
   onClear(): void {
