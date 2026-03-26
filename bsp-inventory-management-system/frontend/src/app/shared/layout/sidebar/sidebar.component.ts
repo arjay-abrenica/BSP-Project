@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
     selector: 'app-sidebar',
@@ -17,7 +18,15 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     showLogoutModal = false;
     private lastScrollTop = 0;
 
-    constructor(public router: Router) {}
+    constructor(public router: Router, private authService: AuthService) {}
+
+    get userName() {
+        return this.authService.currentUserValue?.username || 'User';
+    }
+
+    hasRole(allowedRoles: string[]) {
+        return this.authService.hasRole(allowedRoles);
+    }
 
     ngOnInit() {
         this.checkWindowSize();
@@ -100,7 +109,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
     confirmLogOut() {
         this.showLogoutModal = false;
-        // In a real app this would clear tokens
-        this.router.navigate(['/login']);
+        this.authService.logout();
     }
 }   

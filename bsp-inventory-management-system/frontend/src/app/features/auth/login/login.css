@@ -1,5 +1,7 @@
 :host {
     display: flex;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .login-image{
@@ -13,19 +15,26 @@
 .login-container {
     align-items: center;
     max-width: 350px;
-    margin: 50px auto;
-    padding: 20px;
+    margin: auto;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
 }
 
 .bsp-logo {
-    width:277px;
-    height:271px;
+    width: 200px;
+    height: auto;
+    object-fit: contain;
+    margin: 0 auto 10px;
+    display: block;
 }
 
 .system-name {
     margin: 0 auto;
     text-align: center;
-    margin-bottom: 38px;
+    margin-bottom: 20px;
 }
 
 .system-name .bsp-name {
@@ -42,8 +51,8 @@
 
 .system-name h2 {
     text-align: center;
-    font-size: 40px;
-    margin: 0;
+    font-size: 32px;
+    margin: 5px 0;
     color: var(--primary-text-color);
 }
 

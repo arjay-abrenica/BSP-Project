@@ -91,4 +91,4 @@ INSERT INTO Transactions (ris_no, transaction_type, transaction_date, department
 INSERT INTO Transaction_Details (transaction_id, item_id, quantity, unit_cost) VALUES (1, 4, 2, 0.00), (1, 3, 1, 55.62), (1, 5, 1, 0.00);
 
 -- Insert a Default Admin User (Password: admin123)
-INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'admin');
+INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'Superadmin');

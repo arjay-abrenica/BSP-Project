@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
 
@@ -37,6 +39,8 @@ export const routes: Routes = [
             // Inventory Page
             {
                 path: 'inventory',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['superadmin', 'admin', 'supply officer'] },
                 loadComponent: () =>
                     import('./pages/inventory/inventory').then(c => c.Inventory),
                 children: [
@@ -58,8 +62,23 @@ export const routes: Routes = [
             // Property > Property Overview
             {
                 path: 'property/overview',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['superadmin', 'admin', 'supply officer'] },
                 loadComponent: () =>
                     import('./pages/property/property-overview/property-overview').then(c => c.PropertyOverview)
+            },
+            // Focal Person Module
+            {
+                path: 'focal',
+                redirectTo: 'focal/request',
+                pathMatch: 'full'
+            },
+            {
+                path: 'focal/request',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['superadmin', 'admin', 'focal person'] },
+                loadComponent: () =>
+                    import('./pages/focal/request-supplies/request-supplies').then(c => c.RequestSupplies)
             },
 
             // Reports Page
@@ -97,12 +116,16 @@ export const routes: Routes = [
             // Settings > System Settings
             {
                 path: 'settings/system',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['superadmin', 'admin'] },
                 loadComponent: () =>
                     import('./pages/settings/system-settings/system-settings').then(c => c.SystemSettings)
             },
             // Settings > Account Management
             {
                 path: 'settings/accounts',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['superadmin', 'admin'] },
                 loadComponent: () =>
                     import('./pages/settings/account-management/account-management').then(c => c.AccountManagement)
             },

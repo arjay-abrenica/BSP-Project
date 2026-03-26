@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 export interface AccountRow {
+    rawId: number;
     accountId: string;
     name: string;
     email: string;
@@ -18,7 +20,7 @@ export interface AccountRow {
   templateUrl: './account-management.html',
   styleUrl: './account-management.scss'
 })
-export class AccountManagement {
+export class AccountManagement implements OnInit {
     searchQuery = '';
     showAddModal = false;
 
@@ -28,18 +30,41 @@ export class AccountManagement {
     newOffice = 'CPSMO';
     newRole = 'User';
 
-    accounts: AccountRow[] = [
-        { accountId: 'ACC-2025-001', name: 'Maria D. Santos', email: 'mdsantos@scouts.gov.ph', office: 'IAC', role: 'User', status: 'Active' },
-        { accountId: 'ACC-2025-002', name: 'Roberto L. Cruz', email: 'rlcruz@scouts.gov.ph', office: 'NSS', role: 'User', status: 'Inactive' },
-        { accountId: 'ACC-2025-003', name: 'Alyssa R. Mendoza', email: 'armendoza@scouts.gov.ph', office: 'ICTU', role: 'Superadmin', status: 'Active' },
-        { accountId: 'ACC-2025-004', name: 'Jason T. Villanueva', email: 'jtvillanueva@scouts.gov.ph', office: 'CPSMO', role: 'User', status: 'Active' },
-        { accountId: 'ACC-2025-005', name: 'Nicole G. Perez', email: 'ngperez@scouts.gov.ph', office: 'ICTU', role: 'Superadmin', status: 'Active' },
-        { accountId: 'ACC-2025-006', name: 'Kevin A. Dela Cruz', email: 'kadelacruz@scouts.gov.ph', office: 'Finance', role: 'User', status: 'Active' },
-        { accountId: 'ACC-2025-007', name: 'Liza M. Flores', email: 'lmflores@scouts.gov.ph', office: 'PMDD', role: 'Inventory Officer', status: 'Active' },
-        { accountId: 'ACC-2025-008', name: 'Patrick C. Navarro', email: 'pcnavarro@scouts.gov.ph', office: 'Admin', role: 'Inventory Officer', status: 'Active' },
-        { accountId: 'ACC-2025-009', name: 'Angela R. Lim', email: 'arilm@scouts.gov.ph', office: 'OSG', role: 'User', status: 'Active' },
-        { accountId: 'ACC-2025-010', name: 'Jerome P. Santos', email: 'jpsantos@scouts.gov.ph', office: 'ONP', role: 'User', status: 'Inactive' }
-    ];
+    // Edit Modal State
+    showEditModal = false;
+    editAccountId = 0;
+    editFullName = '';
+    editEmail = '';
+    editOffice = '';
+    editRole = '';
+    editStatus = 'Active';
+
+    accounts: AccountRow[] = [];
+
+    constructor(private http: HttpClient) {}
+
+    ngOnInit() {
+        this.fetchUsers();
+    }
+
+    fetchUsers() {
+        this.http.get<any[]>('http://localhost:5000/api/users').subscribe({
+            next: (data) => {
+                this.accounts = data.map(user => ({
+                    rawId: user.user_id,
+                    accountId: `ACC-${user.user_id.toString().padStart(3, '0')}`,
+                    name: user.username,
+                    email: user.email || '-',
+                    office: user.office || '-',
+                    role: user.role,
+                    status: user.status || 'Active'
+                }));
+            },
+            error: (err) => {
+                console.error("Failed to load users", err);
+            }
+        });
+    }
 
     openAddModal() {
         this.showAddModal = true;
@@ -52,5 +77,39 @@ export class AccountManagement {
     addAccount() {
         console.log("Added:", this.newFullName, this.newEmail, this.newOffice, this.newRole);
         this.showAddModal = false;
+    }
+
+    openEditModal(acc: AccountRow) {
+        this.editAccountId = acc.rawId;
+        this.editFullName = acc.name;
+        this.editEmail = acc.email === '-' ? '' : acc.email;
+        this.editOffice = acc.office === '-' ? 'CPSMO' : acc.office;
+        this.editRole = acc.role;
+        this.editStatus = acc.status;
+        this.showEditModal = true;
+    }
+
+    closeEditModal() {
+        this.showEditModal = false;
+    }
+
+    saveEdit() {
+        const payload = {
+            username: this.editFullName,
+            email: this.editEmail,
+            office: this.editOffice,
+            role: this.editRole,
+            status: this.editStatus
+        };
+
+        this.http.put(`http://localhost:5000/api/users/${this.editAccountId}`, payload).subscribe({
+            next: () => {
+                this.showEditModal = false;
+                this.fetchUsers();
+            },
+            error: (err) => {
+                console.error("Failed to update user", err);
+            }
+        });
     }
 }
