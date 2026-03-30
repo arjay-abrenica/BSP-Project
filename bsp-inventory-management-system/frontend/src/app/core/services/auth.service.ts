@@ -11,11 +11,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
 
   constructor(private http: HttpClient, private router: Router) {
-    // Check if there is a user in session storage
-    const storedUser = sessionStorage.getItem('currentUser');
-    if (storedUser) {
-      this.currentUserSubject.next(JSON.parse(storedUser));
-    }
+    // TEMPORARY: Automatically set superadmin mock user for frontend-only testing
+    const mockUser = { username: 'superadmin', role: 'Superadmin', token: 'mock-token', firstName: 'Super', lastName: 'Admin' };
+    sessionStorage.setItem('currentUser', JSON.stringify(mockUser));
+    this.currentUserSubject.next(mockUser);
   }
 
   public get currentUserValue(): any {
@@ -23,18 +22,14 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/login`, { username, password })
-      .pipe(
-        tap(response => {
-          if (response && response.token) {
-            // Store user details and jwt token in session storage 
-            // session storage clears when the tab/browser is closed
-            const user = { ...response.user, token: response.token };
-            sessionStorage.setItem('currentUser', JSON.stringify(user));
-            this.currentUserSubject.next(user);
-          }
-        })
-      );
+    // TEMPORARY: Bypass backend login call
+    return new Observable(observer => {
+      const user = { username: username || 'superadmin', role: 'Superadmin', token: 'mock-token' };
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+      this.currentUserSubject.next(user);
+      observer.next({ user, token: user.token });
+      observer.complete();
+    });
   }
 
   logout() {
@@ -45,14 +40,10 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.currentUserValue;
+    return true; // TEMPORARY BYPASS
   }
 
   hasRole(allowedRoles: string[]): boolean {
-    const userRole = this.currentUserValue?.role;
-    if (!userRole) return false;
-    
-    const normalizedRole = userRole.toLowerCase();
-    return allowedRoles.some(role => role.toLowerCase() === normalizedRole);
+    return true; // TEMPORARY BYPASS
   }
 }
