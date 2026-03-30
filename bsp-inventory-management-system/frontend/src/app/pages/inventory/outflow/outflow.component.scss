@@ -34,6 +34,8 @@
   border-radius: var(--radius-md, 10px);
   overflow: hidden;
   background-color: var(--white);
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 .requests-panel {
@@ -42,12 +44,15 @@
 }
 
 .details-panel {
-  flex: 0 0 66%;
+  flex: 1;
+  min-width: 0;
 }
 
 .panel-header {
   background-color: var(--bsp-light-green-bg);
   padding: 0;
+  border-radius: var(--radius-sm, 6px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .panel-header h3 {
@@ -318,14 +323,15 @@
 
 /* Issue Request Box (Pending Tab bottom section) */
 .issue-request-box {
-  border: 1px solid var(--bsp-light-green-bg);
+  border: none;
   border-radius: var(--radius-sm, 6px);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .inner-header {
   padding: 0;
   background-color: var(--bsp-light-green-bg);
+  border-radius: var(--radius-sm, 6px);
 }
 
 .inner-header h3 {

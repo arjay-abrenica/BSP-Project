@@ -29,13 +29,16 @@
     overflow: hidden;
     flex-grow: 1;
     min-height: 0;
+    padding: 8px;
+    box-sizing: border-box;
 }
 
 /* Custom Tab Navbar */
 .tabbed-header {
     background-color: var(--bsp-light-green-bg);
     padding: 0.25rem 1.5rem 0 1.5rem;
-    border-bottom: 2px solid #a3b8ad;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-sm, 6px);
     display: flex;
     flex-shrink: 0;
 }

@@ -65,7 +65,8 @@
   background-color: var(--bsp-light-green-bg);
   border: 2px dashed var(--bsp-dark-green);
   border-radius: 8px;
-  height: 200px;
+  aspect-ratio: 1 / 1;
+  height: auto;
   margin-top: 8px;
   cursor: pointer;
   transition: all 0.2s;
@@ -136,6 +137,7 @@
   border-radius: 4px;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .input-wrapper input:focus {
