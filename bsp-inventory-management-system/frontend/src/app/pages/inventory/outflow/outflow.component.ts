@@ -4,6 +4,9 @@ import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } 
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
+
 @Component({
   selector: 'app-outflow',
   standalone: true,
@@ -33,6 +36,7 @@ export class OutflowComponent implements OnInit {
   
   // Print state
   printData: any = null;
+  showPrintPreview: boolean = false;
   Math = Math;
 
   // Cart/Staging state for Direct Allocation
@@ -418,13 +422,36 @@ export class OutflowComponent implements OnInit {
 
   printRis(data: any) {
     this.printData = data;
-    
-    // We need to wait for the view to update before calling print
-    setTimeout(() => {
-      window.print();
-      // Optional: Clear printData after printing to save memory
-      // this.printData = null;
-    }, 100);
+    this.showPrintPreview = true;
+  }
+
+  closePrintPreview() {
+    this.showPrintPreview = false;
+    this.printData = null;
+  }
+
+  downloadPDF() {
+    const element = document.querySelector('.ris-form-container') as HTMLElement;
+    if (!element) return;
+
+    const opt = {
+      margin: 0,
+      filename: `RIS_${this.printData.risNo || 'Document'}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false, 
+        letterRendering: true,
+        width: element.offsetWidth,
+        windowWidth: element.offsetWidth,
+        height: element.offsetHeight,
+        windowHeight: element.offsetHeight
+      },
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+    };
+
+    html2pdf().from(element).set(opt).save();
   }
 
   submitIssuance(itemsToIssue: any[], departmentId: number, fallbackRemarks: string, requestId?: number) {

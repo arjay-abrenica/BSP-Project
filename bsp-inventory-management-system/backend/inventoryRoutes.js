@@ -33,6 +33,7 @@ router.get('/history/requests', inventoryController.getRequestsHistory);
 router.get('/history/activity', inventoryController.getActivityLog);
 router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
+router.get('/items/:id/allocation', inventoryController.getItemAllocationPerOffice);
 
 // --- Authentication ---
 router.post('/auth/register', inventoryController.registerUser);

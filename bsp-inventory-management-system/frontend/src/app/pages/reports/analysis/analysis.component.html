@@ -157,7 +157,7 @@
                         </div>
                         <div class="chart-legend">
                             <div class="legend-item" *ngFor="let label of distChartData.labels; let i = index">
-                                <div class="legend-dot" [style.backgroundColor]="$any(distChartData.datasets[0].backgroundColor)[i]"></div>
+                                <div class="legend-color" [style.backgroundColor]="distChartData.datasets?.[0]?.backgroundColor ? $any(distChartData.datasets[0].backgroundColor)[i] : '#ccc'"></div>
                                 <span>{{ label }}</span>
                             </div>
                         </div>
@@ -213,7 +213,7 @@
                         </div>
                         <div class="chart-legend">
                             <div class="legend-item" *ngFor="let label of catChartData.labels; let i = index">
-                                <div class="legend-dot" [style.backgroundColor]="$any(catChartData.datasets[0].backgroundColor)[i]"></div>
+                                <div class="legend-dot" [style.backgroundColor]="catChartData.datasets?.[0]?.backgroundColor ? $any(catChartData.datasets[0].backgroundColor)[i] : '#ccc'"></div>
                                 <span>{{ label }}</span>
                             </div>
                         </div>

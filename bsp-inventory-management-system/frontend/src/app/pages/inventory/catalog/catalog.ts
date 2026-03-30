@@ -45,11 +45,28 @@ export class Catalog implements OnInit {
   batchItems: any[] = [];
   filteredSuggestions: any[] = [];
   showSuggestions = false;
+  isSkuExisting = false;
 
   // Item Transactions State
   showTransactionHistoryModal: boolean = false;
   itemTransactionHistory: any[] = [];
   isLoadingHistory: boolean = false;
+
+  // Item Allocation State
+  showAllocationModal: boolean = false;
+  itemAllocation: any[] = [];
+  isLoadingAllocation: boolean = false;
+  totalAllocatedQuantity: number = 0;
+
+  // Log Transaction State
+  showLogTransactionModal: boolean = false;
+  logTransactionForm: FormGroup;
+  offices: any[] = [];
+  generatedRisNo: string = '';
+
+  // Transaction Summary
+  totalIn: number = 0;
+  totalOut: number = 0;
 
   // Intake Summary Modal State (Success Modal)
   showIntakeModal: boolean = false;
@@ -77,6 +94,39 @@ export class Catalog implements OnInit {
       delivery_receipt: [''],
       delivery_number: ['']
     });
+
+    this.logTransactionForm = this.fb.group({
+      transaction_type: ['OUT', Validators.required], // Currently only supporting OUT here
+      office_id: ['', Validators.required],
+      ris_no: ['', Validators.required],
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      remarks: [''],
+      transaction_date: [new Date().toISOString().split('T')[0], Validators.required]
+    });
+
+    // Listen to office changes to update RIS number
+    this.logTransactionForm.get('office_id')?.valueChanges.subscribe(officeId => {
+      if (officeId) {
+        this.updateGeneratedRisNo(officeId);
+      }
+    });
+  }
+
+  fetchOffices(): void {
+    this.http.get<any[]>('http://localhost:5000/api/offices').subscribe({
+      next: (res) => this.offices = res,
+      error: (err) => console.error('Failed to fetch offices', err)
+    });
+  }
+
+  updateGeneratedRisNo(officeId: number): void {
+    this.http.get<{nextRis: string}>(`http://localhost:5000/api/transactions/next-ris/${officeId}`).subscribe({
+      next: (res) => {
+        this.generatedRisNo = res.nextRis;
+        this.logTransactionForm.patchValue({ ris_no: res.nextRis });
+      },
+      error: (err) => console.error('Failed to fetch next RIS number', err)
+    });
   }
 
   onEditItem(): void {
@@ -101,7 +151,69 @@ export class Catalog implements OnInit {
   }
 
   onLogTransaction(): void {
-    this.router.navigate(['/inventory/outflow']);
+    if (!this.selectedItemDetails) return;
+    
+    this.fetchOffices();
+    this.showLogTransactionModal = true;
+    this.showItemDetailsModal = false;
+    
+    this.logTransactionForm.reset({
+      transaction_type: 'OUT',
+      office_id: '',
+      ris_no: '',
+      quantity: 1,
+      remarks: '',
+      transaction_date: new Date().toISOString().split('T')[0]
+    });
+  }
+
+  closeLogTransaction(): void {
+    this.showLogTransactionModal = false;
+    this.generatedRisNo = '';
+  }
+
+  submitLogTransaction(): void {
+    if (this.logTransactionForm.invalid) {
+      this.logTransactionForm.markAllAsTouched();
+      return;
+    }
+
+    const formVal = this.logTransactionForm.value;
+    
+    // Validate stock
+    if (formVal.transaction_type === 'OUT' && formVal.quantity > this.selectedItemDetails.current_stock) {
+      alert(`Cannot issue more than available stock (${this.selectedItemDetails.current_stock}).`);
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const payload = {
+      ris_no: formVal.ris_no,
+      office_id: formVal.office_id,
+      transaction_date: formVal.transaction_date,
+      remarks: formVal.remarks,
+      items: [
+        {
+          item_id: this.selectedItemDetails.item_id,
+          quantity: formVal.quantity
+        }
+      ]
+    };
+
+    this.http.post('http://localhost:5000/api/transactions/issue', payload).subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        alert('Transaction logged successfully!');
+        this.closeLogTransaction();
+        this.fetchItems(); // Refresh catalog
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        console.error('Failed to log transaction', err);
+        alert('Failed to log transaction: ' + (err.error?.error || 'Unknown error'));
+      }
+    });
   }
 
   onViewTransactions(): void {
@@ -113,6 +225,16 @@ export class Catalog implements OnInit {
     this.http.get<any[]>(`http://localhost:5000/api/items/${this.selectedItemDetails.item_id}/history`).subscribe({
       next: (data) => {
         this.itemTransactionHistory = data;
+        
+        // Calculate Summary
+        this.totalIn = data
+          .filter(t => t.transaction_type === 'IN')
+          .reduce((sum, t) => sum + Number(t.quantity), 0);
+          
+        this.totalOut = data
+          .filter(t => t.transaction_type === 'OUT')
+          .reduce((sum, t) => sum + Number(t.quantity), 0);
+          
         this.isLoadingHistory = false;
       },
       error: (err) => {
@@ -123,8 +245,28 @@ export class Catalog implements OnInit {
   }
 
   onViewAllocation(): void {
-    // Navigate to reports or a specific allocation view
-    this.router.navigate(['/reports/analysis']);
+    if (!this.selectedItemDetails) return;
+    
+    this.isLoadingAllocation = true;
+    this.showAllocationModal = true;
+    
+    this.http.get<any[]>(`http://localhost:5000/api/items/${this.selectedItemDetails.item_id}/allocation`).subscribe({
+      next: (data) => {
+        console.log('Allocation Data received:', data);
+        this.itemAllocation = data;
+        this.totalAllocatedQuantity = data.reduce((sum, a) => sum + Number(a.total_allocated), 0);
+        this.isLoadingAllocation = false;
+      },
+      error: (err) => {
+        console.error('Failed to fetch item allocation', err);
+        this.isLoadingAllocation = false;
+      }
+    });
+  }
+
+  closeAllocation(): void {
+    this.showAllocationModal = false;
+    this.itemAllocation = [];
   }
 
   closeTransactionHistory(): void {
@@ -304,11 +446,40 @@ export class Catalog implements OnInit {
   }
 
   onClear(): void {
+    this.isSkuExisting = false;
     this.addItemForm.reset({
       unit_price: 0,
       quantity: 0,
       reorder_level: 10
     });
+  }
+
+  onSkuInput(event: any): void {
+    const sku = event.target.value.trim().toUpperCase();
+    if (!sku) {
+      this.isSkuExisting = false;
+      return;
+    }
+
+    // Check if SKU exists in our local items list
+    const existingItem = this.items.find(i => i.item_code === sku);
+    
+    if (existingItem) {
+      this.isSkuExisting = true;
+      // Auto-populate item details
+      this.addItemForm.patchValue({
+        item_name: existingItem.item_name,
+        category_id: existingItem.category_id,
+        unit_of_measure: existingItem.unit_of_measure,
+        description: existingItem.description,
+        unit_price: existingItem.unit_price,
+        reorder_level: existingItem.reorder_level
+      });
+    } else {
+      this.isSkuExisting = false;
+      // If SKU was previously existing but now it's different, clear the auto-populated name
+      // but keep what the user might have typed if they are creating a new one
+    }
   }
 
   extractFilterOptions(data: any[]): void {
