@@ -359,21 +359,27 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(220, 230, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.5); /* Darker, more standard overlay */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(2px); /* Slight blur for modern look */
 }
 
-.item-details-modal, .add-item-modal, .intake-summary-modal {
-  background-color: var(--white);
+.modal-content {
+  background-color: #ffffff;
   border-radius: var(--radius-md, 10px);
-  box-shadow: 0 10px 40px rgba(0, 94, 56, 0.15), 0 0 0 1px rgba(0, 94, 56, 0.05);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  opacity: 1.0;
+  opacity: 1.0; /* Ensure full opacity */
+  position: relative;
+}
+
+.item-details-modal, .add-item-modal, .intake-summary-modal, .transaction-history-modal {
+  /* Inherit from .modal-content */
 }
 
 .item-details-modal {
@@ -600,6 +606,13 @@
   transition: border-color 0.2s;
 }
 
+.form-group input.read-only {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
 .form-group input.error, 
 .form-group select.error {
   border-color: var(--bsp-alert-red, #d92d20);
@@ -774,10 +787,60 @@
   cursor: pointer;
 }
 
-/* Transaction History Modal Styles */
+/* Summary Cards in Modals */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-card.in {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.summary-card.out {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.summary-card.balance {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+}
+
+.card-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.summary-card.in .card-value { color: #166534; }
+.summary-card.out .card-value { color: #991b1b; }
+.summary-card.balance .card-value { color: #1e40af; }
+
 .transaction-history-modal {
   max-width: 900px;
   width: 90%;
+  border: 1px solid var(--bsp-dark-green);
 }
 
 .history-table-container {

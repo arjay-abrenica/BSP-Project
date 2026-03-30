@@ -58,24 +58,62 @@ exports.createItem = async (req, res) => {
         }
       }
 
-      // 1. Insert Item
-      const result = await client.query(
-        `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-        [
-          item_code ? item_code.toUpperCase() : null,
-          item_name ? item_name.toUpperCase() : null,
-          description ? description.toUpperCase() : null,
-          unit_of_measure ? unit_of_measure.toUpperCase() : null,
-          unit_price,
-          category_id || null,
-          final_supplier_id,
-          reorder_level || 10,
-          quantity || 0
-        ]
-      );
+      // 1. Check if item with this SKU already exists
+      let itemToUpdate = null;
+      if (item_code && item_code.trim() !== '') {
+        const skuToSearch = item_code.trim().toUpperCase();
+        const existingItemRes = await client.query('SELECT * FROM Items WHERE TRIM(UPPER(item_code)) = $1', [skuToSearch]);
+        if (existingItemRes.rows.length > 0) {
+          itemToUpdate = existingItemRes.rows[0];
+        }
+      }
 
-      const newItem = result.rows[0];
+      let newItem;
+      if (itemToUpdate) {
+        // Update existing item
+        const updateRes = await client.query(
+          `UPDATE Items 
+           SET item_name = COALESCE($1, item_name), 
+               description = COALESCE($2, description), 
+               unit_of_measure = COALESCE($3, unit_of_measure), 
+               unit_price = COALESCE($4, unit_price), 
+               category_id = COALESCE($5, category_id), 
+               supplier_id = COALESCE($6, supplier_id), 
+               reorder_level = COALESCE($7, reorder_level),
+               current_stock = current_stock + $8
+           WHERE item_id = $9 RETURNING *`,
+          [
+            item_name ? item_name.toUpperCase() : null,
+            description ? description.toUpperCase() : null,
+            unit_of_measure ? unit_of_measure.toUpperCase() : null,
+            unit_price,
+            category_id || null,
+            final_supplier_id,
+            reorder_level || 10,
+            quantity || 0,
+            itemToUpdate.item_id
+          ]
+        );
+        newItem = updateRes.rows[0];
+      } else {
+        // Insert New Item
+        const result = await client.query(
+          `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+          [
+            item_code ? item_code.toUpperCase() : null,
+            item_name ? item_name.toUpperCase() : null,
+            description ? description.toUpperCase() : null,
+            unit_of_measure ? unit_of_measure.toUpperCase() : null,
+            unit_price,
+            category_id || null,
+            final_supplier_id,
+            reorder_level || 10,
+            quantity || 0
+          ]
+        );
+        newItem = result.rows[0];
+      }
 
       // 2. If quantity > 0, create a Transaction IN
       if (quantity > 0) {
@@ -608,13 +646,38 @@ exports.getItemTransactionHistory = async (req, res) => {
         t.ris_no,
         t.delivery_number,
         o.office_name as recipient,
+        s.supplier_name,
         td.quantity,
         t.remarks
       FROM Transaction_Details td
       JOIN Transactions t ON td.transaction_id = t.transaction_id
       LEFT JOIN Offices o ON t.office_id = o.office_id
+      JOIN Items i ON td.item_id = i.item_id
+      LEFT JOIN Suppliers s ON i.supplier_id = s.supplier_id
       WHERE td.item_id = $1
       ORDER BY t.transaction_date DESC, t.transaction_id DESC
+    `;
+    const result = await db.query(query, [id]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getItemAllocationPerOffice = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const query = `
+      SELECT 
+        COALESCE(o.office_name, 'Unknown Office') as office_name, 
+        COALESCE(o.acronym, 'N/A') as acronym,
+        SUM(td.quantity) as total_allocated
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
+      WHERE td.item_id = $1 AND t.transaction_type = 'OUT'
+      GROUP BY o.office_name, o.acronym
+      ORDER BY total_allocated DESC
     `;
     const result = await db.query(query, [id]);
     res.status(200).json(result.rows);
