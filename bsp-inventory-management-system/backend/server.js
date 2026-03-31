@@ -8,17 +8,21 @@ const db = require('./db');
 const inventoryRoutes = require('./inventoryRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 const app = express();
+const path = require('path');
 
 // --- Middleware ---
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api', inventoryRoutes);
 
 // --- System Health Checks ---

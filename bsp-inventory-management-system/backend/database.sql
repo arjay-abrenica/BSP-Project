@@ -93,9 +93,31 @@ CREATE TABLE Users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL, -- In production, this should be hashed (e.g., bcrypt)
-    role VARCHAR(50) DEFAULT 'STAFF', -- 'ADMIN' or 'STAFF'
+    email VARCHAR(100),
+    office VARCHAR(100),
+    role VARCHAR(50) DEFAULT 'STAFF', -- 'ADMIN' or 'STAFF' or 'FOCAL_USER' or 'SUPERADMIN'
+    status VARCHAR(20) DEFAULT 'Active', -- 'Active' or 'Inactive'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 10. Create System Settings Table
+CREATE TABLE System_Settings (
+    setting_id SERIAL PRIMARY KEY,
+    setting_key VARCHAR(100) UNIQUE NOT NULL,
+    setting_value TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert Default Settings
+INSERT INTO System_Settings (setting_key, setting_value) VALUES 
+('email_new_requests', 'false'),
+('email_on_approval', 'false'),
+('email_on_release', 'false'),
+('email_low_stock', 'false'),
+('in_system_alert', 'true'),
+('low_stock_alert', 'false'),
+('notification_sound', 'false'),
+('email_server', 'bsp-ims@scouts.gov.ph');
 
 -- =========================================================
 -- STEP 2: INSERT SAMPLE DATA
@@ -134,4 +156,4 @@ INSERT INTO Request_Details (request_id, item_id, quantity) VALUES
 (3, 1, 5), (3, 2, 2);
 
 -- Insert a Default Admin User (Password: admin123)
-INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'Superadmin');
+INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'SUPERADMIN');

@@ -83,7 +83,7 @@ export class AnalysisComponent implements OnInit {
   ];
 
   /* ── Tab B: Usage Trend ── */
-  trendChartType: ChartType = 'bar' as const;
+  trendChartType: 'bar' = 'bar';
   trendChartData: ChartData<'bar'> = {
     labels: ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'],
     datasets: [
@@ -110,7 +110,7 @@ export class AnalysisComponent implements OnInit {
   ];
 
   /* ── Tab C: Stock Distribution ── */
-  distChartType: ChartType = 'doughnut' as const;
+  distChartType: 'doughnut' = 'doughnut';
   distChartData: ChartData<'doughnut'> = {
     labels: ['FOD', 'CPSMO', 'LSO', 'IAO', 'NSS', 'Administration', 'Finance', 'PMDD', 'ONP', 'OSG'],
     datasets: [{
@@ -142,7 +142,7 @@ export class AnalysisComponent implements OnInit {
   ];
 
   /* ── Tab D: Supply Category Breakdown ── */
-  catChartType: ChartType = 'doughnut' as const;
+  catChartType: 'doughnut' = 'doughnut';
   catChartData: ChartData<'doughnut'> = {
     labels: ['Office Stationary', 'Cleaning & Sanitation Supplies', 'Printing & Documentation Supplies', 'First Aid & Health Supplies', 'Miscellaneous Office Consumables'],
     datasets: [{
@@ -174,7 +174,7 @@ export class AnalysisComponent implements OnInit {
   ];
 
   /* ── Tab E: Allocation Efficiency ── */
-  effChartType: ChartType = 'line' as const;
+  effChartType: 'line' = 'line';
   effChartData: ChartData<'line'> = {
     labels: ['CPSMO', 'FOD', 'LSO', 'IAO', 'NSS', 'Admin', 'Finance', 'PMDD', 'ONP', 'OSG'],
     datasets: [

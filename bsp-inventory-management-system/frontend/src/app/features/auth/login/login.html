@@ -10,16 +10,17 @@
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     
     <div class="form-group">
-      <label for="username">Email</label>
+      <label for="username">Username</label>
       <input 
         id="username" 
         type="text" 
         formControlName="username" 
+        placeholder="Enter your username"
         required
       >
       @if (loginForm.get('username')?.invalid && (loginForm.get('username')?.dirty || loginForm.get('username')?.touched)){
         <div class="alert-danger">
-            @if (loginForm.get('username')?.errors?.['required']){Email is required.
+            @if (loginForm.get('username')?.errors?.['required']){Username is required.
             }
         </div>
       }

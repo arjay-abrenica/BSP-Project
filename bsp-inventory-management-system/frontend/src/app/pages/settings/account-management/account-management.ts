@@ -27,8 +27,9 @@ export class AccountManagement implements OnInit {
     // Form fields for Add Account modal
     newFullName = '';
     newEmail = '';
+    newPassword = '';
     newOffice = 'CPSMO';
-    newRole = 'User';
+    newRole = 'STAFF';
 
     // Edit Modal State
     showEditModal = false;
@@ -72,11 +73,45 @@ export class AccountManagement implements OnInit {
 
     closeAddModal() {
         this.showAddModal = false;
+        this.resetAddForm();
+    }
+
+    resetAddForm() {
+        this.newFullName = '';
+        this.newEmail = '';
+        this.newPassword = '';
+        this.newOffice = 'CPSMO';
+        this.newRole = 'STAFF';
     }
 
     addAccount() {
-        console.log("Added:", this.newFullName, this.newEmail, this.newOffice, this.newRole);
-        this.showAddModal = false;
+        if (!this.newFullName || !this.newPassword) {
+            alert('Full Name and Password are required.');
+            return;
+        }
+
+        const payload = {
+            username: this.newFullName,
+            password: this.newPassword,
+            email: this.newEmail,
+            office: this.newOffice,
+            role: this.newRole,
+            status: 'Active'
+        };
+
+        this.http.post('http://localhost:5000/api/users', payload).subscribe({
+            next: (res) => {
+                console.log("User added successfully", res);
+                alert('User added successfully!');
+                this.showAddModal = false;
+                this.fetchUsers();
+                this.resetAddForm();
+            },
+            error: (err) => {
+                console.error("Failed to add user", err);
+                alert(err.error?.message || 'Failed to add user.');
+            }
+        });
     }
 
     openEditModal(acc: AccountRow) {
@@ -109,6 +144,7 @@ export class AccountManagement implements OnInit {
             },
             error: (err) => {
                 console.error("Failed to update user", err);
+                alert('Failed to update user.');
             }
         });
     }

@@ -1,12 +1,41 @@
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('./inventoryController');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// --- Multer Configuration for Item Images ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/items';
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'item-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed!'), false);
+    }
+  }
+});
 
 // --- Item Management ---
 router.get('/offices', inventoryController.getAllOffices);
 router.get('/items', inventoryController.getAllItems);
-router.post('/items', inventoryController.createItem);
-router.put('/items/:id', inventoryController.updateItem);
+router.post('/items', upload.single('image'), inventoryController.createItem);
+router.put('/items/:id', upload.single('image'), inventoryController.updateItem);
 router.delete('/items/:id', inventoryController.deleteItem);
 
 // --- Transactions: Restocking (IN) ---
@@ -34,9 +63,5 @@ router.get('/history/activity', inventoryController.getActivityLog);
 router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
 router.get('/items/:id/allocation', inventoryController.getItemAllocationPerOffice);
-
-// --- Authentication ---
-router.post('/auth/register', inventoryController.registerUser);
-router.post('/auth/login', inventoryController.loginUser);
 
 module.exports = router;

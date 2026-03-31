@@ -92,7 +92,8 @@ export class Catalog implements OnInit {
       quantity: [0, Validators.min(0)],
       reorder_level: [10, Validators.min(0)],
       delivery_receipt: [''],
-      delivery_number: ['']
+      delivery_number: [''],
+      image: [null]
     });
 
     this.logTransactionForm = this.fb.group({

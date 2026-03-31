@@ -15,8 +15,8 @@ export class Login {
   loginForm!: FormGroup; 
   errorMessage: string = '';
   
-  imagePathLoginImg: string = './assets/img/loginImage.png';
-  imagePathBSPLogo: string = './assets/img/bspLogo.png';
+  imagePathLoginImg: string = 'assets/img/loginImage.png';
+  imagePathBSPLogo: string = 'assets/img/bspLogo.png';
 
   // Inject FormBuilder to easily create form controls, and Router for navigation
   constructor(

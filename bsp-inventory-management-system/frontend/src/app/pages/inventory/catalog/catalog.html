@@ -429,7 +429,68 @@
 
 <!-- Allocation Per Office Modal -->
 @if (showAllocationModal) {
-...
+<div class="modal-overlay" (click)="closeAllocation()">
+  <div class="modal-content transaction-history-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Allocation Per Office: {{selectedItemDetails?.item_name}}</h2>  
+      <button class="btn-close" (click)="closeAllocation()">×</button>   
+    </div>
+
+    <div class="modal-body">
+      @if (isLoadingAllocation) {
+        <div class="loading-state">
+          <span class="spinner green"></span>
+          <p>Loading allocation data...</p>
+        </div>
+      } @else {
+        <div class="summary-cards">
+          <div class="summary-card out">
+            <span class="card-label">Total Allocated</span>
+            <span class="card-value">{{ totalAllocatedQuantity }} {{ selectedItemDetails?.unit_of_measure }}</span>
+          </div>
+          <div class="summary-card balance">
+            <span class="card-label">Unique Offices</span>
+            <span class="card-value">{{ itemAllocation.length }}</span>
+          </div>
+        </div>
+
+        <div class="history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Office Name</th>
+                <th>Acronym</th>
+                <th class="text-center">Total Allocated Qty</th>
+                <th class="text-center">Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (alloc of itemAllocation; track alloc.office_name) {
+              <tr>
+                <td class="font-medium">{{ alloc.office_name }}</td>
+                <td>{{ alloc.acronym }}</td>
+                <td class="text-center font-bold text-success">
+                  {{ alloc.total_allocated }}
+                </td>
+                <td class="text-center">{{ selectedItemDetails?.unit_of_measure }}</td>
+              </tr>
+              }
+              @if (itemAllocation.length === 0) {
+                <tr>
+                  <td colspan="4" class="empty-history">No allocations found for this item.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary-modal" (click)="closeAllocation()">Close</button>
+    </div>
+  </div>
+</div>
 }
 
 <!-- Log Transaction Modal -->
