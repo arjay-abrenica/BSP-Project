@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartOptions, ChartType } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { AuthService } from '../../../core/services/auth.service';
 
 // Register the datalabels plugin globally so charts don't crash when trying to use it
 Chart.register(ChartDataLabels);
@@ -199,8 +200,52 @@ export class AnalysisComponent implements OnInit {
     }
   };
 
-  constructor() {}
-  ngOnInit(): void {}
+  constructor(private authService: AuthService) {}
+  ngOnInit(): void {
+    this.applyFilters();
+  }
+
+  private applyFilters(): void {
+    const user = this.authService.currentUserValue;
+    if (user && user.role?.toLowerCase() === 'focal_officer') {
+      const userOffice = user.office?.toUpperCase() || '';
+      
+      // Filter Detailed Data
+      this.detailedData = this.detailedData.filter(d => d.office.toUpperCase() === userOffice);
+      
+      // Filter Stock Distribution Table
+      this.stockDistTable = this.stockDistTable.filter(s => s.office.toUpperCase() === userOffice);
+      
+      // Filter Distribution Chart
+      const distIndices = this.distChartData.labels?.map((label, index) => 
+        (label as string).toUpperCase() === userOffice || (this.officeNames[label as string] && label === userOffice) ? index : -1
+      ).filter(i => i !== -1) || [];
+
+      if (distIndices.length > 0) {
+        this.distChartData.labels = distIndices.map(i => this.distChartData.labels![i]);
+        this.distChartData.datasets[0].data = distIndices.map(i => this.distChartData.datasets[0].data[i]);
+      } else if (userOffice) {
+          // If no data found for their office, show empty but don't crash
+          this.distChartData.labels = [userOffice];
+          this.distChartData.datasets[0].data = [0];
+      }
+
+      // Filter Efficiency Chart
+      const effIndices = this.effChartData.labels?.map((label, index) => 
+        (label as string).toUpperCase() === userOffice ? index : -1
+      ).filter(i => i !== -1) || [];
+
+      if (effIndices.length > 0) {
+        this.effChartData.labels = effIndices.map(i => this.effChartData.labels![i]);
+        this.effChartData.datasets[0].data = effIndices.map(i => this.effChartData.datasets[0].data[i]);
+        this.effChartData.datasets[1].data = effIndices.map(i => this.effChartData.datasets[1].data[i]);
+      } else if (userOffice) {
+          this.effChartData.labels = [userOffice];
+          this.effChartData.datasets[0].data = [0];
+          this.effChartData.datasets[1].data = [0];
+      }
+    }
+  }
 
   setTab(tab: 'detailed' | 'trend' | 'distribution' | 'category' | 'efficiency'): void {
     this.activeAnalysisTab = tab;
