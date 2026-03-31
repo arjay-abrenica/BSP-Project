@@ -4,8 +4,7 @@ import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
 
-    // 1. Routes WITHOUT the Sidebar (e.g., Auth/Login)
-    // These sit outside the layout wrapper so they take up the full screen.
+    // 1. Routes WITHOUT the Sidebar (e.g., Auth, Error Pages)
     {
         path: 'login',
         loadComponent: () =>
@@ -15,6 +14,7 @@ export const routes: Routes = [
     // 2. The Main Layout Wrapper (WITH the Sidebar)
     {
         path: '', // The base path
+        canActivate: [AuthGuard],
         loadComponent: () =>
             import('./shared/layout/main-layout/main-layout.component').then(c => c.MainLayoutComponent),
 
@@ -32,6 +32,8 @@ export const routes: Routes = [
             // Admin Dashboard Page
             {
                 path: 'admin/dashboard',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/admin/dashboard/dashboard.component').then(c => c.DashboardComponent)
             },
@@ -40,7 +42,7 @@ export const routes: Routes = [
             {
                 path: 'inventory',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['superadmin', 'admin', 'supply officer'] },
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/inventory/inventory').then(c => c.Inventory),
                 children: [
@@ -63,7 +65,7 @@ export const routes: Routes = [
             {
                 path: 'property/overview',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['superadmin', 'admin', 'supply officer'] },
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/property/property-overview/property-overview').then(c => c.PropertyOverview)
             },
@@ -76,7 +78,7 @@ export const routes: Routes = [
             {
                 path: 'focal/request',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['superadmin', 'admin', 'focal person'] },
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/focal/request-supplies/request-supplies').then(c => c.RequestSupplies)
             },
@@ -84,6 +86,8 @@ export const routes: Routes = [
             // Reports Page
             {
                 path: 'reports',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/reports/reports.component').then(c => c.ReportsComponent)
             },
@@ -91,6 +95,8 @@ export const routes: Routes = [
             // Reports Analysis Page
             {
                 path: 'reports/analysis',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/reports/analysis/analysis.component').then(c => c.AnalysisComponent)
             },
@@ -98,11 +104,15 @@ export const routes: Routes = [
             // History Page
             {
                 path: 'history',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/history/history.component').then(c => c.HistoryComponent)
             },
             {
                 path: 'history/activity-log',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/history/activity-log/activity-log.component').then(c => c.ActivityLogComponent)
             },
@@ -117,7 +127,7 @@ export const routes: Routes = [
             {
                 path: 'settings/system',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['superadmin', 'admin'] },
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/settings/system-settings/system-settings').then(c => c.SystemSettings)
             },
@@ -125,7 +135,7 @@ export const routes: Routes = [
             {
                 path: 'settings/accounts',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['superadmin', 'admin'] },
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/settings/account-management/account-management').then(c => c.AccountManagement)
             },
@@ -139,6 +149,7 @@ export const routes: Routes = [
             // Profile > Profile Settings
             {
                 path: 'profile/settings',
+                canActivate: [AuthGuard],
                 loadComponent: () =>
                     import('./pages/profile/profile-settings/profile-settings').then(c => c.ProfileSettings)
             }

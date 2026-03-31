@@ -67,6 +67,10 @@
                 <input type="email" [(ngModel)]="newEmail" class="bsp-input">
             </div>
             <div class="form-group">
+                <label>Password</label>
+                <input type="password" [(ngModel)]="newPassword" class="bsp-input">
+            </div>
+            <div class="form-group" *ngIf="newRole !== 'SUPPLY_OFFICER' && newRole !== 'SUPERADMIN'">
                 <label>Office</label>
                 <select [(ngModel)]="newOffice" class="bsp-select">
                     <option value="CPSMO">CPSMO</option>
@@ -78,15 +82,17 @@
                     <option value="ONP">ONP</option>
                     <option value="IAC">IAC</option>
                     <option value="NSS">NSS</option>
+                    <option value="SS">SS</option>
+                    <option value="SU">SU</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Role</label>
                 <select [(ngModel)]="newRole" class="bsp-select">
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Superadmin">Superadmin</option>
-                    <option value="Inventory Officer">Inventory Officer</option>
+                    <option value="STAFF">Staff</option>
+                    <option value="FOCAL_OFFICER">Focal Officer</option>
+                    <option value="SUPPLY_OFFICER">Supply Officer</option>
+                    <option value="SUPERADMIN">Superadmin</option>
                 </select>
             </div>
             
@@ -113,7 +119,7 @@
                 <label>Email</label>
                 <input type="email" [(ngModel)]="editEmail" class="bsp-input" placeholder="e.g. user@scouts.gov.ph">
             </div>
-            <div class="form-group">
+            <div class="form-group" *ngIf="editRole !== 'SUPPLY_OFFICER' && editRole !== 'SUPERADMIN'">
                 <label>Office</label>
                 <select [(ngModel)]="editOffice" class="bsp-select">
                     <option value="CPSMO">CPSMO</option>
@@ -125,16 +131,17 @@
                     <option value="ONP">ONP</option>
                     <option value="IAC">IAC</option>
                     <option value="NSS">NSS</option>
+                    <option value="SS">SS</option>
+                    <option value="SU">SU</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Role</label>
                 <select [(ngModel)]="editRole" class="bsp-select">
-                    <option value="User">User</option>
-                    <option value="Focal Person">Focal Person</option>
-                    <option value="Supply Officer">Supply Officer</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Superadmin">Superadmin</option>
+                    <option value="STAFF">Staff</option>
+                    <option value="FOCAL_OFFICER">Focal Officer</option>
+                    <option value="SUPPLY_OFFICER">Supply Officer</option>
+                    <option value="SUPERADMIN">Superadmin</option>
                 </select>
             </div>
             <div class="form-group">

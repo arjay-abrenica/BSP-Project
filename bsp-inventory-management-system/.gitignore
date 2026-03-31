@@ -1,0 +1,13 @@
+# Root .gitignore to catch nested node_modules
+**/node_modules/
+**/dist/
+**/.angular/
+
+# Logs and environment
+*.log
+.env
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/

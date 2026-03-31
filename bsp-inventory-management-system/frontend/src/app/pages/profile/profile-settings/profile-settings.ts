@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-profile-settings',
@@ -16,7 +17,7 @@ export class ProfileSettings implements OnInit {
     userRole = '';
     userName = '';
 
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService, private http: HttpClient) {}
 
     ngOnInit() {
         this.userRole = this.authService.currentUserValue?.role || 'User';
@@ -24,6 +25,32 @@ export class ProfileSettings implements OnInit {
     }
 
     savePassword() {
-        console.log("Saving new password...");
+        if (!this.oldPassword || !this.newPassword) {
+            alert('Please fill in both old and new passwords.');
+            return;
+        }
+
+        const userId = this.authService.currentUserValue?.id;
+        if (!userId) {
+            alert('User ID not found.');
+            return;
+        }
+
+        const payload = {
+            oldPassword: this.oldPassword,
+            newPassword: this.newPassword
+        };
+
+        this.http.put(`http://localhost:5000/api/users/${userId}/change-password`, payload).subscribe({
+            next: (res: any) => {
+                alert(res.message || 'Password updated successfully!');
+                this.oldPassword = '';
+                this.newPassword = '';
+            },
+            error: (err) => {
+                console.error("Failed to update password", err);
+                alert(err.error?.message || 'Failed to update password.');
+            }
+        });
     }
 }

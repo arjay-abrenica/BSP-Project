@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../core/services/auth.service';
 
 interface RequestHistory {
   risNo: string;
@@ -22,14 +23,22 @@ export class HistoryComponent implements OnInit {
   isFilterOpen = false;
   historyData: RequestHistory[] = [];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   ngOnInit(): void {
     this.fetchRequests();
   }
 
   fetchRequests(): void {
-    this.http.get<RequestHistory[]>('http://localhost:5000/api/history/requests').subscribe({
+    const user = this.authService.currentUserValue;
+    let url = 'http://localhost:5000/api/history/requests';
+    
+    // If user is FOCAL_OFFICER, filter by their office
+    if (user && user.role === 'FOCAL_OFFICER' && user.office && user.office !== 'N/A') {
+      url += `?office=${encodeURIComponent(user.office)}`;
+    }
+
+    this.http.get<RequestHistory[]>(url).subscribe({
       next: (data) => {
         this.historyData = data;
       },

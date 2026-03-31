@@ -32,11 +32,26 @@ exports.getAllItems = async (req, res) => {
 };
 
 exports.createItem = async (req, res) => {
-  if (!req.body) return res.status(400).json({ error: "Request body missing or not JSON" });
+  // Handle both single item with image (multipart/form-data) and batch (JSON)
+  let itemsToCreate = [];
+  let isBatch = false;
 
-  const itemsToCreate = Array.isArray(req.body) ? req.body : [req.body];
+  if (req.file || req.body.item_code) {
+    // Single item creation (possibly with image)
+    const item = req.body;
+    if (req.file) {
+      item.image_url = `/uploads/items/${req.file.filename}`;
+    }
+    itemsToCreate = [item];
+    isBatch = false;
+  } else if (Array.isArray(req.body)) {
+    itemsToCreate = req.body;
+    isBatch = true;
+  } else {
+    return res.status(400).json({ error: "Invalid request format" });
+  }
+
   let client;
-
   try {
     client = await db.pool.connect();
     await client.query('BEGIN');
@@ -44,7 +59,7 @@ exports.createItem = async (req, res) => {
     const createdItems = [];
 
     for (const item of itemsToCreate) {
-      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number, delivery_receipt } = item;
+      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number, delivery_receipt, image_url } = item;
 
       let final_supplier_id = null;
       if (supplier_name && supplier_name.trim() !== '') {
@@ -80,8 +95,9 @@ exports.createItem = async (req, res) => {
                category_id = COALESCE($5, category_id), 
                supplier_id = COALESCE($6, supplier_id), 
                reorder_level = COALESCE($7, reorder_level),
-               current_stock = current_stock + $8
-           WHERE item_id = $9 RETURNING *`,
+               current_stock = current_stock + $8,
+               image_url = COALESCE($9, image_url)
+           WHERE item_id = $10 RETURNING *`,
           [
             item_name ? item_name.toUpperCase() : null,
             description ? description.toUpperCase() : null,
@@ -91,6 +107,7 @@ exports.createItem = async (req, res) => {
             final_supplier_id,
             reorder_level || 10,
             quantity || 0,
+            image_url || null,
             itemToUpdate.item_id
           ]
         );
@@ -98,8 +115,8 @@ exports.createItem = async (req, res) => {
       } else {
         // Insert New Item
         const result = await client.query(
-          `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+          `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock, image_url) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
           [
             item_code ? item_code.toUpperCase() : null,
             item_name ? item_name.toUpperCase() : null,
@@ -109,7 +126,8 @@ exports.createItem = async (req, res) => {
             category_id || null,
             final_supplier_id,
             reorder_level || 10,
-            quantity || 0
+            quantity || 0,
+            image_url || null
           ]
         );
         newItem = result.rows[0];
@@ -151,11 +169,17 @@ exports.updateItem = async (req, res) => {
   if (!req.body) return res.status(400).json({ error: "Request body missing or not JSON" });
   const { id } = req.params;
   const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level } = req.body;
+  
+  let image_url = req.body.image_url;
+  if (req.file) {
+    image_url = `/uploads/items/${req.file.filename}`;
+  }
+
   try {
     const result = await db.query(
       `UPDATE Items 
-       SET item_code = $1, item_name = $2, description = $3, unit_of_measure = $4, unit_price = $5, category_id = $6, supplier_id = $7, reorder_level = $8
-       WHERE item_id = $9 RETURNING *`,
+       SET item_code = $1, item_name = $2, description = $3, unit_of_measure = $4, unit_price = $5, category_id = $6, supplier_id = $7, reorder_level = $8, image_url = COALESCE($9, image_url)
+       WHERE item_id = $10 RETURNING *`,
       [
         item_code ? item_code.toUpperCase() : null,
         item_name ? item_name.toUpperCase() : null,
@@ -165,6 +189,7 @@ exports.updateItem = async (req, res) => {
         category_id,
         supplier_id,
         reorder_level,
+        image_url || null,
         id
       ]
     );
@@ -526,8 +551,9 @@ exports.rejectRequest = async (req, res) => {
 };
 
 exports.getRequestsHistory = async (req, res) => {
+  const { office } = req.query;
   try {
-    const query = `
+    let query = `
       SELECT 
         t.ris_no as "risNo",
         COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
@@ -538,9 +564,17 @@ exports.getRequestsHistory = async (req, res) => {
       FROM Transactions t
       LEFT JOIN Offices o ON t.office_id = o.office_id
       WHERE t.transaction_type = 'OUT'
-      ORDER BY t.transaction_date DESC, t.transaction_id DESC
     `;
-    const result = await db.query(query);
+
+    const params = [];
+    if (office && office !== 'N/A') {
+      params.push(office);
+      query += ` AND (o.office_name = $1 OR o.acronym = $1)`;
+    }
+
+    query += ` ORDER BY t.transaction_date DESC, t.transaction_id DESC`;
+    
+    const result = await db.query(query, params);
     res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
