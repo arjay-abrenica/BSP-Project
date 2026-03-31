@@ -18,7 +18,7 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     showLogoutModal = false;
     private lastScrollTop = 0;
 
-    constructor(public router: Router, private authService: AuthService) {}
+    constructor(public router: Router, private authService: AuthService) { }
 
     get userName() {
         return this.authService.currentUserValue?.username || 'User';
