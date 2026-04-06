@@ -32,19 +32,19 @@
                         style="-webkit-mask-image: url('Icons/dashboard-5480.png'); mask-image: url('Icons/dashboard-5480.png');"></span>
                 </a>
             </li>
-            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                 <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/ready-stock.png'); mask-image: url('Icons/ready-stock.png');"></span>
                 </a>
             </li>
-            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                 <a routerLink="/property" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/home-2503.png'); mask-image: url('Icons/home-2503.png');"></span>
                 </a>
             </li>
-            <li title="Requests" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'focal person'])">
+            <li title="Requests" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
                 <a routerLink="/focal/request" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/document.png'); mask-image: url('Icons/document.png');"></span>
@@ -63,7 +63,7 @@
                 </a>
             </li>
             <li title="Settings" [class.active]="router.url.includes('settings') && !router.url.includes('profile')"
-                *ngIf="hasRole(['superadmin', 'admin'])">
+                *ngIf="hasRole(['SUPERADMIN'])">
                 <a routerLink="/settings/system" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -118,7 +118,7 @@
 
             <!-- Inventory Menu -->
             <div class="menu-group"
-                *ngIf="router.url.includes('inventory') && hasRole(['superadmin', 'admin', 'supply officer'])"
+                *ngIf="router.url.includes('inventory') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Inventory</span>
@@ -140,7 +140,7 @@
 
             <!-- Property Menu -->
             <div class="menu-group"
-                *ngIf="router.url.includes('property') && hasRole(['superadmin', 'admin', 'supply officer'])"
+                *ngIf="router.url.includes('property') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Property</span>
@@ -155,7 +155,7 @@
             </div>
 
             <!-- Request Supplies Menu (Focal Person) -->
-            <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['superadmin', 'focal person'])"
+            <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Requests</span>
@@ -178,7 +178,7 @@
 
                 <ul class="sub-menu">
                     <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub"
-                        (click)="closeMenuOnMobile()" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+                        (click)="closeMenuOnMobile()" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
                         <span class="dot"></span> Monthly Report
                     </li>
                     <li routerLink="/reports/analysis" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
@@ -200,7 +200,7 @@
                         <span class="dot"></span> Requests History
                     </li>
                     <li routerLink="/history/activity-log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()"
-                        *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+                        *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                         <span class="dot"></span> Activity Log
                     </li>
                 </ul>
@@ -208,7 +208,7 @@
 
             <!-- Settings Menu -->
             <div class="menu-group"
-                *ngIf="router.url.includes('settings') && !router.url.includes('profile') && hasRole(['superadmin', 'admin'])"
+                *ngIf="router.url.includes('settings') && !router.url.includes('profile') && hasRole(['SUPERADMIN'])"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Settings</span>
