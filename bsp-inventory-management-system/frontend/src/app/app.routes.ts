@@ -126,7 +126,7 @@ export const routes: Routes = [
             {
                 path: 'settings/system',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
+                data: { roles: ['SUPERADMIN'] },
                 loadComponent: () =>
                     import('./pages/settings/system-settings/system-settings').then(c => c.SystemSettings)
             },
@@ -134,7 +134,7 @@ export const routes: Routes = [
             {
                 path: 'settings/accounts',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
+                data: { roles: ['SUPERADMIN'] },
                 loadComponent: () =>
                     import('./pages/settings/account-management/account-management').then(c => c.AccountManagement)
             },
