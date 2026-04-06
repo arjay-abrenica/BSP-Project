@@ -25,6 +25,20 @@ app.use('/api/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api', inventoryRoutes);
 
+// DEBUG: Print all registered routes
+console.log('--- Registered Routes ---');
+app._router.stack.forEach((middleware) => {
+  if (middleware.route) { // routes registered directly on the app
+    console.log(`${Object.keys(middleware.route.methods)} ${middleware.route.path}`);
+  } else if (middleware.name === 'router') { // router HTTP layer
+    middleware.handle.stack.forEach((handler) => {
+      route = handler.route;
+      route && console.log(`${Object.keys(route.methods)} ${middleware.regexp} ${route.path}`);
+    });
+  }
+});
+console.log('-------------------------');
+
 // --- System Health Checks ---
 // Endpoint to verify database connection status
 app.get('/api/test-db', async (req, res) => {

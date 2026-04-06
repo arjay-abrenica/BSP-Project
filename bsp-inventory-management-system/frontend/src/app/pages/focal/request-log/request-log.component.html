@@ -1,0 +1,98 @@
+<div class="bsp-page-container">
+  <div class="page-title-bar">
+    <h1 class="page-title">Request Log</h1>
+    <p class="page-subtitle">Historical record of all your completed, rejected, or cancelled supply requisitions.</p>
+  </div>
+
+  <div class="controls-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()" placeholder="Search logs by request number or purpose...">
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Request #</th>
+          <th>Purpose</th>
+          <th class="text-center">Items</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of filteredLogs">
+          <td>{{log.date}}</td>
+          <td class="req-no">{{log.reqNumber}}</td>
+          <td class="purpose-cell">{{log.purpose}}</td>
+          <td class="text-center">{{log.itemsCount}}</td>
+          <td class="text-center">
+            <span class="status-badge" [ngClass]="'status-' + log.status.toLowerCase()">{{log.status}}</span>
+          </td>
+          <td class="text-center">
+            <button class="btn-view" (click)="openDetails(log)">View Items</button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredLogs.length === 0 && !isLoading">
+          <td colspan="6" class="empty-table">No matching request logs found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Details Modal -->
+@if (isDetailsModalOpen && selectedRequest) {
+<div class="modal-overlay" (click)="closeDetails()">
+  <div class="modal-content details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Requisition Items: {{selectedRequest.reqNumber}}</h2>
+      <button class="close-btn" (click)="closeDetails()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="log-info-box">
+        <div class="info-item">
+          <label>Date Requested</label>
+          <span>{{selectedRequest.date}}</span>
+        </div>
+        <div class="info-item">
+          <label>Final Status</label>
+          <span class="status-badge" [ngClass]="'status-' + selectedRequest.status.toLowerCase()">{{selectedRequest.status}}</span>
+        </div>
+      </div>
+
+      <div class="items-list">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item Description</th>
+              <th class="text-center">Requested</th>
+              <th class="text-center">Issued</th>
+              <th>Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedRequest.items">
+              <td>{{item.description}}</td>
+              <td class="text-center">{{item.reqQty}}</td>
+              <td class="text-center">{{item.issueQty || 0}}</td>
+              <td>{{item.unit}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeDetails()">Close</button>
+    </div>
+  </div>
+</div>
+}

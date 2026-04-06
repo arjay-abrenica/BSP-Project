@@ -48,7 +48,10 @@ router.get('/transactions/next-ris/:officeId', inventoryController.getNextRisNo)
 // --- Requests ---
 router.get('/requests/pending', inventoryController.getPendingRequests);
 router.get('/requests/approved', inventoryController.getApprovedRequests);
+router.get('/requests/my', inventoryController.getMyRequests);
 router.get('/requests/:id/details', inventoryController.getRequestDetails);
+router.post('/requests', inventoryController.createRequest);
+router.put('/requests/:id/status', inventoryController.updateRequestStatus);
 router.put('/requests/:id/reject', inventoryController.rejectRequest);
 
 // --- Tracking & Scanners ---

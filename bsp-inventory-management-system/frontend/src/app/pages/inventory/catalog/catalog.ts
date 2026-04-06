@@ -358,6 +358,13 @@ export class Catalog implements OnInit {
     this.batchItems.splice(index, 1);
   }
 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.addItemForm.patchValue({ image: file });
+    }
+  }
+
   submitBatch(): void {
     if (this.isEditing) {
       this.updateSingleItem();
@@ -376,42 +383,67 @@ export class Catalog implements OnInit {
 
     this.isSubmitting = true;
     
-    this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
-      next: (res) => {
-        this.isSubmitting = false;
-        
-        if (res && res.length > 0) {
-          const firstItemId = res[0].item_id;
-          this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
-            next: (data) => {
-              this.intakeSummaryData = data;
-              this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
-              this.showIntakeModal = true;
-              this.showAddItemModal = false;
-              this.batchItems = []; 
-              this.fetchItems(); // Refresh catalog
-            },
-            error: (err) => {
-              console.error('Failed to fetch intake summary', err);
-              alert(`${res.length} item(s) added successfully!`);
-              this.batchItems = [];
-              this.showAddItemModal = false;
-              this.fetchItems(); // Refresh catalog
-            }
-          });
-        } else {
-          alert('Item(s) added successfully!');
+    // For batch upload with images, we might need a different approach if we want multiple images.
+    // However, the current backend handles either a single item (with possible image) or a batch (without images).
+    // Given the UI allows adding to a list, we'll support batch if no images, or single if image is present.
+    
+    if (this.batchItems.length === 1) {
+      const item = this.batchItems[0];
+      const formData = new FormData();
+      Object.keys(item).forEach(key => {
+        if (key === 'image' && item[key]) {
+          formData.append('image', item[key]);
+        } else if (item[key] !== null && item[key] !== undefined) {
+          formData.append(key, item[key]);
+        }
+      });
+
+      this.http.post<any>('http://localhost:5000/api/items', formData).subscribe({
+        next: (res) => this.handleSuccess([res]),
+        error: (err) => this.handleError(err)
+      });
+    } else {
+      // Batch mode (JSON) - standard behavior
+      this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
+        next: (res) => this.handleSuccess(res),
+        error: (err) => this.handleError(err)
+      });
+    }
+  }
+
+  private handleSuccess(res: any[]): void {
+    this.isSubmitting = false;
+    if (res && res.length > 0) {
+      const firstItemId = res[0].item_id;
+      this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
+        next: (data) => {
+          this.intakeSummaryData = data;
+          this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
+          this.showIntakeModal = true;
+          this.showAddItemModal = false;
+          this.batchItems = []; 
+          this.fetchItems(); 
+        },
+        error: (err) => {
+          console.error('Failed to fetch intake summary', err);
+          alert(`${res.length} item(s) added successfully!`);
           this.batchItems = [];
           this.showAddItemModal = false;
-          this.fetchItems(); // Refresh catalog
+          this.fetchItems();
         }
-      },
-      error: (err) => {
-        console.error('Error adding items', err);
-        this.isSubmitting = false;
-        alert('Failed to add items. Please try again.');
-      }
-    });
+      });
+    } else {
+      alert('Item(s) added successfully!');
+      this.batchItems = [];
+      this.showAddItemModal = false;
+      this.fetchItems();
+    }
+  }
+
+  private handleError(err: any): void {
+    console.error('Error adding items', err);
+    this.isSubmitting = false;
+    alert('Failed to add items. Please try again.');
   }
 
   updateSingleItem(): void {
@@ -422,9 +454,18 @@ export class Catalog implements OnInit {
 
     this.isSubmitting = true;
     const itemId = this.addItemForm.value.item_id;
-    const payload = this.addItemForm.value;
+    const formVal = this.addItemForm.value;
 
-    this.http.put(`http://localhost:5000/api/items/${itemId}`, payload).subscribe({
+    const formData = new FormData();
+    Object.keys(formVal).forEach(key => {
+      if (key === 'image' && formVal[key]) {
+        formData.append('image', formVal[key]);
+      } else if (formVal[key] !== null && formVal[key] !== undefined) {
+        formData.append(key, formVal[key]);
+      }
+    });
+
+    this.http.put(`http://localhost:5000/api/items/${itemId}`, formData).subscribe({
       next: (res) => {
         this.isSubmitting = false;
         alert('Item updated successfully!');

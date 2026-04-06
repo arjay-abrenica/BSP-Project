@@ -319,6 +319,84 @@ exports.getNextRisNo = async (req, res) => {
   }
 };
 
+exports.createRequest = async (req, res) => {
+  const { office_id, purpose, priority, justification, items } = req.body;
+  
+  if (!office_id || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Office ID and items are required' });
+  }
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // 1. Generate Request Number
+    const countRes = await client.query('SELECT COUNT(*) FROM Requests');
+    const count = parseInt(countRes.rows[0].count) + 1;
+    const request_number = `REQ-${new Date().getFullYear()}-${String(count).padStart(4, '0')}`;
+
+    // 2. Insert Request Header
+    const requestRes = await client.query(
+      `INSERT INTO Requests (request_number, office_id, purpose, priority, justification, status) 
+       VALUES ($1, $2, $3, $4, $5, 'PENDING') RETURNING request_id`,
+      [request_number, office_id, purpose, priority || 'NORMAL', justification]
+    );
+    const requestId = requestRes.rows[0].request_id;
+
+    // 3. Insert Request Details
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO Request_Details (request_id, item_id, quantity) VALUES ($1, $2, $3)`,
+        [requestId, item.item_id, item.quantity]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
+  }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status, items } = req.body; // items: [{item_id, approved_quantity}]
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // 1. Update Request Status
+    await client.query(
+      'UPDATE Requests SET status = $1 WHERE request_id = $2',
+      [status, id]
+    );
+
+    // 2. If status is APPROVED or PARTIAL, update approved_quantity in details
+    if ((status === 'APPROVED' || status === 'PARTIAL') && items) {
+      for (const item of items) {
+        await client.query(
+          'UPDATE Request_Details SET approved_quantity = $1 WHERE request_id = $2 AND item_id = $3',
+          [item.approved_quantity, id, item.item_id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: `Request status updated to ${status}` });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
+  }
+};
+
 /* =========================================
    SECTION 3: ISSUANCE TRANSACTIONS (OUT/Issue)
    ========================================= */
@@ -383,10 +461,10 @@ exports.issueItems = async (req, res) => {
       );
     }
 
-    // 3. If it was from a Request, update the request status
+    // 3. If it was from a Request, update the request status to RELEASED
     if (request_id) {
       await client.query(
-        `UPDATE Requests SET status = 'APPROVED' WHERE request_id = $1`,
+        `UPDATE Requests SET status = 'RELEASED' WHERE request_id = $1`,
         [request_id]
       );
     }
@@ -400,6 +478,7 @@ exports.issueItems = async (req, res) => {
     if (client) client.release();
   }
 };
+
 
 /* =========================================
    SECTION 4: SCANNING & LOOKUPS
@@ -605,6 +684,36 @@ exports.getActivityLog = async (req, res) => {
   }
 };
 
+exports.getMyRequests = async (req, res) => {
+  const { office_id, type } = req.query; // type: 'active' or 'log'
+  try {
+    let query = `
+      SELECT 
+        r.request_id as id,
+        r.request_number as "reqNumber",
+        r.purpose,
+        r.status,
+        r.priority,
+        TO_CHAR(r.request_date, 'MM/DD/YYYY') as date,
+        (SELECT COUNT(*) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "itemsCount"
+      FROM Requests r
+      WHERE r.office_id = $1
+    `;
+
+    if (type === 'active') {
+      query += " AND r.status IN ('PENDING', 'APPROVED', 'PARTIAL')";
+    } else if (type === 'log') {
+      query += " AND r.status IN ('RELEASED', 'REJECTED', 'CANCELLED')";
+    }
+
+    query += " ORDER BY r.request_date DESC";
+    const result = await db.query(query, [office_id]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getLatestIntakeForItem = async (req, res) => {
   const { id } = req.params;
   try {
@@ -773,7 +882,12 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({ 
       message: 'Login successful', 
       token,
-      user: { id: user.user_id, username: user.username, role: user.role } 
+      user: { 
+        id: user.user_id, 
+        username: user.username, 
+        role: user.role,
+        office_id: user.office_id
+      } 
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
