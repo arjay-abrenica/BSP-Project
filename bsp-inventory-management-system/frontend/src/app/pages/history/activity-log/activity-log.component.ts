@@ -34,10 +34,9 @@ interface AuditLog {
 export class ActivityLogComponent implements OnInit {
   isFilterOpen = false;
   activityData: ActivityLog[] = [];
-<<<<<<< HEAD
   auditData: AuditLog[] = [];
   activeTab: 'activity' | 'audit' = 'activity';
-=======
+  
   filteredData: ActivityLog[] = [];
   paginatedData: ActivityLog[] = [];
 
@@ -55,7 +54,6 @@ export class ActivityLogComponent implements OnInit {
   itemsPerPage: number = 25;
   totalPages: number = 1;
   Math = Math;
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -80,7 +78,6 @@ export class ActivityLogComponent implements OnInit {
     });
   }
 
-<<<<<<< HEAD
   fetchAuditLog(): void {
     this.http.get<AuditLog[]>('http://localhost:5000/api/history/audit-logs').subscribe({
       next: (data) => {
@@ -92,7 +89,8 @@ export class ActivityLogComponent implements OnInit {
 
   switchTab(tab: 'activity' | 'audit'): void {
     this.activeTab = tab;
-=======
+  }
+
   get uniqueOffices(): string[] {
     return [...new Set(this.activityData.map(item => item.office))].filter(Boolean);
   }
@@ -157,11 +155,9 @@ export class ActivityLogComponent implements OnInit {
       this.currentPage = page;
       this.updatePagination();
     }
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
   }
 
   toggleFilter() {
     this.isFilterOpen = !this.isFilterOpen;
   }
 }
-
