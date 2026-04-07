@@ -22,8 +22,9 @@ interface RequestHistory {
 })
 export class HistoryComponent implements OnInit {
   isFilterOpen = false;
-<<<<<<< HEAD
   historyData: any[] = [];
+  filteredData: any[] = [];
+  paginatedData: any[] = [];
   
   // Details Modal
   isDetailsModalOpen = false;
@@ -33,10 +34,6 @@ export class HistoryComponent implements OnInit {
     { label: 'Approved', status: 'APPROVED' },
     { label: 'Released', status: 'RELEASED' }
   ];
-=======
-  historyData: RequestHistory[] = [];
-  filteredData: RequestHistory[] = [];
-  paginatedData: RequestHistory[] = [];
 
   // Filters
   searchQuery: string = '';
@@ -53,7 +50,6 @@ export class HistoryComponent implements OnInit {
   itemsPerPage: number = 25;
   totalPages: number = 1;
   Math = Math;
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -79,7 +75,6 @@ export class HistoryComponent implements OnInit {
     });
   }
 
-<<<<<<< HEAD
   openDetails(item: any) {
     this.selectedRequest = item;
     this.isDetailsModalOpen = true;
@@ -114,7 +109,8 @@ export class HistoryComponent implements OnInit {
     if (stepIndex < currentIndex || currentStatus === 'RELEASED') return 'step-completed';
     if (stepIndex === currentIndex) return 'step-active';
     return 'step-pending';
-=======
+  }
+
   get uniqueOffices(): string[] {
     return [...new Set(this.historyData.map(item => item.requestingOffice))].filter(Boolean);
   }
@@ -180,7 +176,6 @@ export class HistoryComponent implements OnInit {
       this.currentPage = page;
       this.updatePagination();
     }
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
   }
 
   toggleFilter() {

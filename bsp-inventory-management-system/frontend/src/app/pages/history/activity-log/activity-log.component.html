@@ -1,21 +1,16 @@
-<<<<<<< HEAD
-<div class="page-container">
-    <!-- Header -->
-    <div class="page-title-bar" style="display: flex; gap: 20px; align-items: flex-end; border-bottom: 1px solid #e5e7eb; padding-bottom: 0;">
-        <h2 style="margin: 0; cursor: pointer; padding-bottom: 10px; font-size: 1.5rem;" 
-            [ngStyle]="{'border-bottom': activeTab === 'activity' ? '3px solid #16a34a' : '3px solid transparent', 'color': activeTab === 'activity' ? '#1f2937' : '#9ca3af'}" 
-            (click)="switchTab('activity')">Activity Log</h2>
-        @if (isSuperadmin) {
-            <h2 style="margin: 0; cursor: pointer; padding-bottom: 10px; font-size: 1.5rem;" 
-                [ngStyle]="{'border-bottom': activeTab === 'audit' ? '3px solid #16a34a' : '3px solid transparent', 'color': activeTab === 'audit' ? '#1f2937' : '#9ca3af'}" 
-                (click)="switchTab('audit')">Audit Log</h2>
-        }
-=======
 <div class="table-container">
-  <div class="catalog-header">
-    <h2 class="catalog-title">Activity Log</h2>
+  <div class="catalog-header" style="display: flex; gap: 20px; align-items: flex-end; padding: 0 16px;">
+    <h2 class="catalog-title" style="margin: 0; cursor: pointer; padding: 12px 0; font-size: 1rem; border-bottom: 2px solid transparent;" 
+        [ngStyle]="{'border-bottom-color': activeTab === 'activity' ? 'var(--bsp-dark-green)' : 'transparent', 'color': activeTab === 'activity' ? 'var(--bsp-dark-green)' : 'var(--bsp-text-muted)'}" 
+        (click)="switchTab('activity')">Activity Log</h2>
+    @if (isSuperadmin) {
+        <h2 class="catalog-title" style="margin: 0; cursor: pointer; padding: 12px 0; font-size: 1rem; border-bottom: 2px solid transparent;" 
+            [ngStyle]="{'border-bottom-color': activeTab === 'audit' ? 'var(--bsp-dark-green)' : 'transparent', 'color': activeTab === 'audit' ? 'var(--bsp-dark-green)' : 'var(--bsp-text-muted)'}" 
+            (click)="switchTab('audit')">Audit Log</h2>
+    }
   </div>
 
+  @if (activeTab === 'activity') {
   <div class="toolbar">
     <div class="search-wrapper">
       <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -23,7 +18,6 @@
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <input type="text" class="search-input" placeholder="Search by Activity Log ID..." [(ngModel)]="searchQuery" (input)="applyFilters()">
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
     </div>
     
     <div class="actions-wrapper">
@@ -33,228 +27,14 @@
           Filter
         </button>
 
-<<<<<<< HEAD
-    <!-- Search & Filter -->
-    <div class="controls-container">
-        <div class="search-box">
-            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" placeholder="Search by ID, Details..." />
-        </div>
-        
-        <div class="filter-wrapper">
-            <button class="filter-btn" (click)="toggleFilter()" [class.active]="isFilterOpen">
-                <svg class="filter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
-                Filter
-            </button>
-
-            <!-- Filter Dropdown -->
-            @if (isFilterOpen) {
-            <div class="filter-dropdown">
-                <div class="filter-header">
-                    Filter
-                </div>
-                <div class="filter-body">
-                    
-                    <div class="filter-row justify-between">
-                        <span class="filter-label">Date Range</span>
-                        <select class="filter-select select-sm">
-                            <option>Date Requested</option>
-                            <option>Date Released</option>
-                        </select>
-                    </div>
-                    
-                    <div class="date-inputs-row">
-                        <div class="date-input-group">
-                            <label>Start Date</label>
-                            <div class="input-with-icon">
-                                <input type="text" value="October 6, 2025" readonly />
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    <rect x="8" y="14" width="8" height="4" rx="1"></rect>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="date-arrow">➔</div>
-                        <div class="date-input-group">
-                            <label>End Date</label>
-                            <div class="input-with-icon">
-                                <input type="text" value="October 13, 2025" readonly />
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    <rect x="8" y="14" width="8" height="4" rx="1"></rect>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Static Mock of the Calendar -->
-                    <div class="calendar-mock">
-                        <div class="calendar-header">
-                            <span class="month-year"><strong>October</strong> 2025 <span class="triangle-down">▼</span></span>
-                            <span class="calendar-nav">
-                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg></span>
-                                <span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
-                            </span>
-                        </div>
-                        <div class="calendar-grid">
-                            <div class="day-name">Su</div><div class="day-name">Mo</div><div class="day-name">Tu</div><div class="day-name">We</div><div class="day-name">Th</div><div class="day-name">Fr</div><div class="day-name">Sa</div>
-                            
-                            <div class="day disabled">28</div><div class="day disabled">29</div><div class="day disabled">30</div>
-                            <div class="day">1</div><div class="day">2</div><div class="day">3</div><div class="day">4</div>
-                            
-                            <div class="day">5</div>
-                            <div class="day selected-start">6</div>
-                            <div class="day in-range">7</div>
-                            <div class="day in-range">8</div>
-                            <div class="day in-range">9</div>
-                            <div class="day in-range">10</div>
-                            <div class="day in-range">11</div>
-                            
-                            <div class="day in-range">12</div>
-                            <div class="day selected-end">13</div>
-                            <div class="day">14</div>
-                            <div class="day">15</div>
-                            <div class="day">16</div>
-                            <div class="day">17</div>
-                            <div class="day">18</div>
-                            
-                            <div class="day">19</div><div class="day">20</div><div class="day">21</div><div class="day">22</div><div class="day">23</div><div class="day">24</div><div class="day">25</div>
-                            
-                            <div class="day">26</div><div class="day">27</div><div class="day">28</div><div class="day">29</div><div class="day">30</div><div class="day">31</div>
-                            <div class="day disabled">1</div>
-                        </div>
-                    </div>
-
-                    <hr class="filter-divider" />
-
-                    <div class="filter-group">
-                        <label class="filter-label">Office</label>
-                        <select class="filter-select">
-                            <option>CPSMO</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">Role</label>
-                        <select class="filter-select">
-                            <option>Admin</option>
-                            <option>System</option>
-                            <option>Requester</option>
-                            <option>Superadmin</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-actions">
-                        <button class="filter-action-btn btn-clear" (click)="toggleFilter()">Clear Filter</button>
-                        <button class="filter-action-btn btn-apply" (click)="toggleFilter()">Apply</button>
-                    </div>
-                </div>
-=======
         @if (isFilterOpen) {
           <div class="filter-dropdown" style="width: 320px;">
             <div class="filter-header">
               <h3>Filter By</h3>
               <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
             </div>
             
             <div class="filter-body">
-              <div class="filter-group">
-                <label>Date Range Type</label>
-                <select class="filter-select">
-                  <option>Date Requested</option>
-                  <option>Date Released</option>
-                </select>
-              </div>
-
-<<<<<<< HEAD
-    <!-- Table -->
-    <div class="table-container">
-        @if (activeTab === 'activity') {
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Activity Log ID</th>
-                    <th class="text-center">Timestamp</th>
-                    <th class="text-center">Office</th>
-                    <th class="text-center">Role</th>
-                    <th>Activity</th>
-                    <th>Details/References</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (item of activityData; track item.activityLogId) {
-                <tr>
-                    <td>{{ item.activityLogId }}</td>
-                    <td class="text-center">{{ item.timestamp }}</td>
-                    <td class="text-center">{{ item.office }}</td>
-                    <td class="text-center">{{ item.role }}</td>
-                    <td>{{ item.activity }}</td>
-                    <td>{{ item.details }}</td>
-                    <td class="text-right">
-                        <button class="action-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="1.5"></circle>
-                                <circle cx="12" cy="5" r="1.5"></circle>
-                                <circle cx="12" cy="19" r="1.5"></circle>
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-                }
-                @if (activityData.length === 0) {
-                    <tr>
-                        <td colspan="7" class="text-center" style="padding: 2rem; color: #6b7280;">No activity logs found.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        } @else {
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>Log ID</th>
-                    <th class="text-center">Timestamp</th>
-                    <th class="text-center">User</th>
-                    <th class="text-center">Action</th>
-                    <th>Entity</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (item of auditData; track item.log_id) {
-                <tr>
-                    <td>{{ item.log_id }}</td>
-                    <td class="text-center">{{ item.timestamp }}</td>
-                    <td class="text-center">{{ item.username || 'SYSTEM' }}</td>
-                    <td class="text-center">
-                        <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'EDIT' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'EDIT' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '0.75rem', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
-                    </td>
-                    <td>{{ item.entity }} <span style="color: #9ca3af; font-size: 0.8rem;">(ID: {{ item.entity_id }})</span></td>
-                    <td>{{ item.details }}</td>
-                </tr>
-                }
-                @if (auditData.length === 0) {
-                    <tr>
-                        <td colspan="6" class="text-center" style="padding: 2rem; color: #6b7280;">No audit logs found.</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        }
-=======
               <div style="display: flex; gap: 8px; margin-top: 8px;">
                 <div class="filter-group" style="flex:1;">
                   <label>Start Date</label>
@@ -295,7 +75,6 @@
           </div>
         }
       </div>
->>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
     </div>
   </div>
 
@@ -349,4 +128,37 @@
       <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">Next</button>
     </div>
   </div>
+  } @else {
+  <table class="data-table" style="margin-top: 12px; border-top: 1px solid #E5E7EB;">
+      <thead>
+          <tr>
+              <th>Log ID</th>
+              <th class="text-center">Timestamp</th>
+              <th class="text-center">User</th>
+              <th class="text-center">Action</th>
+              <th>Entity</th>
+              <th>Details</th>
+          </tr>
+      </thead>
+      <tbody>
+          @for (item of auditData; track item.log_id) {
+          <tr class="clickable-row">
+              <td class="font-medium">{{ item.log_id }}</td>
+              <td class="text-center">{{ item.timestamp }}</td>
+              <td class="text-center">{{ item.username || 'SYSTEM' }}</td>
+              <td class="text-center">
+                  <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'EDIT' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'EDIT' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '11px', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
+              </td>
+              <td>{{ item.entity }} <span style="color: var(--bsp-text-muted); font-size: 11px;">(ID: {{ item.entity_id }})</span></td>
+              <td class="text-muted">{{ item.details }}</td>
+          </tr>
+          }
+          @if (auditData.length === 0) {
+              <tr>
+                  <td colspan="6" class="text-center empty-state" style="padding: 32px; color: var(--bsp-text-muted);">No audit logs found.</td>
+              </tr>
+          }
+      </tbody>
+  </table>
+  }
 </div>
