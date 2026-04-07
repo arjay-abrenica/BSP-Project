@@ -13,17 +13,6 @@ interface ActivityLog {
   details: string;
 }
 
-interface AuditLog {
-  log_id: number;
-  user_id: number;
-  username: string;
-  action: string;
-  entity: string;
-  entity_id: string;
-  details: string;
-  timestamp: string;
-}
-
 @Component({
   selector: 'app-activity-log',
   standalone: true,
@@ -34,8 +23,6 @@ interface AuditLog {
 export class ActivityLogComponent implements OnInit {
   isFilterOpen = false;
   activityData: ActivityLog[] = [];
-  auditData: AuditLog[] = [];
-  activeTab: 'activity' | 'audit' = 'activity';
   
   filteredData: ActivityLog[] = [];
   paginatedData: ActivityLog[] = [];
@@ -63,9 +50,6 @@ export class ActivityLogComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchActivityLog();
-    if (this.isSuperadmin) {
-      this.fetchAuditLog();
-    }
   }
 
   fetchActivityLog(): void {
@@ -76,19 +60,6 @@ export class ActivityLogComponent implements OnInit {
       },
       error: (err) => console.error('Failed to fetch activity log', err)
     });
-  }
-
-  fetchAuditLog(): void {
-    this.http.get<AuditLog[]>('http://localhost:5000/api/history/audit-logs').subscribe({
-      next: (data) => {
-        this.auditData = data;
-      },
-      error: (err) => console.error('Failed to fetch audit log', err)
-    });
-  }
-
-  switchTab(tab: 'activity' | 'audit'): void {
-    this.activeTab = tab;
   }
 
   get uniqueOffices(): string[] {

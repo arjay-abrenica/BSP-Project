@@ -1,0 +1,37 @@
+<div class="table-container">
+  <div class="catalog-header">
+    <h2 class="catalog-title">Audit Log</h2>
+  </div>
+
+  <table class="data-table" style="margin-top: 12px; border-top: 1px solid #E5E7EB;">
+      <thead>
+          <tr>
+              <th>Log ID</th>
+              <th class="text-center">Timestamp</th>
+              <th class="text-center">User</th>
+              <th class="text-center">Action</th>
+              <th>Entity</th>
+              <th>Details</th>
+          </tr>
+      </thead>
+      <tbody>
+          @for (item of auditData; track item.log_id) {
+          <tr class="clickable-row">
+              <td class="font-medium">{{ item.log_id }}</td>
+              <td class="text-center">{{ item.timestamp }}</td>
+              <td class="text-center">{{ item.username || 'SYSTEM' }}</td>
+              <td class="text-center">
+                  <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'EDIT' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'EDIT' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '11px', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
+              </td>
+              <td>{{ item.entity }} <span style="color: var(--bsp-text-muted); font-size: 11px;">(ID: {{ item.entity_id }})</span></td>
+              <td class="text-muted">{{ item.details }}</td>
+          </tr>
+          }
+          @if (auditData.length === 0) {
+              <tr>
+                  <td colspan="6" class="text-center empty-state" style="padding: 32px; color: var(--bsp-text-muted);">No audit logs found.</td>
+              </tr>
+          }
+      </tbody>
+  </table>
+</div>

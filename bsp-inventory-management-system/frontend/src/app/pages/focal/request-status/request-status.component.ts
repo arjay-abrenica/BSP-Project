@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 
+import { RouterModule } from '@angular/router';
+
 @Component({
   selector: 'app-request-status',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './request-status.component.html',
   styleUrls: ['./request-status.component.scss']
 })
