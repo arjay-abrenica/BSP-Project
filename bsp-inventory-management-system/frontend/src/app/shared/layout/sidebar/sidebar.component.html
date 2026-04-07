@@ -1,7 +1,8 @@
 <!-- Mobile Top App Bar (Only visible < 768px) -->
 <div class="mobile-app-bar" [class.hidden-header]="isHeaderHidden">
     <button class="hamburger-btn" (click)="toggleMobileSidebar()">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -14,7 +15,8 @@
 </div>
 
 <!-- Optional overlay background when the menu is open on small screens -->
-<div class="sidebar-overlay" *ngIf="isSecondaryMenuOpen || isMobileSidebarOpen" [class.mobile-visible]="isMobileSidebarOpen" (click)="closeMenuOnMobile()"></div>
+<div class="sidebar-overlay" *ngIf="isSecondaryMenuOpen || isMobileSidebarOpen"
+    [class.mobile-visible]="isMobileSidebarOpen" (click)="closeMenuOnMobile()"></div>
 
 <div class="sidebar-wrapper" [class.collapsed]="!isSecondaryMenuOpen" [class.mobile-open]="isMobileSidebarOpen">
 
@@ -26,60 +28,42 @@
         <ul class="nav-icons">
             <li title="Dashboard" routerLinkActive="active">
                 <a routerLink="/admin/dashboard" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/dashboard-5480.png'); mask-image: url('Icons/dashboard-5480.png');"></span>
                 </a>
             </li>
-            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                 <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/ready-stock.png'); mask-image: url('Icons/ready-stock.png');"></span>
                 </a>
             </li>
-            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                 <a routerLink="/property" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/home-2503.png'); mask-image: url('Icons/home-2503.png');"></span>
                 </a>
             </li>
-            <li title="Requests" routerLinkActive="active" *ngIf="hasRole(['superadmin', 'focal person'])">
+            <li title="Requests" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
                 <a routerLink="/focal/request" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/document.png'); mask-image: url('Icons/document.png');"></span>
                 </a>
             </li>
             <li title="Reports" routerLinkActive="active">
                 <a routerLink="/reports" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/chart (1).png'); mask-image: url('Icons/chart (1).png');"></span>
                 </a>
             </li>
             <li title="History" routerLinkActive="active">
                 <a routerLink="/history" (click)="isSecondaryMenuOpen = true">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
+                    <span class="nav-icon-mask"
+                        style="-webkit-mask-image: url('Icons/history-timer-clock-blue-outline-26312.png'); mask-image: url('Icons/history-timer-clock-blue-outline-26312.png');"></span>
                 </a>
             </li>
-            <li title="Settings" [class.active]="router.url.includes('settings') && !router.url.includes('profile')" *ngIf="hasRole(['superadmin', 'admin'])">
+            <li title="Settings" [class.active]="router.url.includes('settings') && !router.url.includes('profile')"
+                *ngIf="hasRole(['SUPERADMIN'])">
                 <a routerLink="/settings/system" (click)="isSecondaryMenuOpen = true">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -118,7 +102,8 @@
         <div class="menu-content">
 
             <!-- Dashboard Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('dashboard') || router.url === '/'" [class.active-group]="true">
+            <div class="menu-group" *ngIf="router.url.includes('dashboard') || router.url === '/'"
+                [class.active-group]="true">
                 <div class="group-header">
                     <span>Dashboard</span>
                     <span class="indicator">-</span>
@@ -132,7 +117,9 @@
             </div>
 
             <!-- Inventory Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('inventory') && hasRole(['superadmin', 'admin', 'supply officer'])" [class.active-group]="true">
+            <div class="menu-group"
+                *ngIf="router.url.includes('inventory') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])"
+                [class.active-group]="true">
                 <div class="group-header">
                     <span>Inventory</span>
                     <span class="indicator">-</span>
@@ -152,7 +139,9 @@
             </div>
 
             <!-- Property Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('property') && hasRole(['superadmin', 'admin', 'supply officer'])" [class.active-group]="true">
+            <div class="menu-group"
+                *ngIf="router.url.includes('property') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])"
+                [class.active-group]="true">
                 <div class="group-header">
                     <span>Property</span>
                     <span class="indicator">-</span>
@@ -166,7 +155,12 @@
             </div>
 
             <!-- Request Supplies Menu (Focal Person) -->
+<<<<<<< HEAD
             <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['superadmin', 'focal person', 'focal officer'])" [class.active-group]="true">
+=======
+            <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])"
+                [class.active-group]="true">
+>>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2
                 <div class="group-header">
                     <span>Requests</span>
                     <span class="indicator">-</span>
@@ -193,7 +187,8 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+                    <li routerLink="/reports" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub"
+                        (click)="closeMenuOnMobile()" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
                         <span class="dot"></span> Monthly Report
                     </li>
                     <li routerLink="/reports/analysis" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
@@ -210,17 +205,21 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                    <li routerLink="/history" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="active-sub"
+                        (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Requests History
                     </li>
-                    <li routerLink="/history/activity-log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()" *ngIf="hasRole(['superadmin', 'admin', 'supply officer'])">
+                    <li routerLink="/history/activity-log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()"
+                        *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                         <span class="dot"></span> Activity Log
                     </li>
                 </ul>
             </div>
 
             <!-- Settings Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('settings') && !router.url.includes('profile') && hasRole(['superadmin', 'admin'])" [class.active-group]="true">
+            <div class="menu-group"
+                *ngIf="router.url.includes('settings') && !router.url.includes('profile') && hasRole(['SUPERADMIN'])"
+                [class.active-group]="true">
                 <div class="group-header">
                     <span>Settings</span>
                     <span class="indicator">-</span>
