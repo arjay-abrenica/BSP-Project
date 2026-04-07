@@ -16,12 +16,19 @@ export class ProfileSettings implements OnInit {
     newPassword = '';
     userRole = '';
     userName = '';
+    userEmail = '';
+    userOffice = '';
+    userStatus = '';
 
     constructor(private authService: AuthService, private http: HttpClient) {}
 
     ngOnInit() {
-        this.userRole = this.authService.currentUserValue?.role || 'User';
-        this.userName = this.authService.currentUserValue?.username || 'User';
+        const user = this.authService.currentUserValue;
+        this.userRole = user?.role || 'User';
+        this.userName = user?.username || 'User';
+        this.userEmail = user?.email || `${this.userName.toLowerCase()}@scouts.gov.ph`;
+        this.userOffice = user?.office || 'N/A';
+        this.userStatus = user?.status || 'Active';
     }
 
     savePassword() {

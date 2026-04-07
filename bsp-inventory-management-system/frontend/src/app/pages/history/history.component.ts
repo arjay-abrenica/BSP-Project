@@ -22,6 +22,13 @@ interface RequestHistory {
 export class HistoryComponent implements OnInit {
   isFilterOpen = false;
   historyData: RequestHistory[] = [];
+  paginatedData: RequestHistory[] = [];
+
+  // Pagination state
+  currentPage: number = 1;
+  itemsPerPage: number = 25;
+  totalPages: number = 1;
+  Math = Math;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -41,9 +48,24 @@ export class HistoryComponent implements OnInit {
     this.http.get<RequestHistory[]>(url).subscribe({
       next: (data) => {
         this.historyData = data;
+        this.updatePagination();
       },
       error: (err) => console.error('Failed to fetch requests history', err)
     });
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.historyData.length / this.itemsPerPage) || 1;
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.paginatedData = this.historyData.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
   }
 
   toggleFilter() {

@@ -20,8 +20,10 @@
 
         <div class="user-details">
             <h2>{{ userName | titlecase }}</h2>
-            <p>{{ userName | lowercase }}@scouts.gov.ph</p>
+            <p>{{ userEmail }}</p>
             <p class="user-role">Role: {{ userRole | titlecase }}</p>
+            <p class="user-office">Office: {{ userOffice }}</p>
+            <p class="user-status">Status: {{ userStatus | titlecase }}</p>
         </div>
 
         <div class="password-section">

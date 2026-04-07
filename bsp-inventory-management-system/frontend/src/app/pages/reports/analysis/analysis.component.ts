@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartOptions, ChartType } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { AuthService } from '../../../core/services/auth.service';
 
 // Register the datalabels plugin globally so charts don't crash when trying to use it
 Chart.register(ChartDataLabels);
@@ -61,7 +60,7 @@ export class AnalysisComponent implements OnInit {
   /* ── Modal State & Data ── */
   isModalOpen: boolean = false;
   selectedRow: DetailedAnalysisRow | null = null;
-  
+
   officeNames: { [key: string]: string } = {
     'PMDD': 'Property Management Development Division',
     'CPSMO': 'Corporate Planning and Strategy Management Office',
@@ -116,7 +115,7 @@ export class AnalysisComponent implements OnInit {
     labels: ['FOD', 'CPSMO', 'LSO', 'IAO', 'NSS', 'Administration', 'Finance', 'PMDD', 'ONP', 'OSG'],
     datasets: [{
       data: [16, 11, 4, 3.3, 20, 22, 5, 8, 5, 6],
-      backgroundColor: ['#2d6a4f','#40916c','#52b788','#74c69d','#95d5b2','#b7e4c7','#d8f3dc','#a8dadc','#457b9d','#1d3557'],
+      backgroundColor: ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#b7e4c7', '#d8f3dc', '#a8dadc', '#457b9d', '#1d3557'],
       hoverOffset: 4
     }]
   };
@@ -125,8 +124,10 @@ export class AnalysisComponent implements OnInit {
     cutout: '55%',
     plugins: {
       legend: { display: false },
-      datalabels: { formatter: (v: number, ctx: any) => ctx.chart.data.labels?.[ctx.dataIndex] + '\n' + v + '%',
-        font: { size: 9 }, color: '#333', textAlign: 'center' }
+      datalabels: {
+        formatter: (v: number, ctx: any) => ctx.chart.data.labels?.[ctx.dataIndex] + '\n' + v + '%',
+        font: { size: 9 }, color: '#333', textAlign: 'center'
+      }
     }
   };
   stockDistTable: StockDistRow[] = [
@@ -157,10 +158,12 @@ export class AnalysisComponent implements OnInit {
     cutout: '55%',
     plugins: {
       legend: { display: false },
-      datalabels: { formatter: (v: number, ctx: any) => {
-        const label = ctx.chart.data.labels?.[ctx.dataIndex] as string;
-        return label + '\n' + v + '%';
-      }, font: { size: 9 }, color: '#333', textAlign: 'center' }
+      datalabels: {
+        formatter: (v: number, ctx: any) => {
+          const label = ctx.chart.data.labels?.[ctx.dataIndex] as string;
+          return label + '\n' + v + '%';
+        }, font: { size: 9 }, color: '#333', textAlign: 'center'
+      }
     }
   };
   topCatUsage = [
@@ -179,10 +182,14 @@ export class AnalysisComponent implements OnInit {
   effChartData: ChartData<'line'> = {
     labels: ['CPSMO', 'FOD', 'LSO', 'IAO', 'NSS', 'Admin', 'Finance', 'PMDD', 'ONP', 'OSG'],
     datasets: [
-      { label: 'Allocation Time (day/s)', data: [95, 91, 96, 88, 52, 97, 90, 91, 97, 54],
-        borderColor: '#1d3557', backgroundColor: 'transparent', pointBackgroundColor: '#1d3557', yAxisID: 'y', tension: 0.4 },
-      { label: 'Approval Rate (%)', data: [2.8, 3.7, 4.4, 6.5, 3.2, 7.1, 4.8, 6.3, 5.7, 6.3],
-        borderColor: '#1a7a3e', backgroundColor: 'transparent', pointBackgroundColor: '#1a7a3e', yAxisID: 'y1', tension: 0.4 }
+      {
+        label: 'Allocation Time (day/s)', data: [95, 91, 96, 88, 52, 97, 90, 91, 97, 54],
+        borderColor: '#1d3557', backgroundColor: 'transparent', pointBackgroundColor: '#1d3557', yAxisID: 'y', tension: 0.4
+      },
+      {
+        label: 'Approval Rate (%)', data: [2.8, 3.7, 4.4, 6.5, 3.2, 7.1, 4.8, 6.3, 5.7, 6.3],
+        borderColor: '#1a7a3e', backgroundColor: 'transparent', pointBackgroundColor: '#1a7a3e', yAxisID: 'y1', tension: 0.4
+      }
     ]
   };
   effChartOptions: ChartOptions<'line'> = {
@@ -200,52 +207,8 @@ export class AnalysisComponent implements OnInit {
     }
   };
 
-  constructor(private authService: AuthService) {}
-  ngOnInit(): void {
-    this.applyFilters();
-  }
-
-  private applyFilters(): void {
-    const user = this.authService.currentUserValue;
-    if (user && user.role?.toLowerCase() === 'focal_officer') {
-      const userOffice = user.office?.toUpperCase() || '';
-      
-      // Filter Detailed Data
-      this.detailedData = this.detailedData.filter(d => d.office.toUpperCase() === userOffice);
-      
-      // Filter Stock Distribution Table
-      this.stockDistTable = this.stockDistTable.filter(s => s.office.toUpperCase() === userOffice);
-      
-      // Filter Distribution Chart
-      const distIndices = this.distChartData.labels?.map((label, index) => 
-        (label as string).toUpperCase() === userOffice || (this.officeNames[label as string] && label === userOffice) ? index : -1
-      ).filter(i => i !== -1) || [];
-
-      if (distIndices.length > 0) {
-        this.distChartData.labels = distIndices.map(i => this.distChartData.labels![i]);
-        this.distChartData.datasets[0].data = distIndices.map(i => this.distChartData.datasets[0].data[i]);
-      } else if (userOffice) {
-          // If no data found for their office, show empty but don't crash
-          this.distChartData.labels = [userOffice];
-          this.distChartData.datasets[0].data = [0];
-      }
-
-      // Filter Efficiency Chart
-      const effIndices = this.effChartData.labels?.map((label, index) => 
-        (label as string).toUpperCase() === userOffice ? index : -1
-      ).filter(i => i !== -1) || [];
-
-      if (effIndices.length > 0) {
-        this.effChartData.labels = effIndices.map(i => this.effChartData.labels![i]);
-        this.effChartData.datasets[0].data = effIndices.map(i => this.effChartData.datasets[0].data[i]);
-        this.effChartData.datasets[1].data = effIndices.map(i => this.effChartData.datasets[1].data[i]);
-      } else if (userOffice) {
-          this.effChartData.labels = [userOffice];
-          this.effChartData.datasets[0].data = [0];
-          this.effChartData.datasets[1].data = [0];
-      }
-    }
-  }
+  constructor() { }
+  ngOnInit(): void { }
 
   setTab(tab: 'detailed' | 'trend' | 'distribution' | 'category' | 'efficiency'): void {
     this.activeAnalysisTab = tab;
