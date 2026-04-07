@@ -122,7 +122,7 @@
         <div class="item-image-container">
           <!-- Display actual item image if it exists, otherwise show placeholder -->
           @if (selectedItemDetails.image_url) {
-            <img [src]="'http://localhost:5000' + selectedItemDetails.image_url" [alt]="selectedItemDetails.item_name" style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
+            <img [src]="selectedItemDetails.image_url.startsWith('data:') ? selectedItemDetails.image_url : 'http://localhost:5000' + selectedItemDetails.image_url" [alt]="selectedItemDetails.item_name" style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
           } @else {
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
               <rect width="200" height="200" fill="#f9fafb"/>
@@ -160,6 +160,43 @@
         <button class="btn-primary" (click)="onLogTransaction()">Log Transaction</button>
         <button class="btn-primary" (click)="onViewTransactions()">View Transactions</button>
         <button class="btn-primary" (click)="onViewAllocation()">View Allocation</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal) {
+<div class="modal-overlay" (click)="closeDeleteModal()">
+  <div class="modal-content add-item-modal" (click)="$event.stopPropagation()" style="max-width: 400px; z-index: 1000;">
+    <div class="modal-header" style="background-color: #fee2e2; border-bottom: 1px solid #fca5a5;">
+      <h2 style="color: #b91c1c;">Confirm Deletion</h2>
+      <button class="btn-close" (click)="closeDeleteModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <p style="margin-bottom: 1rem; font-weight: 500;">
+        You are about to delete <strong>{{selectedItemDetails?.item_name}}</strong>.
+      </p>
+      <p style="margin-bottom: 1rem; color: #4b5563; font-size: 0.9rem;">
+        This action cannot be undone. To proceed, please confirm your identity by entering your password.
+      </p>
+      
+      <div class="form-group">
+        <label>Your Password <span class="required">*</span></label>
+        <input type="password" [(ngModel)]="deletePassword" placeholder="Enter password to confirm" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px;" />
+        @if (deleteError) {
+          <span class="error-msg" style="color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: block;">{{deleteError}}</span>
+        }
+      </div>
+
+      <div class="form-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-secondary-modal" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
+        <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="confirmDelete()" [disabled]="isDeleting || !deletePassword">
+          <span *ngIf="isDeleting" class="spinner"></span>
+          Confirm Delete
+        </button>
       </div>
     </div>
   </div>
@@ -314,9 +351,17 @@
           </div>
         </div>
         
-        <div class="form-actions">
-          <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting">Clear</button>
-          <div class="right-actions">
+        <div class="form-actions" style="display: flex; justify-content: space-between;">
+          <div class="left-actions" style="display: flex; gap: 10px;">
+            @if (isEditing && canDelete) {
+              <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="onDeleteItem()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; display: inline-block; vertical-align: middle;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete Item
+              </button>
+            }
+            <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting" *ngIf="!isEditing">Clear</button>
+          </div>
+          <div class="right-actions" style="display: flex; gap: 10px;">
             <button type="button" class="btn-secondary-modal" (click)="closeAddItemModal()" [disabled]="isSubmitting">Cancel</button>
             <button type="button" class="btn-primary-outline" (click)="addToBatch()" [disabled]="isSubmitting" *ngIf="!isEditing">
               {{ isSkuExisting ? '+ Add Stock' : '+ Add to List' }}

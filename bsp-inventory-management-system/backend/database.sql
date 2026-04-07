@@ -37,6 +37,7 @@ CREATE TABLE Items (
     supplier_id INT,
     current_stock INT DEFAULT 0,
     reorder_level INT DEFAULT 10,
+    image_url TEXT,
     FOREIGN KEY (category_id) REFERENCES Categories(category_id),
     FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
 );

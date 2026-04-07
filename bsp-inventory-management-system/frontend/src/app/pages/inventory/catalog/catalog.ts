@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-catalog',
@@ -47,6 +48,12 @@ export class Catalog implements OnInit {
   showSuggestions = false;
   isSkuExisting = false;
 
+  // Delete Item Modal State
+  showDeleteModal: boolean = false;
+  deletePassword = '';
+  isDeleting = false;
+  deleteError = '';
+
   // Item Transactions State
   showTransactionHistoryModal: boolean = false;
   itemTransactionHistory: any[] = [];
@@ -78,7 +85,8 @@ export class Catalog implements OnInit {
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.addItemForm = this.fb.group({
       item_id: [null], // Hidden field for editing
@@ -109,6 +117,58 @@ export class Catalog implements OnInit {
     this.logTransactionForm.get('office_id')?.valueChanges.subscribe(officeId => {
       if (officeId) {
         this.updateGeneratedRisNo(officeId);
+      }
+    });
+  }
+
+  get canDelete(): boolean {
+    return this.authService.hasRole(['SUPERADMIN', 'ADMIN', 'SUPPLY_OFFICER']);
+  }
+
+  onDeleteItem(): void {
+    if (!this.selectedItemDetails) return;
+    if (!confirm(`Are you sure you want to delete ${this.selectedItemDetails.item_name}? This action cannot be undone.`)) {
+      return;
+    }
+    this.showDeleteModal = true;
+    this.showItemDetailsModal = false;
+    this.showAddItemModal = false;
+    this.deletePassword = '';
+    this.deleteError = '';
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.deletePassword = '';
+    this.deleteError = '';
+  }
+
+  confirmDelete(): void {
+    if (!this.deletePassword) {
+      this.deleteError = 'Password is required.';
+      return;
+    }
+
+    this.isDeleting = true;
+    this.deleteError = '';
+    const currentUser = this.authService.currentUserValue;
+
+    const payload = {
+      user_id: currentUser?.id,
+      password: this.deletePassword
+    };
+
+    this.http.delete(`http://localhost:5000/api/items/${this.selectedItemDetails.item_id}`, { body: payload }).subscribe({
+      next: (res) => {
+        this.isDeleting = false;
+        alert('Item deleted successfully!');
+        this.closeDeleteModal();
+        this.fetchItems();
+      },
+      error: (err) => {
+        this.isDeleting = false;
+        console.error('Error deleting item', err);
+        this.deleteError = err.error?.error || 'Failed to delete item. Please check your password.';
       }
     });
   }
@@ -383,12 +443,23 @@ export class Catalog implements OnInit {
 
     this.isSubmitting = true;
     
-    // For batch upload with images, we might need a different approach if we want multiple images.
-    // However, the current backend handles either a single item (with possible image) or a batch (without images).
-    // Given the UI allows adding to a list, we'll support batch if no images, or single if image is present.
+    // Instead of sending as JSON array which drops images, we send each item sequentially
+    let completedCount = 0;
+    let hasErrors = false;
+    const allResponses: any[] = [];
     
-    if (this.batchItems.length === 1) {
-      const item = this.batchItems[0];
+    const submitNext = (index: number) => {
+      if (index >= this.batchItems.length) {
+        this.isSubmitting = false;
+        if (!hasErrors) {
+          this.handleSuccess(allResponses);
+        } else {
+          alert('Some items failed to save. Please check the list.');
+        }
+        return;
+      }
+      
+      const item = this.batchItems[index];
       const formData = new FormData();
       Object.keys(item).forEach(key => {
         if (key === 'image' && item[key]) {
@@ -397,18 +468,23 @@ export class Catalog implements OnInit {
           formData.append(key, item[key]);
         }
       });
-
+      
       this.http.post<any>('http://localhost:5000/api/items', formData).subscribe({
-        next: (res) => this.handleSuccess([res]),
-        error: (err) => this.handleError(err)
+        next: (res) => {
+          const createdItems = Array.isArray(res) ? res : [res];
+          allResponses.push(...createdItems);
+          completedCount++;
+          submitNext(index + 1);
+        },
+        error: (err) => {
+          console.error('Error saving item:', err);
+          hasErrors = true;
+          submitNext(index + 1);
+        }
       });
-    } else {
-      // Batch mode (JSON) - standard behavior
-      this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
-        next: (res) => this.handleSuccess(res),
-        error: (err) => this.handleError(err)
-      });
-    }
+    };
+    
+    submitNext(0);
   }
 
   private handleSuccess(res: any[]): void {

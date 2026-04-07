@@ -122,9 +122,23 @@ export class AddItem {
 
     this.isSubmitting = true;
     
-    // Support single item with image via FormData, or batch via JSON
-    if (this.batchItems.length === 1) {
-      const item = this.batchItems[0];
+    // Instead of sending as JSON array which drops images, we send each item sequentially
+    let completedCount = 0;
+    let hasErrors = false;
+    const allResponses: any[] = [];
+    
+    const submitNext = (index: number) => {
+      if (index >= this.batchItems.length) {
+        this.isSubmitting = false;
+        if (!hasErrors) {
+          this.handleSuccess(allResponses);
+        } else {
+          alert('Some items failed to save. Please check the list.');
+        }
+        return;
+      }
+      
+      const item = this.batchItems[index];
       const formData = new FormData();
       Object.keys(item).forEach(key => {
         if (key === 'image' && item[key]) {
@@ -133,17 +147,24 @@ export class AddItem {
           formData.append(key, item[key]);
         }
       });
-
+      
       this.http.post<any>('http://localhost:5000/api/items', formData).subscribe({
-        next: (res) => this.handleSuccess([res]),
-        error: (err) => this.handleError(err)
+        next: (res) => {
+          // res is an array containing the single created item, or a single object. Normalize to array.
+          const createdItems = Array.isArray(res) ? res : [res];
+          allResponses.push(...createdItems);
+          completedCount++;
+          submitNext(index + 1);
+        },
+        error: (err) => {
+          console.error('Error saving item:', err);
+          hasErrors = true;
+          submitNext(index + 1);
+        }
       });
-    } else {
-      this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
-        next: (res) => this.handleSuccess(res),
-        error: (err) => this.handleError(err)
-      });
-    }
+    };
+    
+    submitNext(0);
   }
 
   private handleSuccess(res: any[]): void {

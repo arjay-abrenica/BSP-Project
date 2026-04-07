@@ -40,7 +40,8 @@ exports.createItem = async (req, res) => {
     // Single item creation (possibly with image)
     const item = req.body;
     if (req.file) {
-      item.image_url = `/uploads/items/${req.file.filename}`;
+      const base64Image = req.file.buffer.toString('base64');
+      item.image_url = `data:${req.file.mimetype};base64,${base64Image}`;
     }
     itemsToCreate = [item];
     isBatch = false;
@@ -152,6 +153,16 @@ exports.createItem = async (req, res) => {
           [transactionId, newItem.item_id, quantity, unit_price || 0]
         );
       }
+
+      // Log the action (Add or Edit)
+      const actionType = itemToUpdate ? 'EDIT' : 'ADD';
+      const userId = item.user_id || null;
+      const username = item.username || 'SYSTEM';
+      await client.query(
+        `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, username, actionType, 'ITEM', newItem.item_id, `${actionType === 'ADD' ? 'Added new item' : 'Updated item via creation batch'}: ${newItem.item_name}`]
+      );
+
       createdItems.push(newItem);
     }
 
@@ -172,7 +183,8 @@ exports.updateItem = async (req, res) => {
   
   let image_url = req.body.image_url;
   if (req.file) {
-    image_url = `/uploads/items/${req.file.filename}`;
+    const base64Image = req.file.buffer.toString('base64');
+    image_url = `data:${req.file.mimetype};base64,${base64Image}`;
   }
 
   try {
@@ -194,6 +206,15 @@ exports.updateItem = async (req, res) => {
       ]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    
+    // Log the action (Edit)
+    const userId = req.body.user_id || null;
+    const username = req.body.username || 'SYSTEM';
+    await db.query(
+      `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, username, 'EDIT', 'ITEM', id, `Updated item details: ${result.rows[0].item_name}`]
+    );
+
     res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -202,12 +223,58 @@ exports.updateItem = async (req, res) => {
 
 exports.deleteItem = async (req, res) => {
   const { id } = req.params;
+  const { user_id, password } = req.body;
+  if (!user_id || !password) {
+    return res.status(400).json({ error: 'User ID and password are required for deletion' });
+  }
+
+  let client;
   try {
-    const result = await db.query('DELETE FROM Items WHERE item_id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    // Verify user and password
+    const userRes = await db.query('SELECT * FROM Users WHERE user_id = $1', [user_id]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const user = userRes.rows[0];
+    
+    // Check role (SUPERADMIN or ADMIN)
+    if (user.role !== 'SUPERADMIN' && user.role !== 'ADMIN' && user.role !== 'SUPPLY_OFFICER') {
+      return res.status(403).json({ error: 'You do not have permission to delete items' });
+    }
+    
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch && user.password !== password) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // Remove foreign key dependencies
+    await client.query('DELETE FROM Transaction_Details WHERE item_id = $1', [id]);
+    await client.query('DELETE FROM Request_Details WHERE item_id = $1', [id]);
+
+    const result = await client.query('DELETE FROM Items WHERE item_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Item not found' });
+    }
+    
+    // Log the deletion
+    const item = result.rows[0];
+    await client.query(
+      `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [user.user_id, user.username, 'DELETE', 'ITEM', id, `Deleted item: ${item.item_name} (${item.item_code || 'No SKU'})`]
+    );
+
+    await client.query('COMMIT');
     res.status(200).json({ message: 'Item deleted successfully' });
   } catch (err) {
+    if (client) await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
   }
 };
 
@@ -889,6 +956,32 @@ exports.loginUser = async (req, res) => {
         office_id: user.office_id
       } 
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* =========================================
+   SECTION 7: AUDIT LOGS (Superadmin)
+   ========================================= */
+
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        log_id,
+        user_id,
+        username,
+        action,
+        entity,
+        entity_id,
+        details,
+        TO_CHAR(timestamp, 'MM/DD/YYYY HH:MI AM') as timestamp
+      FROM Audit_Logs
+      ORDER BY log_id DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
