@@ -115,6 +115,13 @@ export const routes: Routes = [
                 loadComponent: () =>
                     import('./pages/history/activity-log/activity-log.component').then(c => c.ActivityLogComponent)
             },
+            {
+                path: 'history/audit-log',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN'] },
+                loadComponent: () =>
+                    import('./pages/history/audit-log/audit-log.component').then(c => c.AuditLogComponent)
+            },
 
             // Settings Redirect
             {

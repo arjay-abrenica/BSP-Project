@@ -18,6 +18,10 @@ export class RequestSupplies implements OnInit {
   items: any[] = [];
   searchQuery: string = '';
   
+  // Category Filtering
+  availableCategories: string[] = ['All'];
+  selectedCategory: string = 'All';
+  
   // Preview Modal Logic
   isPreviewModalOpen: boolean = false;
   selectedItems: any[] = [];
@@ -45,19 +49,40 @@ export class RequestSupplies implements OnInit {
     this.http.get<any[]>('http://localhost:5000/api/items').subscribe({
       next: (data) => {
         this.items = data.map(item => ({ ...item, requestQuantity: null }));
+        
+        // Extract unique categories
+        const categories = this.items.map(item => item.category_name).filter(Boolean);
+        this.availableCategories = ['All', ...Array.from(new Set(categories))];
       },
       error: (err) => console.error('Failed to load inventory', err)
     });
   }
 
   get filteredItems() {
-    if (!this.searchQuery) return this.items;
-    const q = this.searchQuery.toLowerCase();
-    return this.items.filter(item => 
-      item.item_name?.toLowerCase().includes(q) ||
-      item.category_name?.toLowerCase().includes(q) ||
-      item.item_code?.toLowerCase().includes(q)
-    );
+    let filtered = this.items;
+    
+    if (this.selectedCategory !== 'All') {
+      filtered = filtered.filter(item => item.category_name === this.selectedCategory);
+    }
+
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.item_name?.toLowerCase().includes(q) ||
+        item.category_name?.toLowerCase().includes(q) ||
+        item.item_code?.toLowerCase().includes(q)
+      );
+    }
+    
+    return filtered;
+  }
+
+  get selectedItemsCount() {
+    return this.items.filter(item => item.requestQuantity && item.requestQuantity > 0).length;
+  }
+
+  selectCategory(category: string) {
+    this.selectedCategory = category;
   }
 
   openPreview() {

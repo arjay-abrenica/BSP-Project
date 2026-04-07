@@ -1,16 +1,8 @@
 <div class="table-container">
-  <div class="catalog-header" style="display: flex; gap: 20px; align-items: flex-end; padding: 0 16px;">
-    <h2 class="catalog-title" style="margin: 0; cursor: pointer; padding: 12px 0; font-size: 1rem; border-bottom: 2px solid transparent;" 
-        [ngStyle]="{'border-bottom-color': activeTab === 'activity' ? 'var(--bsp-dark-green)' : 'transparent', 'color': activeTab === 'activity' ? 'var(--bsp-dark-green)' : 'var(--bsp-text-muted)'}" 
-        (click)="switchTab('activity')">Activity Log</h2>
-    @if (isSuperadmin) {
-        <h2 class="catalog-title" style="margin: 0; cursor: pointer; padding: 12px 0; font-size: 1rem; border-bottom: 2px solid transparent;" 
-            [ngStyle]="{'border-bottom-color': activeTab === 'audit' ? 'var(--bsp-dark-green)' : 'transparent', 'color': activeTab === 'audit' ? 'var(--bsp-dark-green)' : 'var(--bsp-text-muted)'}" 
-            (click)="switchTab('audit')">Audit Log</h2>
-    }
+  <div class="catalog-header">
+    <h2 class="catalog-title">Activity Log</h2>
   </div>
 
-  @if (activeTab === 'activity') {
   <div class="toolbar">
     <div class="search-wrapper">
       <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -128,37 +120,4 @@
       <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">Next</button>
     </div>
   </div>
-  } @else {
-  <table class="data-table" style="margin-top: 12px; border-top: 1px solid #E5E7EB;">
-      <thead>
-          <tr>
-              <th>Log ID</th>
-              <th class="text-center">Timestamp</th>
-              <th class="text-center">User</th>
-              <th class="text-center">Action</th>
-              <th>Entity</th>
-              <th>Details</th>
-          </tr>
-      </thead>
-      <tbody>
-          @for (item of auditData; track item.log_id) {
-          <tr class="clickable-row">
-              <td class="font-medium">{{ item.log_id }}</td>
-              <td class="text-center">{{ item.timestamp }}</td>
-              <td class="text-center">{{ item.username || 'SYSTEM' }}</td>
-              <td class="text-center">
-                  <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'EDIT' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'EDIT' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '11px', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
-              </td>
-              <td>{{ item.entity }} <span style="color: var(--bsp-text-muted); font-size: 11px;">(ID: {{ item.entity_id }})</span></td>
-              <td class="text-muted">{{ item.details }}</td>
-          </tr>
-          }
-          @if (auditData.length === 0) {
-              <tr>
-                  <td colspan="6" class="text-center empty-state" style="padding: 32px; color: var(--bsp-text-muted);">No audit logs found.</td>
-              </tr>
-          }
-      </tbody>
-  </table>
-  }
 </div>

@@ -44,7 +44,7 @@
                         style="-webkit-mask-image: url('Icons/home-2503.png'); mask-image: url('Icons/home-2503.png');"></span>
                 </a>
             </li>
-            <li title="Requests" routerLinkActive="active"
+            <li title="Requests" [class.active]="router.url.includes('focal')"
                 *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
                 <a routerLink="/focal/request" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
@@ -210,6 +210,10 @@
                         <li routerLink="/history/activity-log" routerLinkActive="active-sub"
                             (click)="closeMenuOnMobile()" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                             <span class="dot"></span> Activity Log
+                        </li>
+                        <li routerLink="/history/audit-log" routerLinkActive="active-sub"
+                            (click)="closeMenuOnMobile()" *ngIf="hasRole(['SUPERADMIN'])">
+                            <span class="dot"></span> Audit Log
                         </li>
                     </ul>
                 </div>
