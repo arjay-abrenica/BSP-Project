@@ -1,49 +1,209 @@
 <div class="bsp-page-container">
-    <div class="page-title-bar">
-        <h2>Submit Request Form</h2>
-    </div>
+  <div class="page-title-bar">
+    <h1 class="page-title">Request Supplies</h1>
+    <p class="page-subtitle">Enter quantities for the items you need, then click "Done" to review and submit.</p>
+  </div>
 
-    <!-- Search & Action Bar -->
-    <div class="action-top-bar">
-        <div class="search-wrap">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#2c7a4b" stroke-width="3"><circle cx="10.5" cy="10.5" r="7.5"></circle><line x1="21" y1="21" x2="15.8" y2="15.8"></line></svg>
-            <input type="text" placeholder="Search by item code, Name, or Category..." [(ngModel)]="searchQuery">
-        </div>
+  <div class="action-top-bar">
+    <div class="search-wrap">
+      <img src="Icons/search-2907.png" class="search-icon" alt="search">
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name, SKU, or category...">
     </div>
+    <button class="btn-done" (click)="openPreview()">Done</button>
+  </div>
 
-    <!-- Table -->
-    <div class="table-container">
-        <table class="bsp-table">
-            <thead>
-                <tr>
-                    <th>Item Code</th>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th>Current Stock</th>
-                    <th style="text-align: center; width: 15%">Req. QTY</th>
-                    <th style="text-align: right; width: 15%">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let item of filteredItems">
-                    <td><strong>{{ item.item_code }}</strong></td>
-                    <td>{{ item.item_name }}</td>
-                    <td>{{ item.category_name }}</td>
-                    <td>
-                        <span class="stock-badge" [class.low-stock]="item.current_stock <= (item.reorder_level || 10)" [class.in-stock]="item.current_stock > (item.reorder_level || 10)">
-                            {{ item.current_stock || 0 }} {{ item.unit }}
-                        </span>
-                    </td>
-                    <td style="text-align: center;">
-                        <input type="number" [(ngModel)]="item.requestQuantity" placeholder="1" min="1" style="width: 80px; text-align: center; padding: 0.35rem; border: 1px solid #c7d4cc; border-radius: 4px; outline: none;">
-                    </td>
-                    <td class="action-cell" style="text-align: right;">
-                        <button class="btn-request" (click)="submitRequest(item)" [disabled]="!item.requestQuantity">
-                            Request
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
+  <div class="table-container">
+    <table class="bsp-table">
+      <thead>
+        <tr>
+          <th>SKU</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th class="text-center">Available</th>
+          <th class="text-center" style="width: 150px;">Quantity to Request</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredItems">
+          <td class="sku-cell">{{ item.item_code || 'N/A' }}</td>
+          <td class="name-cell">
+            <div class="item-name">{{ item.item_name }}</div>
+            <div class="item-unit">{{ item.unit_of_measure }}</div>
+          </td>
+          <td>{{ item.category_name }}</td>
+          <td class="text-center">
+            <span class="stock-badge" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
+              {{ item.current_stock }}
+            </span>
+          </td>
+          <td class="text-center">
+            <input type="number" [(ngModel)]="item.requestQuantity" min="0" placeholder="0" class="qty-input">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+@if (isPreviewModalOpen) {
+<div class="modal-overlay" (click)="closePreview()">
+  <div class="modal-content preview-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Review Requisition</h2>
+      <button class="close-btn" (click)="closePreview()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="preview-scroll">
+        <table class="simple-table">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th class="text-center">Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedItems">
+              <td>{{item.item_name}}</td>
+              <td class="text-center">{{item.requestQuantity}} {{item.unit_of_measure}}</td>
+            </tr>
+          </tbody>
         </table>
+      </div>
+
+      <div class="request-details-form">
+        <div class="form-group">
+          <label>Purpose <span class="required">*</span></label>
+          <textarea [(ngModel)]="requestPurpose" placeholder="e.g. Office supplies for the next quarter"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Priority</label>
+          <select [(ngModel)]="requestPriority">
+            <option value="NORMAL">Normal</option>
+            <option value="URGENT">Urgent</option>
+            <option value="EMERGENCY">Emergency</option>
+          </select>
+        </div>
+
+        <div class="form-group" *ngIf="requestPriority !== 'NORMAL'">
+          <label>Justification <span class="required">*</span></label>
+          <textarea [(ngModel)]="requestJustification" placeholder="Why is this request urgent?"></textarea>
+        </div>
+      </div>
     </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closePreview()">Back to list</button>
+      <button class="btn-submit-full" (click)="submitFullRequest()" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="spinner"></span>
+        Submit Requisition
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Success Modal -->
+<div class="modal-overlay" *ngIf="isSuccessModalOpen" (click)="closeSuccessModal()">
+  <div class="modal-content success-modal" (click)="$event.stopPropagation()">
+    <div class="success-icon-wrap">
+      <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#0d4a22" stroke-width="3">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <h2>Request Submitted!</h2>
+    <p>Your requisition <strong>{{lastRequestNumber}}</strong> has been successfully sent for approval.</p>
+    
+    <div class="receipt-actions">
+      <button class="btn-outline" (click)="printRis()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Print RIS
+      </button>
+      <button class="btn-outline" (click)="downloadPDF()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download PDF
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" (click)="closeSuccessModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden RIS Receipt Template for Printing -->
+<div id="ris-receipt" style="display: none;">
+  <div class="ris-container" style="padding: 40px; color: #000; background: #fff; width: 800px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h2 style="margin: 0; text-transform: uppercase;">Boy Scouts of the Philippines</h2>
+      <p style="margin: 5px 0;">National Headquarters, Manila</p>
+      <h3 style="margin: 20px 0 10px; text-decoration: underline;">REQUISITION AND ISSUE SLIP</h3>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+      <div>
+        <p><strong>Division:</strong> {{receiptData?.office}}</p>
+        <p><strong>Office:</strong> {{receiptData?.office}}</p>
+      </div>
+      <div style="text-align: right;">
+        <p><strong>RIS No:</strong> {{lastRequestNumber}}</p>
+        <p><strong>Date:</strong> {{receiptData?.date}}</p>
+      </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #000; padding: 10px; text-align: center;" colspan="4">REQUISITION</th>
+          <th style="border: 1px solid #000; padding: 10px; text-align: center;" colspan="2">ISSUE</th>
+        </tr>
+        <tr>
+          <th style="border: 1px solid #000; padding: 8px;">Stock No.</th>
+          <th style="border: 1px solid #000; padding: 8px;">Unit</th>
+          <th style="border: 1px solid #000; padding: 8px;">Description</th>
+          <th style="border: 1px solid #000; padding: 8px;">Quantity</th>
+          <th style="border: 1px solid #000; padding: 8px;">Quantity</th>
+          <th style="border: 1px solid #000; padding: 8px;">Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of receiptData?.items">
+          <td style="border: 1px solid #000; padding: 8px;">{{item.item_code}}</td>
+          <td style="border: 1px solid #000; padding: 8px;">{{item.unit_of_measure}}</td>
+          <td style="border: 1px solid #000; padding: 8px;">{{item.item_name}}</td>
+          <td style="border: 1px solid #000; padding: 8px; text-align: center;">{{item.requestQuantity}}</td>
+          <td style="border: 1px solid #000; padding: 8px;"></td>
+          <td style="border: 1px solid #000; padding: 8px;"></td>
+        </tr>
+        <!-- Fill remaining space if few items -->
+        <tr *ngFor="let i of [1,2,3,4,5]">
+          <td style="border: 1px solid #000; padding: 15px;">&nbsp;</td>
+          <td style="border: 1px solid #000; padding: 15px;"></td>
+          <td style="border: 1px solid #000; padding: 15px;"></td>
+          <td style="border: 1px solid #000; padding: 15px;"></td>
+          <td style="border: 1px solid #000; padding: 15px;"></td>
+          <td style="border: 1px solid #000; padding: 15px;"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 20px;">
+      <p><strong>Purpose:</strong> {{receiptData?.purpose}}</p>
+    </div>
+
+    <div style="margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px;">
+      <div style="text-align: center;">
+        <p style="margin-bottom: 40px;">Requested by:</p>
+        <p style="border-bottom: 1px solid #000; margin-bottom: 0; font-weight: bold;">{{authService.currentUserValue?.username | uppercase}}</p>
+        <p style="margin-top: 5px;">Signature over Printed Name</p>
+      </div>
+      <div style="text-align: center;">
+        <p style="margin-bottom: 40px;">Approved by:</p>
+        <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+        <p style="margin-top: 5px;">Head of Office/Authorized Representative</p>
+      </div>
+    </div>
+  </div>
 </div>

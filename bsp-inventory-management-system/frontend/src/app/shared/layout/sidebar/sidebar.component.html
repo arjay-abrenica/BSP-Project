@@ -155,8 +155,12 @@
             </div>
 
             <!-- Request Supplies Menu (Focal Person) -->
+<<<<<<<<< Temporary merge branch 1
             <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])"
                 [class.active-group]="true">
+=========
+            <div class="menu-group" *ngIf="router.url.includes('focal') && hasRole(['superadmin', 'focal person', 'focal officer'])" [class.active-group]="true">
+>>>>>>>>> Temporary merge branch 2
                 <div class="group-header">
                     <span>Requests</span>
                     <span class="indicator">-</span>
@@ -165,6 +169,12 @@
                 <ul class="sub-menu">
                     <li routerLink="/focal/request" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Request Supplies
+                    </li>
+                    <li routerLink="/focal/status" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Status of Request
+                    </li>
+                    <li routerLink="/focal/log" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Request Log
                     </li>
                 </ul>
             </div>

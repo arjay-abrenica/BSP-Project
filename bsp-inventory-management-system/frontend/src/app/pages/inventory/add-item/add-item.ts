@@ -40,7 +40,8 @@ export class AddItem {
       quantity: [0, Validators.min(0)],
       reorder_level: [10, Validators.min(0)],
       delivery_receipt: [''],
-      delivery_number: ['']
+      delivery_number: [''],
+      image: [null]
     });
 
     this.fetchExistingItems();
@@ -101,6 +102,13 @@ export class AddItem {
     this.batchItems.splice(index, 1);
   }
 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.addItemForm.patchValue({ image: file });
+    }
+  }
+
   submitBatch(): void {
     if (this.addItemForm.valid) {
       this.batchItems.push(this.addItemForm.value);
@@ -114,39 +122,80 @@ export class AddItem {
 
     this.isSubmitting = true;
     
-    this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
-      next: (res) => {
-        console.log('Items added successfully', res);
+    // Instead of sending as JSON array which drops images, we send each item sequentially
+    let completedCount = 0;
+    let hasErrors = false;
+    const allResponses: any[] = [];
+    
+    const submitNext = (index: number) => {
+      if (index >= this.batchItems.length) {
         this.isSubmitting = false;
-        
-        if (res && res.length > 0) {
-          const firstItemId = res[0].item_id;
-          this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
-            next: (data) => {
-              this.intakeSummaryData = data;
-              this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
-              this.showModal = true;
-              this.batchItems = []; // Clear the batch after success
-            },
-            error: (err) => {
-              console.error('Failed to fetch intake summary', err);
-              alert(`${res.length} item(s) added successfully!`);
-              this.batchItems = [];
-              this.router.navigate(['/inventory/catalog']);
-            }
-          });
+        if (!hasErrors) {
+          this.handleSuccess(allResponses);
         } else {
-          alert('Item(s) added successfully!');
+          alert('Some items failed to save. Please check the list.');
+        }
+        return;
+      }
+      
+      const item = this.batchItems[index];
+      const formData = new FormData();
+      Object.keys(item).forEach(key => {
+        if (key === 'image' && item[key]) {
+          formData.append('image', item[key]);
+        } else if (item[key] !== null && item[key] !== undefined) {
+          formData.append(key, item[key]);
+        }
+      });
+      
+      this.http.post<any>('http://localhost:5000/api/items', formData).subscribe({
+        next: (res) => {
+          // res is an array containing the single created item, or a single object. Normalize to array.
+          const createdItems = Array.isArray(res) ? res : [res];
+          allResponses.push(...createdItems);
+          completedCount++;
+          submitNext(index + 1);
+        },
+        error: (err) => {
+          console.error('Error saving item:', err);
+          hasErrors = true;
+          submitNext(index + 1);
+        }
+      });
+    };
+    
+    submitNext(0);
+  }
+
+  private handleSuccess(res: any[]): void {
+    this.isSubmitting = false;
+    if (res && res.length > 0) {
+      const firstItemId = res[0].item_id;
+      this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
+        next: (data) => {
+          this.intakeSummaryData = data;
+          this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
+          this.showModal = true;
+          this.batchItems = [];
+        },
+        error: (err) => {
+          console.error('Failed to fetch intake summary', err);
+          alert(`${res.length} item(s) added successfully!`);
           this.batchItems = [];
           this.router.navigate(['/inventory/catalog']);
         }
-      },
-      error: (err) => {
-        console.error('Error adding items', err);
-        this.isSubmitting = false;
-        alert('Failed to add items. Please try again.');
-      }
-    });
+      });
+    } else {
+      alert('Item(s) added successfully!');
+      this.batchItems = [];
+      this.router.navigate(['/inventory/catalog']);
+    }
+  }
+
+  private handleError(err: any): void {
+    console.error('Error adding items', err);
+    this.isSubmitting = false;
+    alert('Failed to add items. Please try again.');
   }
 
   closeModal(): void {

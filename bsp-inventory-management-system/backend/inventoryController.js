@@ -40,7 +40,8 @@ exports.createItem = async (req, res) => {
     // Single item creation (possibly with image)
     const item = req.body;
     if (req.file) {
-      item.image_url = `/uploads/items/${req.file.filename}`;
+      const base64Image = req.file.buffer.toString('base64');
+      item.image_url = `data:${req.file.mimetype};base64,${base64Image}`;
     }
     itemsToCreate = [item];
     isBatch = false;
@@ -152,6 +153,16 @@ exports.createItem = async (req, res) => {
           [transactionId, newItem.item_id, quantity, unit_price || 0]
         );
       }
+
+      // Log the action (Add or Edit)
+      const actionType = itemToUpdate ? 'EDIT' : 'ADD';
+      const userId = item.user_id || null;
+      const username = item.username || 'SYSTEM';
+      await client.query(
+        `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+        [userId, username, actionType, 'ITEM', newItem.item_id, `${actionType === 'ADD' ? 'Added new item' : 'Updated item via creation batch'}: ${newItem.item_name}`]
+      );
+
       createdItems.push(newItem);
     }
 
@@ -172,7 +183,8 @@ exports.updateItem = async (req, res) => {
   
   let image_url = req.body.image_url;
   if (req.file) {
-    image_url = `/uploads/items/${req.file.filename}`;
+    const base64Image = req.file.buffer.toString('base64');
+    image_url = `data:${req.file.mimetype};base64,${base64Image}`;
   }
 
   try {
@@ -194,6 +206,15 @@ exports.updateItem = async (req, res) => {
       ]
     );
     if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    
+    // Log the action (Edit)
+    const userId = req.body.user_id || null;
+    const username = req.body.username || 'SYSTEM';
+    await db.query(
+      `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, username, 'EDIT', 'ITEM', id, `Updated item details: ${result.rows[0].item_name}`]
+    );
+
     res.status(200).json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -202,12 +223,58 @@ exports.updateItem = async (req, res) => {
 
 exports.deleteItem = async (req, res) => {
   const { id } = req.params;
+  const { user_id, password } = req.body;
+  if (!user_id || !password) {
+    return res.status(400).json({ error: 'User ID and password are required for deletion' });
+  }
+
+  let client;
   try {
-    const result = await db.query('DELETE FROM Items WHERE item_id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
+    // Verify user and password
+    const userRes = await db.query('SELECT * FROM Users WHERE user_id = $1', [user_id]);
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const user = userRes.rows[0];
+    
+    // Check role (SUPERADMIN or ADMIN)
+    if (user.role !== 'SUPERADMIN' && user.role !== 'ADMIN' && user.role !== 'SUPPLY_OFFICER') {
+      return res.status(403).json({ error: 'You do not have permission to delete items' });
+    }
+    
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch && user.password !== password) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // Remove foreign key dependencies
+    await client.query('DELETE FROM Transaction_Details WHERE item_id = $1', [id]);
+    await client.query('DELETE FROM Request_Details WHERE item_id = $1', [id]);
+
+    const result = await client.query('DELETE FROM Items WHERE item_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: 'Item not found' });
+    }
+    
+    // Log the deletion
+    const item = result.rows[0];
+    await client.query(
+      `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
+      [user.user_id, user.username, 'DELETE', 'ITEM', id, `Deleted item: ${item.item_name} (${item.item_code || 'No SKU'})`]
+    );
+
+    await client.query('COMMIT');
     res.status(200).json({ message: 'Item deleted successfully' });
   } catch (err) {
+    if (client) await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
   }
 };
 
@@ -319,6 +386,84 @@ exports.getNextRisNo = async (req, res) => {
   }
 };
 
+exports.createRequest = async (req, res) => {
+  const { office_id, purpose, priority, justification, items } = req.body;
+  
+  if (!office_id || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Office ID and items are required' });
+  }
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // 1. Generate Request Number
+    const countRes = await client.query('SELECT COUNT(*) FROM Requests');
+    const count = parseInt(countRes.rows[0].count) + 1;
+    const request_number = `REQ-${new Date().getFullYear()}-${String(count).padStart(4, '0')}`;
+
+    // 2. Insert Request Header
+    const requestRes = await client.query(
+      `INSERT INTO Requests (request_number, office_id, purpose, priority, justification, status) 
+       VALUES ($1, $2, $3, $4, $5, 'PENDING') RETURNING request_id`,
+      [request_number, office_id, purpose, priority || 'NORMAL', justification]
+    );
+    const requestId = requestRes.rows[0].request_id;
+
+    // 3. Insert Request Details
+    for (const item of items) {
+      await client.query(
+        `INSERT INTO Request_Details (request_id, item_id, quantity) VALUES ($1, $2, $3)`,
+        [requestId, item.item_id, item.quantity]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
+  }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status, items } = req.body; // items: [{item_id, approved_quantity}]
+
+  let client;
+  try {
+    client = await db.pool.connect();
+    await client.query('BEGIN');
+
+    // 1. Update Request Status
+    await client.query(
+      'UPDATE Requests SET status = $1 WHERE request_id = $2',
+      [status, id]
+    );
+
+    // 2. If status is APPROVED or PARTIAL, update approved_quantity in details
+    if ((status === 'APPROVED' || status === 'PARTIAL') && items) {
+      for (const item of items) {
+        await client.query(
+          'UPDATE Request_Details SET approved_quantity = $1 WHERE request_id = $2 AND item_id = $3',
+          [item.approved_quantity, id, item.item_id]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: `Request status updated to ${status}` });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (client) client.release();
+  }
+};
+
 /* =========================================
    SECTION 3: ISSUANCE TRANSACTIONS (OUT/Issue)
    ========================================= */
@@ -383,10 +528,10 @@ exports.issueItems = async (req, res) => {
       );
     }
 
-    // 3. If it was from a Request, update the request status
+    // 3. If it was from a Request, update the request status to RELEASED
     if (request_id) {
       await client.query(
-        `UPDATE Requests SET status = 'APPROVED' WHERE request_id = $1`,
+        `UPDATE Requests SET status = 'RELEASED' WHERE request_id = $1`,
         [request_id]
       );
     }
@@ -400,6 +545,7 @@ exports.issueItems = async (req, res) => {
     if (client) client.release();
   }
 };
+
 
 /* =========================================
    SECTION 4: SCANNING & LOOKUPS
@@ -605,6 +751,36 @@ exports.getActivityLog = async (req, res) => {
   }
 };
 
+exports.getMyRequests = async (req, res) => {
+  const { office_id, type } = req.query; // type: 'active' or 'log'
+  try {
+    let query = `
+      SELECT 
+        r.request_id as id,
+        r.request_number as "reqNumber",
+        r.purpose,
+        r.status,
+        r.priority,
+        TO_CHAR(r.request_date, 'MM/DD/YYYY') as date,
+        (SELECT COUNT(*) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "itemsCount"
+      FROM Requests r
+      WHERE r.office_id = $1
+    `;
+
+    if (type === 'active') {
+      query += " AND r.status IN ('PENDING', 'APPROVED', 'PARTIAL')";
+    } else if (type === 'log') {
+      query += " AND r.status IN ('RELEASED', 'REJECTED', 'CANCELLED')";
+    }
+
+    query += " ORDER BY r.request_date DESC";
+    const result = await db.query(query, [office_id]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getLatestIntakeForItem = async (req, res) => {
   const { id } = req.params;
   try {
@@ -773,8 +949,39 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({ 
       message: 'Login successful', 
       token,
-      user: { id: user.user_id, username: user.username, role: user.role } 
+      user: { 
+        id: user.user_id, 
+        username: user.username, 
+        role: user.role,
+        office_id: user.office_id
+      } 
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/* =========================================
+   SECTION 7: AUDIT LOGS (Superadmin)
+   ========================================= */
+
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        log_id,
+        user_id,
+        username,
+        action,
+        entity,
+        entity_id,
+        details,
+        TO_CHAR(timestamp, 'MM/DD/YYYY HH:MI AM') as timestamp
+      FROM Audit_Logs
+      ORDER BY log_id DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

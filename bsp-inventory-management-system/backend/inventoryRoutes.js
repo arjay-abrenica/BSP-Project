@@ -2,23 +2,9 @@ const express = require('express');
 const router = express.Router();
 const inventoryController = require('./inventoryController');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
 // --- Multer Configuration for Item Images ---
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = 'uploads/items';
-    if (!fs.existsSync(dir)){
-        fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'item-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage: storage,
@@ -48,7 +34,10 @@ router.get('/transactions/next-ris/:officeId', inventoryController.getNextRisNo)
 // --- Requests ---
 router.get('/requests/pending', inventoryController.getPendingRequests);
 router.get('/requests/approved', inventoryController.getApprovedRequests);
+router.get('/requests/my', inventoryController.getMyRequests);
 router.get('/requests/:id/details', inventoryController.getRequestDetails);
+router.post('/requests', inventoryController.createRequest);
+router.put('/requests/:id/status', inventoryController.updateRequestStatus);
 router.put('/requests/:id/reject', inventoryController.rejectRequest);
 
 // --- Tracking & Scanners ---
@@ -60,6 +49,7 @@ router.get('/scan/ris/:ris_no', inventoryController.getTransactionByRis);
 // --- History & Activity Log ---
 router.get('/history/requests', inventoryController.getRequestsHistory);
 router.get('/history/activity', inventoryController.getActivityLog);
+router.get('/history/audit-logs', inventoryController.getAuditLogs);
 router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
 router.get('/items/:id/allocation', inventoryController.getItemAllocationPerOffice);

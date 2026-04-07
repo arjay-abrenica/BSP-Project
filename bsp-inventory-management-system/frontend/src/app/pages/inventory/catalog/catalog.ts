@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-catalog',
@@ -47,6 +48,12 @@ export class Catalog implements OnInit {
   showSuggestions = false;
   isSkuExisting = false;
 
+  // Delete Item Modal State
+  showDeleteModal: boolean = false;
+  deletePassword = '';
+  isDeleting = false;
+  deleteError = '';
+
   // Item Transactions State
   showTransactionHistoryModal: boolean = false;
   itemTransactionHistory: any[] = [];
@@ -78,7 +85,8 @@ export class Catalog implements OnInit {
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.addItemForm = this.fb.group({
       item_id: [null], // Hidden field for editing
@@ -109,6 +117,58 @@ export class Catalog implements OnInit {
     this.logTransactionForm.get('office_id')?.valueChanges.subscribe(officeId => {
       if (officeId) {
         this.updateGeneratedRisNo(officeId);
+      }
+    });
+  }
+
+  get canDelete(): boolean {
+    return this.authService.hasRole(['SUPERADMIN', 'ADMIN', 'SUPPLY_OFFICER']);
+  }
+
+  onDeleteItem(): void {
+    if (!this.selectedItemDetails) return;
+    if (!confirm(`Are you sure you want to delete ${this.selectedItemDetails.item_name}? This action cannot be undone.`)) {
+      return;
+    }
+    this.showDeleteModal = true;
+    this.showItemDetailsModal = false;
+    this.showAddItemModal = false;
+    this.deletePassword = '';
+    this.deleteError = '';
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.deletePassword = '';
+    this.deleteError = '';
+  }
+
+  confirmDelete(): void {
+    if (!this.deletePassword) {
+      this.deleteError = 'Password is required.';
+      return;
+    }
+
+    this.isDeleting = true;
+    this.deleteError = '';
+    const currentUser = this.authService.currentUserValue;
+
+    const payload = {
+      user_id: currentUser?.id,
+      password: this.deletePassword
+    };
+
+    this.http.delete(`http://localhost:5000/api/items/${this.selectedItemDetails.item_id}`, { body: payload }).subscribe({
+      next: (res) => {
+        this.isDeleting = false;
+        alert('Item deleted successfully!');
+        this.closeDeleteModal();
+        this.fetchItems();
+      },
+      error: (err) => {
+        this.isDeleting = false;
+        console.error('Error deleting item', err);
+        this.deleteError = err.error?.error || 'Failed to delete item. Please check your password.';
       }
     });
   }
@@ -358,6 +418,13 @@ export class Catalog implements OnInit {
     this.batchItems.splice(index, 1);
   }
 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.addItemForm.patchValue({ image: file });
+    }
+  }
+
   submitBatch(): void {
     if (this.isEditing) {
       this.updateSingleItem();
@@ -376,42 +443,83 @@ export class Catalog implements OnInit {
 
     this.isSubmitting = true;
     
-    this.http.post<any[]>('http://localhost:5000/api/items', this.batchItems).subscribe({
-      next: (res) => {
+    // Instead of sending as JSON array which drops images, we send each item sequentially
+    let completedCount = 0;
+    let hasErrors = false;
+    const allResponses: any[] = [];
+    
+    const submitNext = (index: number) => {
+      if (index >= this.batchItems.length) {
         this.isSubmitting = false;
-        
-        if (res && res.length > 0) {
-          const firstItemId = res[0].item_id;
-          this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
-            next: (data) => {
-              this.intakeSummaryData = data;
-              this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
-              this.showIntakeModal = true;
-              this.showAddItemModal = false;
-              this.batchItems = []; 
-              this.fetchItems(); // Refresh catalog
-            },
-            error: (err) => {
-              console.error('Failed to fetch intake summary', err);
-              alert(`${res.length} item(s) added successfully!`);
-              this.batchItems = [];
-              this.showAddItemModal = false;
-              this.fetchItems(); // Refresh catalog
-            }
-          });
+        if (!hasErrors) {
+          this.handleSuccess(allResponses);
         } else {
-          alert('Item(s) added successfully!');
+          alert('Some items failed to save. Please check the list.');
+        }
+        return;
+      }
+      
+      const item = this.batchItems[index];
+      const formData = new FormData();
+      Object.keys(item).forEach(key => {
+        if (key === 'image' && item[key]) {
+          formData.append('image', item[key]);
+        } else if (item[key] !== null && item[key] !== undefined) {
+          formData.append(key, item[key]);
+        }
+      });
+      
+      this.http.post<any>('http://localhost:5000/api/items', formData).subscribe({
+        next: (res) => {
+          const createdItems = Array.isArray(res) ? res : [res];
+          allResponses.push(...createdItems);
+          completedCount++;
+          submitNext(index + 1);
+        },
+        error: (err) => {
+          console.error('Error saving item:', err);
+          hasErrors = true;
+          submitNext(index + 1);
+        }
+      });
+    };
+    
+    submitNext(0);
+  }
+
+  private handleSuccess(res: any[]): void {
+    this.isSubmitting = false;
+    if (res && res.length > 0) {
+      const firstItemId = res[0].item_id;
+      this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({
+        next: (data) => {
+          this.intakeSummaryData = data;
+          this.intakeGrandTotal = data.items.reduce((sum: number, i: any) => sum + Number(i.totalCost), 0);
+          this.showIntakeModal = true;
+          this.showAddItemModal = false;
+          this.batchItems = []; 
+          this.fetchItems(); 
+        },
+        error: (err) => {
+          console.error('Failed to fetch intake summary', err);
+          alert(`${res.length} item(s) added successfully!`);
           this.batchItems = [];
           this.showAddItemModal = false;
-          this.fetchItems(); // Refresh catalog
+          this.fetchItems();
         }
-      },
-      error: (err) => {
-        console.error('Error adding items', err);
-        this.isSubmitting = false;
-        alert('Failed to add items. Please try again.');
-      }
-    });
+      });
+    } else {
+      alert('Item(s) added successfully!');
+      this.batchItems = [];
+      this.showAddItemModal = false;
+      this.fetchItems();
+    }
+  }
+
+  private handleError(err: any): void {
+    console.error('Error adding items', err);
+    this.isSubmitting = false;
+    alert('Failed to add items. Please try again.');
   }
 
   updateSingleItem(): void {
@@ -422,9 +530,18 @@ export class Catalog implements OnInit {
 
     this.isSubmitting = true;
     const itemId = this.addItemForm.value.item_id;
-    const payload = this.addItemForm.value;
+    const formVal = this.addItemForm.value;
 
-    this.http.put(`http://localhost:5000/api/items/${itemId}`, payload).subscribe({
+    const formData = new FormData();
+    Object.keys(formVal).forEach(key => {
+      if (key === 'image' && formVal[key]) {
+        formData.append('image', formVal[key]);
+      } else if (formVal[key] !== null && formVal[key] !== undefined) {
+        formData.append(key, formVal[key]);
+      }
+    });
+
+    this.http.put(`http://localhost:5000/api/items/${itemId}`, formData).subscribe({
       next: (res) => {
         this.isSubmitting = false;
         alert('Item updated successfully!');

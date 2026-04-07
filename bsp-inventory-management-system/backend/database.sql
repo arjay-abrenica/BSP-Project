@@ -37,6 +37,7 @@ CREATE TABLE Items (
     supplier_id INT,
     current_stock INT DEFAULT 0,
     reorder_level INT DEFAULT 10,
+    image_url TEXT,
     FOREIGN KEY (category_id) REFERENCES Categories(category_id),
     FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
 );
@@ -74,7 +75,9 @@ CREATE TABLE Requests (
     office_id INT NOT NULL,
     request_date DATE NOT NULL DEFAULT CURRENT_DATE,
     purpose TEXT,
-    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'CANCELLED')),
+    priority VARCHAR(20) DEFAULT 'NORMAL' CHECK (priority IN ('NORMAL', 'URGENT', 'EMERGENCY')),
+    justification TEXT,
+    status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'PARTIAL', 'REJECTED', 'CANCELLED', 'RELEASED')),
     FOREIGN KEY (office_id) REFERENCES Offices(office_id)
 );
 
@@ -84,6 +87,7 @@ CREATE TABLE Request_Details (
     request_id INT NOT NULL,
     item_id INT NOT NULL,
     quantity INT NOT NULL,
+    approved_quantity INT, -- For partial fulfillment
     FOREIGN KEY (request_id) REFERENCES Requests(request_id),
     FOREIGN KEY (item_id) REFERENCES Items(item_id)
 );

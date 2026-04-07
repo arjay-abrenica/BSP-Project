@@ -35,6 +35,121 @@
                 </select>
               </div>
 
+<<<<<<< HEAD
+    <!-- Table -->
+    <div class="table-container">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>RIS No.</th>
+                    <th>Requesting Office</th>
+                    <th class="text-center">Date Requested</th>
+                    <th class="text-center">Date Released</th>
+                    <th class="text-center">No. of Items</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (item of historyData; track item.risNo) {
+                <tr (click)="openDetails(item)" class="clickable-row">
+                    <td>{{ item.risNo }}</td>
+                    <td>{{ item.requestingOffice }}</td>
+                    <td class="text-center">{{ item.dateRequested }}</td>
+                    <td class="text-center">{{ item.dateReleased }}</td>
+                    <td class="text-center">{{ item.noOfItems }}</td>
+                    <td>
+                        <span class="status-badge" [ngClass]="'status-' + item.status.toLowerCase()">
+                            {{ item.status }}
+                        </span>
+                    </td>
+                    <td class="text-right">
+                        <button class="action-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1.5"></circle>
+                                <circle cx="12" cy="5" r="1.5"></circle>
+                                <circle cx="12" cy="19" r="1.5"></circle>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+            </table>
+            </div>
+            </div>
+
+            <!-- Request Details Modal -->
+            @if (isDetailsModalOpen && selectedRequest) {
+            <div class="modal-overlay" (click)="closeDetails()">
+            <div class="modal-content details-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+            <h2>Requisition Details: {{selectedRequest.risNo}}</h2>
+            <button class="close-btn" (click)="closeDetails()">×</button>
+            </div>
+
+            <div class="modal-body">
+            <!-- Visual Timeline -->
+            <div class="status-timeline">
+            <div class="timeline-step" *ngFor="let step of requestSteps" [ngClass]="getStepClass(step.status)">
+            <div class="step-circle">
+            <svg *ngIf="getStepClass(step.status) === 'step-completed'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <div *ngIf="getStepClass(step.status) !== 'step-completed'" class="dot"></div>
+            </div>
+            <div class="step-label">{{step.label}}</div>
+            <div class="step-line"></div>
+            </div>
+            </div>
+
+            <div class="details-grid">
+            <div class="detail-group">
+            <label>Office</label>
+            <div class="detail-value">{{selectedRequest.requestingOffice}}</div>
+            </div>
+            <div class="detail-group">
+            <label>Date Requested</label>
+            <div class="detail-value">{{selectedRequest.dateRequested}}</div>
+            </div>
+            <div class="detail-group">
+            <label>Status</label>
+            <div class="detail-value">
+            <span class="status-badge" [ngClass]="'status-' + selectedRequest.status.toLowerCase()">
+                {{selectedRequest.status}}
+            </span>
+            </div>
+            </div>
+            </div>
+
+            <div class="items-table-container">
+            <table class="items-table">
+            <thead>
+            <tr>
+              <th>Item Name</th>
+              <th class="text-center">Requested</th>
+              <th class="text-center">Issued</th>
+              <th>Unit</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let item of selectedRequest.items">
+              <td>{{item.item_name || item.description}}</td>
+              <td class="text-center">{{item.quantity || item.reqQty}}</td>
+              <td class="text-center">{{item.quantity || item.issueQty}}</td>
+              <td>{{item.unit_of_measure || item.unit}}</td>
+            </tr>
+            </tbody>
+            </table>
+            </div>
+            </div>
+
+            <div class="modal-footer">
+            <button class="btn-primary" (click)="closeDetails()">Close</button>
+            </div>
+            </div>
+            </div>
+            }
+
+=======
               <div style="display: flex; gap: 8px; margin-top: 8px;">
                 <div class="filter-group" style="flex:1;">
                   <label>Start Date</label>
@@ -129,3 +244,4 @@
     </div>
   </div>
 </div>
+>>>>>>> 19f7881b105d57bd434f1b4c131d331a12f964a2

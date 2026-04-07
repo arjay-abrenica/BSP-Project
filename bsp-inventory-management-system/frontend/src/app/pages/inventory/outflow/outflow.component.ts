@@ -291,19 +291,41 @@ export class OutflowComponent implements OnInit {
       return;
     }
 
+    let isPartial = false;
     const itemsToIssue = this.selectedRequest.items
       .filter((item: any) => item.issueQty && item.issueQty > 0)
-      .map((item: any) => ({
-        item_id: item.item_id,
-        quantity: item.issueQty
-      }));
+      .map((item: any) => {
+        if (item.issueQty < item.reqQty) {
+          isPartial = true;
+        }
+        return {
+          item_id: item.item_id,
+          quantity: item.issueQty,
+          approved_quantity: item.issueQty
+        };
+      });
 
     if (itemsToIssue.length === 0) {
       alert('Please specify a quantity to issue for at least one item.');
       return;
     }
 
-    this.submitIssuance(itemsToIssue, this.selectedRequest.department_id || 1, this.selectedRequest.purpose, this.selectedRequest.id);
+    const status = isPartial ? 'PARTIAL' : 'APPROVED';
+
+    // 1. Update Request Status first
+    this.http.put(`http://localhost:5000/api/requests/${this.selectedRequest.id}/status`, {
+      status: status,
+      items: itemsToIssue
+    }).subscribe({
+      next: () => {
+        // 2. Then proceed to record the actual issuance (Stock OUT)
+        this.submitIssuance(itemsToIssue, this.selectedRequest.department_id || 1, this.selectedRequest.purpose, this.selectedRequest.id);
+      },
+      error: (err) => {
+        console.error('Failed to update request status', err);
+        alert('Failed to update request status. Issuance cancelled.');
+      }
+    });
   }
 
   rejectRequest(): void {

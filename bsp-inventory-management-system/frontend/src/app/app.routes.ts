@@ -72,15 +72,14 @@ export const routes: Routes = [
             // Focal Person Module
             {
                 path: 'focal',
-                redirectTo: 'focal/request',
-                pathMatch: 'full'
-            },
-            {
-                path: 'focal/request',
                 canActivate: [AuthGuard, RoleGuard],
                 data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
-                loadComponent: () =>
-                    import('./pages/focal/request-supplies/request-supplies').then(c => c.RequestSupplies)
+                children: [
+                    { path: '', redirectTo: 'request', pathMatch: 'full' },
+                    { path: 'request', loadComponent: () => import('./pages/focal/request-supplies/request-supplies').then(c => c.RequestSupplies) },
+                    { path: 'status', loadComponent: () => import('./pages/focal/request-status/request-status.component').then(c => c.RequestStatusComponent) },
+                    { path: 'log', loadComponent: () => import('./pages/focal/request-log/request-log.component').then(c => c.RequestLogComponent) }
+                ]
             },
 
             // Reports Page
