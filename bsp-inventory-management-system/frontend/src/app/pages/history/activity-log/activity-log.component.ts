@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 interface ActivityLog {
@@ -14,14 +15,24 @@ interface ActivityLog {
 @Component({
   selector: 'app-activity-log',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './activity-log.component.html',
   styleUrls: ['./activity-log.component.scss']
 })
 export class ActivityLogComponent implements OnInit {
   isFilterOpen = false;
   activityData: ActivityLog[] = [];
+  filteredData: ActivityLog[] = [];
   paginatedData: ActivityLog[] = [];
+
+  // Filters
+  searchQuery: string = '';
+  filters = {
+    startDate: '',
+    endDate: '',
+    office: '',
+    role: ''
+  };
 
   // Pagination state
   currentPage: number = 1;
@@ -39,17 +50,69 @@ export class ActivityLogComponent implements OnInit {
     this.http.get<ActivityLog[]>('http://localhost:5000/api/history/activity').subscribe({
       next: (data) => {
         this.activityData = data;
-        this.updatePagination();
+        this.applyFilters();
       },
       error: (err) => console.error('Failed to fetch activity log', err)
     });
   }
 
+  get uniqueOffices(): string[] {
+    return [...new Set(this.activityData.map(item => item.office))].filter(Boolean);
+  }
+
+  get uniqueRoles(): string[] {
+    return [...new Set(this.activityData.map(item => item.role))].filter(Boolean);
+  }
+
+  applyFilters(): void {
+    let temp = this.activityData;
+
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      temp = temp.filter(item => 
+        item.activityLogId?.toLowerCase().includes(q) ||
+        item.activity?.toLowerCase().includes(q) ||
+        item.details?.toLowerCase().includes(q) ||
+        item.office?.toLowerCase().includes(q)
+      );
+    }
+
+    if (this.filters.office) {
+      temp = temp.filter(item => item.office === this.filters.office);
+    }
+
+    if (this.filters.role) {
+      temp = temp.filter(item => item.role === this.filters.role);
+    }
+
+    if (this.filters.startDate && this.filters.endDate) {
+      const start = new Date(this.filters.startDate);
+      const end = new Date(this.filters.endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      temp = temp.filter(item => {
+        const itemDate = new Date(item.timestamp);
+        return itemDate >= start && itemDate <= end;
+      });
+    }
+
+    this.filteredData = temp;
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  clearFilters(): void {
+    this.filters = { startDate: '', endDate: '', office: '', role: '' };
+    this.searchQuery = '';
+    this.applyFilters();
+    this.isFilterOpen = false;
+  }
+
   updatePagination(): void {
-    this.totalPages = Math.ceil(this.activityData.length / this.itemsPerPage) || 1;
+    this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-    this.paginatedData = this.activityData.slice(startIndex, endIndex);
+    this.paginatedData = this.filteredData.slice(startIndex, endIndex);
   }
 
   goToPage(page: number): void {

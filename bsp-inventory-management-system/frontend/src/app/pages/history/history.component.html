@@ -9,7 +9,7 @@
         <circle cx="11" cy="11" r="8"></circle>
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
-      <input type="text" class="search-input" placeholder="Search by RIS, Requesting Office...">
+      <input type="text" class="search-input" placeholder="Search by RIS, Requesting Office..." [(ngModel)]="searchQuery" (input)="applyFilters()">
     </div>
     
     <div class="actions-wrapper">
@@ -23,13 +23,13 @@
           <div class="filter-dropdown" style="width: 320px;">
             <div class="filter-header">
               <h3>Filter By</h3>
-              <button class="btn-clear-sm" (click)="toggleFilter()">Clear</button>
+              <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
             </div>
             
             <div class="filter-body">
               <div class="filter-group">
                 <label>Date Range Type</label>
-                <select class="filter-select">
+                <select class="filter-select" [(ngModel)]="filters.dateType">
                   <option>Date Requested</option>
                   <option>Date Released</option>
                 </select>
@@ -38,11 +38,11 @@
               <div style="display: flex; gap: 8px; margin-top: 8px;">
                 <div class="filter-group" style="flex:1;">
                   <label>Start Date</label>
-                  <input type="date" class="filter-select" style="padding: 6px;" value="2025-10-06" />
+                  <input type="date" class="filter-select" style="padding: 6px;" [(ngModel)]="filters.startDate" />
                 </div>
                 <div class="filter-group" style="flex:1;">
                   <label>End Date</label>
-                  <input type="date" class="filter-select" style="padding: 6px;" value="2025-10-13" />
+                  <input type="date" class="filter-select" style="padding: 6px;" [(ngModel)]="filters.endDate" />
                 </div>
               </div>
 
@@ -50,22 +50,27 @@
 
               <div class="filter-group">
                 <label>Office</label>
-                <select class="filter-select">
-                  <option>CPSMO</option>
+                <select class="filter-select" [(ngModel)]="filters.office">
+                  <option value="">All Offices</option>
+                  @for (office of uniqueOffices; track office) {
+                    <option [value]="office">{{ office }}</option>
+                  }
                 </select>
               </div>
 
               <div class="filter-group">
                 <label>Status</label>
-                <select class="filter-select">
-                  <option>Released</option>
-                  <option>Pending</option>
+                <select class="filter-select" [(ngModel)]="filters.status">
+                  <option value="">All Statuses</option>
+                  @for (status of uniqueStatuses; track status) {
+                    <option [value]="status">{{ status }}</option>
+                  }
                 </select>
               </div>
             </div>
 
             <div class="filter-footer">
-              <button class="btn-primary w-full" (click)="toggleFilter()">Apply Filter</button>
+              <button class="btn-primary w-full" (click)="applyFilters(); toggleFilter()">Apply Filter</button>
             </div>
           </div>
         }
@@ -105,7 +110,7 @@
           </td>
         </tr>
       }
-      @if (historyData.length === 0) {
+      @if (filteredData.length === 0) {
         <tr>
           <td colspan="7" class="empty-state" style="text-align: center; padding: 32px; color: var(--bsp-text-muted);">No requests history found.</td>
         </tr>
@@ -115,7 +120,7 @@
 
   <div class="pagination-controls">
     <div class="page-info-detailed">
-      Showing {{ historyData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, historyData.length) }} of {{ historyData.length }} entries
+      Showing {{ filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredData.length) }} of {{ filteredData.length }} entries
     </div>
     <div class="page-buttons">
       <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Previous</button>
