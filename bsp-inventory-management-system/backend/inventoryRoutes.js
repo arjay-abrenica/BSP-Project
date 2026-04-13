@@ -19,6 +19,7 @@ const upload = multer({
 
 // --- Item Management ---
 router.get('/offices', inventoryController.getAllOffices);
+router.get('/suppliers', inventoryController.getAllSuppliers);
 router.get('/items', inventoryController.getAllItems);
 router.post('/items', upload.single('image'), inventoryController.createItem);
 router.put('/items/:id', upload.single('image'), inventoryController.updateItem);

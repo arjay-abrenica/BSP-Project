@@ -16,8 +16,11 @@ export class AddItem {
   isSubmitting = false;
   batchItems: any[] = [];
   existingItems: any[] = [];
+  existingSuppliers: any[] = [];
   filteredSuggestions: any[] = [];
+  filteredSuppliers: any[] = [];
   showSuggestions = false;
+  showSupplierSuggestions = false;
 
   // Modal State
   showModal: boolean = false;
@@ -45,6 +48,7 @@ export class AddItem {
     });
 
     this.fetchExistingItems();
+    this.fetchSuppliers();
   }
 
   fetchExistingItems(): void {
@@ -54,6 +58,18 @@ export class AddItem {
       },
       error: (err) => {
         console.error('Failed to fetch existing items', err);
+      }
+    });
+  }
+
+  fetchSuppliers(): void {
+    this.http.get<any[]>('http://localhost:5000/api/suppliers').subscribe({
+      next: (data) => {
+        // Ensure data is mapped to simple strings for the datalist
+        this.existingSuppliers = data.map(s => s.supplier_name);
+      },
+      error: (err) => {
+        console.error('Failed to fetch suppliers', err);
       }
     });
   }
@@ -82,10 +98,40 @@ export class AddItem {
     this.showSuggestions = false;
   }
 
+  onSupplierInput(event: any): void {
+    const query = event.target.value.toLowerCase();
+    this.filterSuppliers(query);
+  }
+
+  onSupplierFocus(event: any): void {
+    const query = event.target.value.toLowerCase();
+    this.filterSuppliers(query);
+  }
+
+  private filterSuppliers(query: string): void {
+    if (query.length > 0) {
+      this.filteredSuppliers = this.existingSuppliers.filter(sup => 
+        sup.toLowerCase().includes(query)
+      ).slice(0, 5);
+    } else {
+      // Show all (or top 5) when empty
+      this.filteredSuppliers = this.existingSuppliers.slice(0, 5);
+    }
+    this.showSupplierSuggestions = this.filteredSuppliers.length > 0;
+  }
+
+  selectSupplier(supplier: string): void {
+    this.addItemForm.patchValue({
+      supplier_name: supplier
+    });
+    this.showSupplierSuggestions = false;
+  }
+
   hideSuggestions(): void {
     // Delay hiding to allow click event on suggestion to fire
     setTimeout(() => {
       this.showSuggestions = false;
+      this.showSupplierSuggestions = false;
     }, 200);
   }
 
@@ -169,6 +215,10 @@ export class AddItem {
 
   private handleSuccess(res: any[]): void {
     this.isSubmitting = false;
+    // Refresh lists
+    this.fetchExistingItems();
+    this.fetchSuppliers();
+    
     if (res && res.length > 0) {
       const firstItemId = res[0].item_id;
       this.http.get<any>(`http://localhost:5000/api/items/${firstItemId}/latest-intake`).subscribe({

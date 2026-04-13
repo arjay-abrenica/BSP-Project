@@ -95,11 +95,19 @@
           
           <div class="form-group">
             <label>Supplier</label>
-            <input type="text" formControlName="supplier_name" placeholder="Enter supplier name" list="supplier-list">
-            <datalist id="supplier-list">
-              <option value="CHAMPION HARDWARE & CO. Inc."></option>
-              <option value="PS-PhilGEPS"></option>
-            </datalist>
+            <div class="suggestions-container">
+              <input type="text" formControlName="supplier_name" placeholder="Enter supplier name"
+                (input)="onSupplierInput($event)"
+                (focus)="onSupplierFocus($event)"
+                (blur)="hideSuggestions()"
+                autocomplete="off">
+              
+              <ul class="suggestions-list" *ngIf="showSupplierSuggestions">
+                <li *ngFor="let supplier of filteredSuppliers" (mousedown)="selectSupplier(supplier)">
+                  <span class="suggestion-name">{{ supplier }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
 
           <div class="form-row">
