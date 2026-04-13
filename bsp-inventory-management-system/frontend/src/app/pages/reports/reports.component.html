@@ -14,6 +14,11 @@
                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                         <input type="text" placeholder="Search by report name, date, or report #" [(ngModel)]="searchQuery">
                     </div>
+                    <select class="filter-dropdown" [(ngModel)]="filterType">
+                        <option value="all">All Types</option>
+                        <option value="pdf">PDF File</option>
+                        <option value="xls">Excel File</option>
+                    </select>
                     <button class="bsp-btn search-btn">Search</button>
                 </div>
                 
@@ -56,7 +61,20 @@
                     <p>Select a file<br>to view</p>
                 </div>
                 <div class="preview-content" *ngIf="selectedReport">
-                   <p>Previewing: <strong>{{selectedReport.title}}</strong></p>
+                   <div style="padding: 1rem 1.5rem; background: var(--bsp-light-green-bg); border-bottom: 1px solid rgba(0,0,0,0.08);">
+                       <p style="margin: 0; color: var(--bsp-dark-green); font-weight: 600; font-size: 0.95rem;">Previewing: <strong>{{selectedReport.title}}</strong></p>
+                   </div>
+                   
+                   <!-- Show iframe if we have base64 fileData -->
+                   <iframe *ngIf="selectedReport.fileData" 
+                       [src]="getSafeUrl(selectedReport.fileData)" 
+                       style="display: block; width: 100%; flex-grow: 1; border: none;">
+                   </iframe>
+                   
+                   <!-- Fallback if it's a mocked dummy report -->
+                   <div *ngIf="!selectedReport.fileData" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; background: #fcfcfc; padding: 20px; text-align: center;">
+                       <p style="color: #666;">This is a pre-existing dummy report.<br>Generate a new report to preview the fully functional PDF.</p>
+                   </div>
                 </div>
             </div>
         </div>
@@ -76,18 +94,27 @@
                 <div class="date-dropdowns">
                     <div class="form-group">
                         <label class="sub-label">Month</label>
-                        <select class="bsp-select">
+                        <select class="bsp-select" [(ngModel)]="selectedMonth">
                             <option>January</option>
                             <option>February</option>
                             <option>March</option>
+                            <option>April</option>
+                            <option>May</option>
+                            <option>June</option>
+                            <option>July</option>
+                            <option>August</option>
+                            <option>September</option>
+                            <option>October</option>
+                            <option>November</option>
+                            <option>December</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="sub-label">Year</label>
-                        <select class="bsp-select">
-                            <option>2020</option>
-                            <option>2021</option>
-                            <option>2022</option>
+                        <select class="bsp-select" [(ngModel)]="selectedYear">
+                            <option>2023</option>
+                            <option>2024</option>
+                            <option>2025</option>
                         </select>
                     </div>
                 </div>
@@ -97,11 +124,11 @@
                 <label class="section-label">File Type</label>
                 <div class="radio-group">
                     <label class="radio-label">
-                        <input type="radio" name="fileType" value="pdf" checked>
+                        <input type="radio" name="fileType" value="pdf" [(ngModel)]="selectedFormat">
                         <span class="radio-custom"></span> PDF
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="fileType" value="excel">
+                        <input type="radio" name="fileType" value="excel" [(ngModel)]="selectedFormat">
                         <span class="radio-custom"></span> Excel (.xlsx)
                     </label>
                 </div>
@@ -110,7 +137,7 @@
 
         <div class="modal-footer">
             <button class="bsp-btn outline-btn cancel-btn" (click)="closeGenerateModal()">Cancel</button>
-            <button class="bsp-btn solid-btn submit-btn">Generate</button>
+            <button class="bsp-btn solid-btn submit-btn" (click)="generateReport()">Generate</button>
         </div>
     </div>
 </div>

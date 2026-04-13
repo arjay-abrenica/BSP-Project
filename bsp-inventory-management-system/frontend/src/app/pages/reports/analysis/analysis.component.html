@@ -60,26 +60,16 @@
                     <table class="analysis-table">
                         <thead>
                             <tr>
-                                <th>Office</th>
-                                <th>Allocated Quantity</th>
-                                <th>Issued Quantity</th>
-                                <th>Remaining Stock</th>
-                                <th>Allocation Utilization (%)</th>
-                                <th>Reallocation Count</th>
-                                <th>Ave. Request Fulfillment (%)</th>
-                                <th>Remarks</th>
+                                <th>Office Segment</th>
+                                <th>Total Requests Logged</th>
+                                <th>Total Units Issued</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr *ngFor="let row of detailedData" class="clickable-row" (click)="openModal(row)">
                                 <td>{{ row.office }}</td>
-                                <td>{{ row.allocatedQuantity }}</td>
-                                <td>{{ row.issuedQuantity }}</td>
-                                <td>{{ row.remainingStock }}</td>
-                                <td>{{ row.allocationUtilization }}</td>
-                                <td>{{ row.reallocationCount }}</td>
-                                <td>{{ row.aveRequestFulfillment }}</td>
-                                <td class="remarks-cell">{{ row.remarks }}</td>
+                                <td>{{ row.totalRequests }}</td>
+                                <td>{{ row.totalIssued }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -153,7 +143,7 @@
                             </div>
                         </fieldset>
 
-                        <button class="export-btn">Export Graph</button>
+                        <button class="export-btn" (click)="exportGraph('Usage_Trend')">Export Graph</button>
 
                         <!-- Top 5 grid -->
                         <div class="top5-grid">
@@ -189,7 +179,7 @@
                         <div class="chart-legend">
                             <div class="legend-item" *ngFor="let label of distChartData.labels; let i = index">
                                 <div class="legend-color"
-                                    [style.backgroundColor]="distChartData.datasets?.[0]?.backgroundColor ? $any(distChartData.datasets[0].backgroundColor)[i] : '#ccc'">
+                                    [style.backgroundColor]="distChartData.datasets[0]?.backgroundColor ? $any(distChartData.datasets[0].backgroundColor)[i] : '#ccc'">
                                 </div>
                                 <span>{{ label }}</span>
                             </div>
@@ -215,25 +205,21 @@
                             </div>
                         </fieldset>
 
-                        <button class="export-btn">Export Graph</button>
+                        <button class="export-btn" (click)="exportGraph('Stock_Distribution')">Export Graph</button>
 
                         <table class="mini-table">
                             <thead>
                                 <tr>
-                                    <th>Office</th>
-                                    <th>Total Items Tracked</th>
-                                    <th>Total Allocated Quantity</th>
-                                    <th>Variance</th>
-                                    <th>Stock Condition</th>
+                                    <th>Category</th>
+                                    <th>Total Items Type (SKUs)</th>
+                                    <th>Total Number of Stock Available</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr *ngFor="let row of stockDistTable">
-                                    <td>{{ row.office }}</td>
+                                    <td>{{ row.category }}</td>
                                     <td>{{ row.totalItems }}</td>
-                                    <td>{{ row.allocated | number }}</td>
-                                    <td>{{ row.variance }}</td>
-                                    <td><span [class]="getBadgeClass(row.condition)">{{ row.condition }}</span></td>
+                                    <td>{{ row.totalStock | number }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -256,7 +242,7 @@
                         <div class="chart-legend">
                             <div class="legend-item" *ngFor="let label of catChartData.labels; let i = index">
                                 <div class="legend-dot"
-                                    [style.backgroundColor]="catChartData.datasets?.[0]?.backgroundColor ? $any(catChartData.datasets[0].backgroundColor)[i] : '#ccc'">
+                                    [style.backgroundColor]="catChartData.datasets[0]?.backgroundColor ? $any(catChartData.datasets[0].backgroundColor)[i] : '#ccc'">
                                 </div>
                                 <span>{{ label }}</span>
                             </div>
@@ -282,7 +268,7 @@
                             </div>
                         </fieldset>
 
-                        <button class="export-btn">Export Graph</button>
+                        <button class="export-btn" (click)="exportGraph('Supply_Category')">Export Graph</button>
 
                         <div class="ranked-list-section">
                             <h4>Top Categories by Usage</h4>
@@ -332,19 +318,19 @@
                             </div>
                         </fieldset>
 
-                        <button class="export-btn">Export Graph</button>
+                        <button class="export-btn" (click)="exportGraph('Allocation_Efficiency')">Export Graph</button>
 
                         <div class="summary-card">
                             <h4>Average Processing Time</h4>
-                            <div class="card-value">3.5 days</div>
+                            <div class="card-value">{{ effSummary.avgProcessingDays | number:'1.0-1' }} days</div>
                         </div>
                         <div class="summary-card">
                             <h4>Average Items Allocated per Request</h4>
-                            <div class="card-value">12 items</div>
+                            <div class="card-value">{{ effSummary.avgItemsPerRequest | number:'1.0-0' }} items</div>
                         </div>
                         <div class="summary-card">
                             <h4>Approval Rate (%)</h4>
-                            <div class="card-value">94.2%</div>
+                            <div class="card-value">{{ effSummary.approvalRate | number:'1.0-1' }}%</div>
                         </div>
                     </div>
                 </div>
@@ -375,27 +361,25 @@
                 </div>
 
                 <div class="item-breakdown-section">
-                    <h4>Item Breakdown</h4>
+                    <h4>Low Stock Alerts</h4>
                     <div class="breakdown-table-wrapper">
                         <table class="breakdown-table">
                             <thead>
                                 <tr>
                                     <th>SKU</th>
                                     <th>Item Name</th>
-                                    <th>Allocated Qty</th>
-                                    <th>Issued Qty</th>
-                                    <th>Remaining</th>
-                                    <th>Utilization (%)</th>
+                                    <th>Current Stock</th>
+                                    <th>Reorder Level</th>
+                                    <th>Category</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr *ngFor="let item of mockItemBreakdown">
                                     <td>{{ item.sku }}</td>
                                     <td>{{ item.itemName }}</td>
-                                    <td>{{ item.allocatedQty }}</td>
-                                    <td>{{ item.issuedQty }}</td>
-                                    <td>{{ item.remaining }}</td>
-                                    <td>{{ item.utilization }}</td>
+                                    <td class="status-low">{{ item.currentStock }}</td>
+                                    <td>{{ item.reorderLevel }}</td>
+                                    <td>{{ item.category }}</td>
                                 </tr>
                             </tbody>
                         </table>

@@ -55,4 +55,12 @@ router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
 router.get('/items/:id/allocation', inventoryController.getItemAllocationPerOffice);
 
+// --- Reports & Analysis ---
+router.get('/reports/low-stock', inventoryController.getLowStockItems);
+router.get('/reports/issuance-summary', inventoryController.getIssuanceSummary);
+router.get('/reports/stock-distribution', inventoryController.getStockDistribution);
+router.get('/reports/usage-trend', inventoryController.getUsageTrend);
+router.get('/reports/category-breakdown', inventoryController.getCategoryBreakdown);
+router.get('/reports/allocation-efficiency', inventoryController.getAllocationEfficiency);
+
 module.exports = router;

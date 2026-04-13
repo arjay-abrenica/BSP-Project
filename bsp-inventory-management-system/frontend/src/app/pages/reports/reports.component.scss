@@ -10,12 +10,10 @@
 .reports-layout {
     display: grid;
     grid-template-columns: 480px 1fr;
-    /* Increased width to prevent aggressive text wrapping on long filenames */
     gap: 1.5rem;
-    flex-grow: 1;
-    /* Stretch to fill remaining height */
-    min-height: 0;
-    /* Important for flex-child scrolling */
+    height: 75vh;
+    min-height: 600px;
+    max-height: 800px;
 }
 
 /* Custom Panel Container */
@@ -93,11 +91,25 @@
             }
         }
 
+        .filter-dropdown {
+            height: 38px;
+            padding: 0 1rem;
+            border: 1px solid var(--bsp-dark-green);
+            border-radius: 4px;
+            color: var(--bsp-dark-green);
+            background-color: transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
         .search-btn {
             padding: 0.5rem 1.25rem;
             font-size: 0.85rem;
             font-weight: 600;
             border-radius: 4px;
+            height: 38px;
         }
     }
 
@@ -234,6 +246,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        margin-top: 10px;
         background-color: var(--white);
     }
 
@@ -262,18 +275,13 @@
     }
 
     .preview-content {
-        /* Placeholder styling for when a report is actually selected */
-        padding: 2rem;
-        width: calc(100% - 4rem);
-        height: calc(100% - 4rem);
+        width: 100%;
+        flex-grow: 1;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        border: 2px dashed var(--bsp-light-green-bg);
-        border-radius: 8px;
+        flex-direction: column;
         background-color: #fcfcfc;
-        color: #555;
-        font-size: 1.2rem;
+        border-radius: 8px;
+        overflow: hidden;
     }
 }
 
@@ -294,7 +302,8 @@
 .modal-content.generate-modal {
     background-color: var(--white);
     border-radius: 12px;
-    width: 400px; /* Specific width for the small report generator */
+    width: 400px;
+    /* Specific width for the small report generator */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
@@ -304,7 +313,7 @@
     .modal-header {
         background-color: var(--bsp-light-green-bg);
         padding: 0.5rem 1rem;
-        
+
         h3 {
             margin: 0;
             color: var(--bsp-dark-green);
@@ -334,7 +343,7 @@
         .date-dropdowns {
             display: flex;
             gap: 1rem;
-            
+
             .form-group {
                 flex: 1;
                 display: flex;
@@ -356,7 +365,9 @@
                     outline: none;
                     cursor: pointer;
 
-                    &:focus { border-width: 2px; }
+                    &:focus {
+                        border-width: 2px;
+                    }
                 }
             }
         }
@@ -377,7 +388,8 @@
 
                 input[type="radio"] {
                     margin: 0;
-                    accent-color: var(--bsp-dark-green); /* Use theme green for radio */
+                    accent-color: var(--bsp-dark-green);
+                    /* Use theme green for radio */
                     cursor: pointer;
                 }
             }
@@ -387,8 +399,9 @@
     .modal-footer {
         padding: 1rem 1.5rem;
         display: flex;
-        justify-content: space-between; /* Cancel left, Generate right */
-        
+        justify-content: space-between;
+        /* Cancel left, Generate right */
+
         .bsp-btn {
             padding: 0.6rem 2rem;
             border-radius: 4px;
@@ -401,7 +414,9 @@
                 border: 1px solid var(--bsp-dark-green);
                 color: var(--bsp-dark-green);
 
-                &:hover { background: #f0f5f2; }
+                &:hover {
+                    background: #f0f5f2;
+                }
             }
 
             &.solid-btn.submit-btn {
@@ -409,7 +424,9 @@
                 border: 1px solid var(--bsp-dark-green);
                 color: var(--white);
 
-                &:hover { background: #0a3d1c; }
+                &:hover {
+                    background: #0a3d1c;
+                }
             }
         }
     }
