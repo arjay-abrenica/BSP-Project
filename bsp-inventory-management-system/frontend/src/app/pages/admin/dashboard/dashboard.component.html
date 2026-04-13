@@ -13,21 +13,25 @@
                 <div class="supply-section">
                     <h3>Low Stock Items</h3>
                     <ul class="stock-list">
-                        <li><span>CLP19-BF</span> <span>Clip, Backfold 19mm</span> <span class="alert">16%</span></li>
-                        <li><span>FLD-TAG</span> <span>Data Folder, Taglia Lock</span> <span class="alert">18%</span>
+                        <li *ngFor="let item of lowStockItems">
+                            <span>{{item.item_code || 'N/A'}}</span> 
+                            <span>{{item.item_name}}</span> 
+                            <span class="alert">{{item.stock_percentage}}%</span>
                         </li>
-                        <li><span>STP-STD</span> <span>Stapler, Standard Type</span> <span class="alert">21%</span></li>
+                        <li *ngIf="lowStockItems.length === 0">
+                            <span>No low stock items</span>
+                        </li>
                     </ul>
                 </div>
 
                 <div class="supply-stats">
                     <div class="stat-block">
                         <h3>Total Items Issued</h3>
-                        <p><span class="big-number">183</span> items have been issued this month</p>
+                        <p><span class="big-number">{{totalItemsIssued}}</span> items have been issued this month</p>
                     </div>
                     <div class="stat-block">
                         <h3>Percentage Stock Used</h3>
-                        <p><span class="big-number">63%</span> stock used this month</p>
+                        <p><span class="big-number">{{percentageStockUsed}}%</span> stock used this month</p>
                     </div>
                 </div>
 
@@ -39,25 +43,13 @@
             <div class="card-content">
                 <table class="simple-table">
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>OSG</td>
-                            <td>10/25/2025</td>
+                        <tr *ngFor="let req of pendingRequests; let i = index">
+                            <td>{{i + 1}}</td>
+                            <td>{{req.office}}</td>
+                            <td>{{req.request_date | date:'MM/dd/yyyy'}}</td>
                         </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>CPSMO</td>
-                            <td>10/31/2025</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>IAO</td>
-                            <td>11/07/2025</td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>PMDD</td>
-                            <td>11/15/2025</td>
+                        <tr *ngIf="pendingRequests.length === 0">
+                            <td colspan="3" style="text-align: center;">No pending requests</td>
                         </tr>
                     </tbody>
                 </table>
@@ -110,9 +102,12 @@
                 <div class="card-header">Recent Activity</div>
                 <div class="card-content">
                     <ul class="activity-list">
-                        <li><span class="dot"></span> CPSMO Supply Request Approved - 10/18/25</li>
-                        <li><span class="dot"></span> Added White Board Marker</li>
-                        <li><span class="dot"></span> Replenish Items for PMDD Supplies</li>
+                        <li *ngFor="let activity of recentActivities">
+                            <span class="dot"></span> {{activity.description}} - {{activity.date | date:'MM/dd/yy'}}
+                        </li>
+                        <li *ngIf="recentActivities.length === 0">
+                            No recent activity
+                        </li>
                     </ul>
                 </div>
             </div>

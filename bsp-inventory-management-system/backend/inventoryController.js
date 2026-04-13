@@ -6,6 +6,15 @@ const jwt = require('jsonwebtoken');
    SECTION 1: ITEM MANAGEMENT (CRUD)
    ========================================= */
 
+exports.getAllSuppliers = async (req, res) => {
+  try {
+    const result = await db.query('SELECT * FROM Suppliers ORDER BY supplier_name ASC');
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.getAllOffices = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM Offices ORDER BY office_name ASC');

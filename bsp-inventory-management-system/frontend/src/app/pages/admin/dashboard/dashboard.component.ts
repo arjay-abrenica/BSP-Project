@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration, ChartOptions, Chart } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { DashboardService } from '../../../core/services/dashboard.service';
 
 // Register the datalabels plugin globally for all charts
 Chart.register(ChartDataLabels);
@@ -15,258 +16,166 @@ Chart.register(ChartDataLabels);
     styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
-    // Properties to hold your dashboard data
-    totalSupplies: number = 0;
-    pendingRequestsCount: number = 0;
-    recentActivities: string[] = [];
+    totalItemsIssued: number = 0;
+    percentageStockUsed: number = 0;
+    lowStockItems: any[] = [];
+    pendingRequests: any[] = [];
+    recentActivities: any[] = [];
 
-    // Modal states
     isQuarterlyUsageModalOpen: boolean = false;
     isStockDistributionModalOpen: boolean = false;
     activeStockTab: 'distribution' | 'allocation' = 'distribution';
 
-    // --- Chart Data & Configuration ---
-
-    // 1. Quarterly Usage (Bar Chart)
     public barChartData: ChartConfiguration<'bar'>['data'] = {
         labels: ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'],
-        datasets: [
-            { data: [50, 39, 63, 35], label: 'CLP-19MM', backgroundColor: '#3f9f4add', barPercentage: 0.8, categoryPercentage: 0.8 },
-            { data: [13, 11, 32, 12], label: 'STP-STD', backgroundColor: '#ee472cdd', barPercentage: 0.8, categoryPercentage: 0.8 },
-            { data: [25, 21, 15, 31], label: 'FLD-TAG', backgroundColor: '#fedb28dd', barPercentage: 0.8, categoryPercentage: 0.8 }
-        ]
+        datasets: []
     };
 
     public barChartOptions: ChartOptions<'bar'> | any = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { boxWidth: 12, padding: 10, font: { size: 10 } }
-            },
-            datalabels: {
-                anchor: 'end',
-                align: 'end',
-                color: '#666',
-                font: {
-                    size: 9,
-                    weight: 'bold'
-                },
-                formatter: Math.round
-            }
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 10 } } },
+            datalabels: { anchor: 'end', align: 'end', color: '#666', font: { size: 9, weight: 'bold' }, formatter: (value: any) => value > 0 ? value : '' }
         },
         scales: {
-            x: {
-                grid: {
-                    display: false // Hide vertical lines
-                },
-                ticks: {
-                    font: { size: 10 }
-                }
-            },
-            y: {
-                border: {
-                    display: false
-                },
-                grid: {
-                    color: '#f0f0f0' // Extra light faint horizontal lines
-                },
-                ticks: {
-                    font: { size: 10 },
-                    stepSize: 10
-                }
-            }
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: { border: { display: false }, grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 }, stepSize: 10 } }
         }
     };
 
-    // 2. Stock Distribution by Office (Doughnut Chart)
     public doughnutChartData: ChartConfiguration<'doughnut'>['data'] = {
-        labels: ['FOD', 'CPSMO', 'LSO', 'IAO', 'NSS', 'Administration', 'Finance', 'PMDD', 'ONP', 'OSG'],
-        datasets: [
-            {
-                data: [16, 11, 4, 13, 10, 18, 9, 8, 5, 6],
-                backgroundColor: [
-                    '#24404C', // Dark Blue - FOD
-                    '#F3A160', // Orange - CPSMO
-                    '#79C3B6', // Light Teal - LSO
-                    '#E1AE58', // Yellow/Gold - IAO
-                    '#E96446', // Bright Orange/Red - NSS
-                    '#7FC8BE', // Aqua - Administration
-                    '#A62244', // Maroon - Finance
-                    '#7E8588', // Gray - PMDD
-                    '#217DAB', // Blue - ONP
-                    '#404243'  // Dark Gray - OSG
-                ],
-                borderWidth: 0 // Remove white borders between segments
-            }
-        ]
+        labels: [],
+        datasets: [{
+            data: [],
+            backgroundColor: ['#24404C', '#F3A160', '#79C3B6', '#E1AE58', '#E96446', '#7FC8BE', '#A62244', '#7E8588', '#217DAB', '#404243'],
+            borderWidth: 0
+        }]
     };
 
     public doughnutChartOptions: ChartOptions<'doughnut'> | any = {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '50%', // Make the hole size match the reference image
+        cutout: '50%',
         plugins: {
             legend: {
                 position: 'bottom',
-                labels: { 
-                    boxWidth: 8, 
-                    boxHeight: 8,
-                    usePointStyle: true, 
-                    pointStyle: 'circle',
-                    padding: 15, 
-                    font: { size: 9, weight: 'bold' } 
-                }
+                labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle', padding: 15, font: { size: 9, weight: 'bold' } }
             },
-            datalabels: {
-                display: false
-            }
+            datalabels: { display: false }
         }
     };
 
     public modalDoughnutChartOptions: ChartOptions<'doughnut'> | any = {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '50%', // Make the hole size match the reference image
+        cutout: '50%',
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { 
-                    boxWidth: 8, 
-                    boxHeight: 8,
-                    usePointStyle: true, 
-                    pointStyle: 'circle',
-                    padding: 10, 
-                    font: { size: 9, weight: 'bold' } 
-                }
-            },
+            legend: { position: 'bottom', labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle', padding: 10, font: { size: 9, weight: 'bold' } } },
             datalabels: {
                 display: true,
                 align: 'end',
                 anchor: 'end',
-                formatter: (value: any, context: any) => {
-                    return context.chart.data.labels ? context.chart.data.labels[context.dataIndex] + '\n' + value + '%' : value + '%';
-                },
-                font: {
-                    size: 9,
-                    weight: 'bold'
-                },
+                formatter: (value: any, context: any) => context.chart.data.labels ? context.chart.data.labels[context.dataIndex] + '\n' + value : value,
+                font: { size: 9, weight: 'bold' },
                 textAlign: 'center',
                 color: '#333'
             }
         },
-        layout: {
-            padding: 40 // Substantially increase space to protect external data labels from being clipped
-        }
+        layout: { padding: 40 }
     };
 
-    // 3. Supply Allocation Status (Horizontal Stacked Bar Chart)
     public allocationChartData: ChartConfiguration<'bar'>['data'] = {
-        // Labels ordered from bottom to top as per reference image
-        labels: ['LSO', 'Finance', 'ONP', 'OSG', 'Admin', 'IAO', 'CPSMO', 'PMDD', 'NSS', 'FOD'],
+        labels: [],
         datasets: [
-            {
-                label: 'Consumed Supply',
-                data: [80, 78, 74, 61, 59, 68, 76, 45, 56, 68],
-                backgroundColor: '#5a8b66', // Dark green tint for consumed
-                barThickness: 25 // make bars slightly slimmer
-            },
-            {
-                label: 'Remaining Supply',
-                data: [20, 22, 26, 39, 41, 32, 24, 55, 44, 32],
-                backgroundColor: '#c7d4cc', // Light milky green tint for remaining
-                barThickness: 25
-            }
+            { label: 'Consumed Supply', data: [], backgroundColor: '#5a8b66', barThickness: 25 },
+            { label: 'Remaining Supply', data: [], backgroundColor: '#c7d4cc', barThickness: 25 }
         ]
     };
 
     public allocationChartOptions: ChartOptions<'bar'> | any = {
         responsive: true,
         maintainAspectRatio: false,
-        indexAxis: 'y', // CRITICAL: Makes the bar chart horizontal
+        indexAxis: 'y',
         scales: {
-            x: { 
-                stacked: true, 
-                display: false // Hide bottom axis per reference
-            },
-            y: { 
-                stacked: true, 
-                grid: { display: false },
-                ticks: {
-                    font: { size: 10, weight: 'bold' },
-                    color: '#333'
-                },
-                border: { display: false }
-            }
+            x: { stacked: true, display: false },
+            y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#333' }, border: { display: false } }
         },
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    boxWidth: 8,
-                    boxHeight: 8,
-                    usePointStyle: true,
-                    pointStyle: 'rectRounded',
-                    padding: 20,
-                    font: { size: 9, weight: 'bold' }
-                }
-            },
-            datalabels: {
-                display: true,
-                color: '#333',
-                font: { size: 8, weight: 'bold' },
-                formatter: (value: any) => value > 0 ? value : '' // Only show label if > 0
-            }
+            legend: { position: 'bottom', labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'rectRounded', padding: 20, font: { size: 9, weight: 'bold' } } },
+            datalabels: { display: true, color: '#333', font: { size: 8, weight: 'bold' }, formatter: (value: any) => value > 0 ? value : '' }
         },
-        layout: {
-            padding: 10
-        }
+        layout: { padding: 10 }
     };
 
-    // ----------------------------------
+    constructor(private dashboardService: DashboardService) { }
 
-    // Inject your services here via the constructor (e.g., private dashboardService: DashboardService)
-    constructor() { }
-
-    // This lifecycle hook runs when the page loads
     ngOnInit(): void {
         this.loadDashboardData();
     }
 
     loadDashboardData(): void {
-        // In a real app, you would call your API service here. 
-        // For now, we are using mock data based on your requirements.
-        this.totalSupplies = 1250;
-        this.pendingRequestsCount = 8;
+        this.dashboardService.getStats().subscribe({
+            next: (data) => {
+                this.totalItemsIssued = data.issuedThisMonth;
+                this.percentageStockUsed = data.percentageStockUsed;
+                this.lowStockItems = data.lowStock;
+                this.pendingRequests = data.pendingRequests;
+                this.recentActivities = data.recentActivities;
 
-        this.recentActivities = [
-            'John Doe requested 50 Reams of Bond Paper',
-            'IT Department allocated 10 Wireless Mice',
-            'System generated Quarterly Usage Report'
-        ];
+                this.updateQuarterlyChart(data.quarterlyUsage);
+                this.updateDistributionChart(data.stockDistribution);
+                this.updateAllocationChart(data.allocationStatus);
+            },
+            error: (err) => console.error('Failed to load dashboard stats', err)
+        });
     }
 
-    openQuarterlyUsageModal(): void {
-        this.isQuarterlyUsageModalOpen = true;
+    updateQuarterlyChart(usageData: any[]): void {
+        const categories = [...new Set(usageData.map(d => d.label))];
+        const quarters = [1, 2, 3, 4];
+        const backgroundColors = ['#3f9f4add', '#ee472cdd', '#fedb28dd', '#217DABdd', '#404243dd'];
+
+        this.barChartData = {
+            ...this.barChartData,
+            datasets: categories.map((cat, index) => ({
+                label: cat,
+                data: quarters.map(q => {
+                    const found = usageData.find(d => d.label === cat && parseInt(d.quarter) === q);
+                    return found ? parseInt(found.total_quantity) : 0;
+                }),
+                backgroundColor: backgroundColors[index % backgroundColors.length],
+                barPercentage: 0.8,
+                categoryPercentage: 0.8
+            }))
+        };
     }
 
-    closeQuarterlyUsageModal(): void {
-        this.isQuarterlyUsageModalOpen = false;
+    updateDistributionChart(distData: any[]): void {
+        this.doughnutChartData = {
+            ...this.doughnutChartData,
+            labels: distData.map(d => d.label),
+            datasets: [{
+                ...this.doughnutChartData.datasets[0],
+                data: distData.map(d => parseInt(d.value))
+            }]
+        };
     }
 
-    openStockDistributionModal(): void {
-        this.isStockDistributionModalOpen = true;
+    updateAllocationChart(allocData: any[]): void {
+        this.allocationChartData = {
+            ...this.allocationChartData,
+            labels: allocData.map(d => d.office),
+            datasets: [
+                { ...this.allocationChartData.datasets[0], data: allocData.map(d => parseInt(d.consumed)) },
+                { ...this.allocationChartData.datasets[1], data: allocData.map(d => parseInt(d.remaining)) }
+            ]
+        };
     }
 
-    closeStockDistributionModal(): void {
-        this.isStockDistributionModalOpen = false;
-        // Optionally reset back to first tab when closed
-        this.activeStockTab = 'distribution';
-    }
-
-    setActiveStockTab(tab: 'distribution' | 'allocation'): void {
-        this.activeStockTab = tab;
-    }
-
+    openQuarterlyUsageModal(): void { this.isQuarterlyUsageModalOpen = true; }
+    closeQuarterlyUsageModal(): void { this.isQuarterlyUsageModalOpen = false; }
+    openStockDistributionModal(): void { this.isStockDistributionModalOpen = true; }
+    closeStockDistributionModal(): void { this.isStockDistributionModalOpen = false; this.activeStockTab = 'distribution'; }
+    setActiveStockTab(tab: 'distribution' | 'allocation'): void { this.activeStockTab = tab; }
 }
