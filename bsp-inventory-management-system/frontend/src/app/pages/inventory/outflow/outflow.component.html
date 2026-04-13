@@ -75,10 +75,13 @@
 
     <!-- Right Panel -->
     <div class="panel details-panel">
+      <div class="page-title-bar">
+        <h2>Outflow / Issuance</h2>
+      </div>
       
       <!-- PENDING TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'pending'">
-        <div class="panel-header">
+        <div class="panel-header" style="border-top-left-radius: 0; border-top-right-radius: 0;">
           <h3>Request Details</h3>
         </div>
         
@@ -209,7 +212,7 @@
           </div>
 
           <div class="transactions-timeline">
-            <div class="transaction-record-box" *ngFor="let trans of officeTransactions">
+            <div class="transaction-record-box" *ngFor="let trans of paginatedTransactions">
               <div class="record-header">
                 <div class="record-ris">
                   <span class="label">RIS No.</span>
@@ -259,6 +262,23 @@
                   Print RIS
                 </button>
               </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="history-pagination" *ngIf="totalPages > 1">
+              <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+                Previous
+              </button>
+              
+              <div class="page-numbers">
+                <button *ngFor="let p of getPages()" class="page-number-btn" [class.active]="p === currentPage" (click)="goToPage(p)">
+                  {{ p }}
+                </button>
+              </div>
+
+              <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+                Next
+              </button>
             </div>
           </div>
         </div>
@@ -394,7 +414,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr *ngFor="let item of filteredItems">
+                    <tr *ngFor="let item of paginatedDirectItems">
                       <td class="font-medium">{{ item.item_code || 'N/A' }}</td>
                       <td>{{ item.item_name }}</td>
                       <td class="center-text">{{ item.current_stock }}</td>
@@ -403,11 +423,28 @@
                         <input type="number" class="issue-input" min="0" [max]="item.current_stock" [value]="getQty(item.item_id)" (change)="onQuantityChange(item, $event)">
                       </td>
                     </tr>
-                    <tr *ngIf="filteredItems.length === 0">
+                    <tr *ngIf="paginatedDirectItems.length === 0">
                       <td colspan="5" class="empty-state">No items found matching your search.</td>
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <!-- Pagination Controls for Direct Allocation Items -->
+              <div class="history-pagination" *ngIf="directTotalPages > 1" style="margin-top: 0; padding-top: 10px; border-top: none;">
+                <button class="page-btn" type="button" [disabled]="directCurrentPage === 1" (click)="goToDirectPage(directCurrentPage - 1)">
+                  Previous
+                </button>
+                
+                <div class="page-numbers">
+                  <button *ngFor="let p of getDirectPages()" type="button" class="page-number-btn" [class.active]="p === directCurrentPage" (click)="goToDirectPage(p)">
+                    {{ p }}
+                  </button>
+                </div>
+
+                <button class="page-btn" type="button" [disabled]="directCurrentPage === directTotalPages" (click)="goToDirectPage(directCurrentPage + 1)">
+                  Next
+                </button>
               </div>
 
               <div class="direct-footer">

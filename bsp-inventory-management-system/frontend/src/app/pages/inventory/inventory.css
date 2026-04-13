@@ -33,4 +33,9 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0; /* Removed padding to align exactly with the edges of the header */
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 80px); /* Adjusting to fit the screen */
 }
