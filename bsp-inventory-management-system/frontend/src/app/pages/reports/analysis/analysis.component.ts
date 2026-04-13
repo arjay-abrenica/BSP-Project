@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { BaseChartDirective } from 'ng2-charts';
 import { Chart, ChartData, ChartOptions, ChartType } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -8,28 +9,28 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 // Register the datalabels plugin globally so charts don't crash when trying to use it
 Chart.register(ChartDataLabels);
 
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
+
 export interface DetailedAnalysisRow {
   office: string;
-  allocatedQuantity: number;
-  issuedQuantity: number;
-  remainingStock: number;
-  allocationUtilization: string;
-  reallocationCount: number;
-  aveRequestFulfillment: string;
-  remarks: string;
+  totalRequests: number;
+  totalIssued: number;
+  remarks?: string;
 }
 
 export interface StockDistRow {
-  office: string; totalItems: number; allocated: number; variance: string; condition: string;
+  category: string; 
+  totalItems: number; 
+  totalStock: number; 
 }
 
 export interface ItemBreakdownRow {
   sku: string;
   itemName: string;
-  allocatedQty: number;
-  issuedQty: number;
-  remaining: number;
-  utilization: string;
+  currentStock: number;
+  reorderLevel: number;
+  category: string;
 }
 
 @Component({
@@ -44,18 +45,7 @@ export class AnalysisComponent implements OnInit {
   activeAnalysisTab: 'detailed' | 'trend' | 'distribution' | 'category' | 'efficiency' = 'detailed';
 
   /* ── Tab A: Detailed ── */
-  detailedData: DetailedAnalysisRow[] = [
-    { office: 'OSG', allocatedQuantity: 340, issuedQuantity: 265, remainingStock: 75, allocationUtilization: '78%', reallocationCount: 1, aveRequestFulfillment: '82%', remarks: 'Moderate Usage' },
-    { office: 'ONP', allocatedQuantity: 410, issuedQuantity: 402, remainingStock: 8, allocationUtilization: '98%', reallocationCount: 1, aveRequestFulfillment: '97%', remarks: 'Near Depletion' },
-    { office: 'IAO', allocatedQuantity: 310, issuedQuantity: 304, remainingStock: 6, allocationUtilization: '98%', reallocationCount: 0, aveRequestFulfillment: '100%', remarks: 'Near Depletion' },
-    { office: 'LSO', allocatedQuantity: 420, issuedQuantity: 395, remainingStock: 25, allocationUtilization: '94%', reallocationCount: 2, aveRequestFulfillment: '90%', remarks: 'High Utilization' },
-    { office: 'CPSMO', allocatedQuantity: 480, issuedQuantity: 462, remainingStock: 18, allocationUtilization: '96%', reallocationCount: 1, aveRequestFulfillment: '98%', remarks: 'High Utilization' },
-    { office: 'PMDD', allocatedQuantity: 275, issuedQuantity: 260, remainingStock: 15, allocationUtilization: '95%', reallocationCount: 0, aveRequestFulfillment: '94%', remarks: 'High Utilization' },
-    { office: 'NSS', allocatedQuantity: 260, issuedQuantity: 180, remainingStock: 85, allocationUtilization: '68%', reallocationCount: 1, aveRequestFulfillment: '80%', remarks: 'Underused Allocation' },
-    { office: 'Admin', allocatedQuantity: 600, issuedQuantity: 580, remainingStock: 20, allocationUtilization: '97%', reallocationCount: 3, aveRequestFulfillment: '96%', remarks: 'High Utilization' },
-    { office: 'Finance', allocatedQuantity: 350, issuedQuantity: 312, remainingStock: 38, allocationUtilization: '89%', reallocationCount: 0, aveRequestFulfillment: '92%', remarks: 'Stable Usage' },
-    { office: 'FOD', allocatedQuantity: 390, issuedQuantity: 278, remainingStock: 112, allocationUtilization: '71%', reallocationCount: 0, aveRequestFulfillment: '85%', remarks: 'Underused Allocation' }
-  ];
+  detailedData: DetailedAnalysisRow[] = [];
 
   /* ── Modal State & Data ── */
   isModalOpen: boolean = false;
@@ -71,16 +61,12 @@ export class AnalysisComponent implements OnInit {
     'Admin': 'Administration Office',
     'Finance': 'Finance Department',
     'ONP': 'Office of National Planning',
-    'OSG': 'Office of the Secretary General'
+    'OSG': 'Office of the Secretary General',
+    'SU': 'Supply Unit/Admin',
+    'CO': 'Corporate Planning and Strategy Management Office'
   };
 
-  mockItemBreakdown: ItemBreakdownRow[] = [
-    { sku: 'STD-STP', itemName: 'Stapler - Standard', allocatedQty: 20, issuedQty: 18, remaining: 2, utilization: '90%' },
-    { sku: 'BND-PPRA4', itemName: 'Bond Paper A4', allocatedQty: 80, issuedQty: 75, remaining: 5, utilization: '93.75%' },
-    { sku: 'BLK-INK', itemName: 'Black Ink Cartridge', allocatedQty: 15, issuedQty: 13, remaining: 2, utilization: '86.67%' },
-    { sku: 'WHT-BRD', itemName: 'White Board Marker Set', allocatedQty: 10, issuedQty: 8, remaining: 2, utilization: '80%' },
-    { sku: 'CLP-MTL', itemName: 'Paper Clips (Large)', allocatedQty: 20, issuedQty: 17, remaining: 3, utilization: '85%' }
-  ];
+  mockItemBreakdown: ItemBreakdownRow[] = [];
 
   /* ── Tab B: Usage Trend ── */
   trendChartType: 'bar' = 'bar';
@@ -99,14 +85,14 @@ export class AnalysisComponent implements OnInit {
   };
 
   top5Most = [
-    { name: 'Bond Paper A4', pct: '92%' }, { name: 'Alcohol (70% Solution)', pct: '85%' },
-    { name: 'Ballpoint Pen (Black)', pct: '78%' }, { name: 'Printer Ink (Black HP)', pct: '71%' },
-    { name: 'Tissue Roll', pct: '64%' }
+    { name: '', pct: '' }, { name: '', pct: '' },
+    { name: '', pct: '' }, { name: '', pct: '' },
+    { name: '', pct: '' }
   ];
   top5Least = [
-    { name: 'Paper Fastener (Metal Clip)', pct: '5%' }, { name: 'Air Freshener (Aerosol)', pct: '8%' },
-    { name: 'Staple Wire (No.35)', pct: '10%' }, { name: 'Push Pins (Assorted)', pct: '11%' },
-    { name: 'Correction Tape', pct: '12%' }
+    { name: '', pct: '' }, { name: '', pct: '' },
+    { name: '', pct: '' }, { name: '', pct: '' },
+    { name: '', pct: '' }
   ];
 
   /* ── Tab C: Stock Distribution ── */
@@ -125,23 +111,12 @@ export class AnalysisComponent implements OnInit {
     plugins: {
       legend: { display: false },
       datalabels: {
-        formatter: (v: number, ctx: any) => ctx.chart.data.labels?.[ctx.dataIndex] + '\n' + v + '%',
+        formatter: (v: number, ctx: any) => ctx.chart.data.labels?.[ctx.dataIndex] + '\n' + v,
         font: { size: 9 }, color: '#333', textAlign: 'center'
       }
     }
   };
-  stockDistTable: StockDistRow[] = [
-    { office: 'CPSMO', totalItems: 20, allocated: 860, variance: '+3.6%', condition: 'Normal' },
-    { office: 'FOD', totalItems: 25, allocated: 1240, variance: '+2.7%', condition: 'Overstock' },
-    { office: 'LSO', totalItems: 35, allocated: 2310, variance: '+3.5%', condition: 'Overstock' },
-    { office: 'IAO', totalItems: 15, allocated: 520, variance: '-13.3%', condition: 'Low Stock' },
-    { office: 'NSS', totalItems: 22, allocated: 1050, variance: '+5.0%', condition: 'Normal' },
-    { office: 'Admin', totalItems: 30, allocated: 1980, variance: '+16.5%', condition: 'Overstock' },
-    { office: 'Finance', totalItems: 18, allocated: 740, variance: '-9.8%', condition: 'Normal' },
-    { office: 'PMDD', totalItems: 16, allocated: 680, variance: '-2.9%', condition: 'Normal' },
-    { office: 'ONP', totalItems: 12, allocated: 530, variance: '+6.0%', condition: 'Normal' },
-    { office: 'OSG', totalItems: 28, allocated: 1770, variance: '-6.6%', condition: 'Normal' }
-  ];
+  stockDistTable: StockDistRow[] = [];
 
   /* ── Tab D: Supply Category Breakdown ── */
   catChartType: 'doughnut' = 'doughnut';
@@ -166,31 +141,28 @@ export class AnalysisComponent implements OnInit {
       }
     }
   };
-  topCatUsage = [
-    { name: 'Office Stationary', pct: '42%' }, { name: 'Cleaning and Sanitation Supplies', pct: '23%' },
-    { name: 'Printing and Documentation Supplies', pct: '15%' }, { name: 'First Aid and Health Supplies', pct: '9%' },
-    { name: 'Miscellaneous Office Supplies', pct: '7%' }
-  ];
-  topCatValue = [
-    { name: 'Cleaning and Sanitation Supplies', pct: '33%' }, { name: 'Office Stationary', pct: '28%' },
-    { name: 'Printing and Documentation Supplies', pct: '23%' }, { name: 'First Aid and Health Supplies', pct: '9%' },
-    { name: 'Miscellaneous Office Supplies', pct: '7%' }
-  ];
+  topCatUsage: any[] = [];
+  topCatValue: any[] = [];
 
   /* ── Tab E: Allocation Efficiency ── */
   effChartType: 'line' = 'line';
   effChartData: ChartData<'line'> = {
-    labels: ['CPSMO', 'FOD', 'LSO', 'IAO', 'NSS', 'Admin', 'Finance', 'PMDD', 'ONP', 'OSG'],
+    labels: [],
     datasets: [
       {
-        label: 'Allocation Time (day/s)', data: [95, 91, 96, 88, 52, 97, 90, 91, 97, 54],
+        label: 'Allocation Time (day/s)', data: [],
         borderColor: '#1d3557', backgroundColor: 'transparent', pointBackgroundColor: '#1d3557', yAxisID: 'y', tension: 0.4
       },
       {
-        label: 'Approval Rate (%)', data: [2.8, 3.7, 4.4, 6.5, 3.2, 7.1, 4.8, 6.3, 5.7, 6.3],
+        label: 'Approval Rate (%)', data: [],
         borderColor: '#1a7a3e', backgroundColor: 'transparent', pointBackgroundColor: '#1a7a3e', yAxisID: 'y1', tension: 0.4
       }
     ]
+  };
+  effSummary = {
+    avgProcessingDays: 0,
+    avgItemsPerRequest: 0,
+    approvalRate: 0
   };
   effChartOptions: ChartOptions<'line'> = {
     responsive: true, maintainAspectRatio: false,
@@ -207,8 +179,175 @@ export class AnalysisComponent implements OnInit {
     }
   };
 
-  constructor() { }
-  ngOnInit(): void { }
+  constructor(private http: HttpClient) { }
+  
+  ngOnInit(): void {
+    this.fetchIssuanceSummary();
+    this.fetchStockDistribution();
+    this.fetchLowStockItems();
+    this.fetchUsageTrend();
+    this.fetchCategoryBreakdown();
+    this.fetchAllocationEfficiency();
+  }
+
+  fetchIssuanceSummary(): void {
+    this.http.get<any[]>('http://localhost:5000/api/reports/issuance-summary').subscribe({
+      next: (data) => {
+        this.detailedData = data.map(d => ({
+          office: d.office || d.acronym || 'UNKNOWN',
+          totalRequests: Number(d.total_requests),
+          totalIssued: Number(d.total_issued)
+        }));
+      },
+      error: (err) => console.error('Error fetching issuance summary', err)
+    });
+  }
+
+  fetchStockDistribution(): void {
+    this.http.get<any[]>('http://localhost:5000/api/reports/stock-distribution').subscribe({
+      next: (data) => {
+        this.stockDistTable = data.map(d => ({
+          category: d.category || 'UNKNOWN',
+          totalItems: Number(d.total_items),
+          totalStock: Number(d.total_stock)
+        }));
+        
+        // Update Dist chart with real data 
+        const colors = ['#1a7a3e', '#e07b39', '#e8c547', '#1d3557', '#c77dff', '#2d6a4f', '#40916c', '#52b788', '#f4a261', '#e76f51'];
+        this.distChartData = {
+          labels: this.stockDistTable.map(d => d.category),
+          datasets: [{
+             ...this.distChartData.datasets[0],
+             data: this.stockDistTable.map(d => d.totalStock),
+             backgroundColor: this.stockDistTable.map((_, i) => colors[i % colors.length])
+          }]
+        };
+      },
+      error: (err) => console.error('Error fetching stock distribution', err)
+    });
+  }
+
+  fetchLowStockItems(): void {
+    this.http.get<any[]>('http://localhost:5000/api/reports/low-stock').subscribe({
+      next: (data) => {
+        this.mockItemBreakdown = data.map(d => ({
+          sku: d.sku || 'N/A',
+          itemName: d.item_name,
+          currentStock: Number(d.current_stock),
+          reorderLevel: Number(d.reorder_level),
+          category: d.category_name || 'Uncategorized'
+        }));
+      },
+      error: (err) => console.error('Error fetching low stock items', err)
+    });
+  }
+
+  fetchUsageTrend(): void {
+    this.http.get<any>('http://localhost:5000/api/reports/usage-trend').subscribe({
+      next: (data) => {
+        // Map Top 5 Most and Least Use
+        const totalMost = data.top5Most.reduce((sum: number, item: any) => sum + Number(item.total_issued), 0) || 1;
+        this.top5Most = data.top5Most.map((d: any) => ({
+          name: d.name,
+          pct: Math.round((Number(d.total_issued) / totalMost) * 100) + '%'
+        }));
+        
+        const totalLeast = data.top5Least.reduce((sum: number, item: any) => sum + Number(item.total_issued), 0) || 1;
+        this.top5Least = data.top5Least.map((d: any) => ({
+          name: d.name,
+          pct: Math.round((Number(d.total_issued) / totalLeast) * 100) + '%'
+        }));
+        
+        while (this.top5Most.length < 5) this.top5Most.push({ name: '', pct: '' });
+        while (this.top5Least.length < 5) this.top5Least.push({ name: '', pct: '' });
+
+        // Map Chart Data (Quarters by Category)
+        const quarters = [1, 2, 3, 4];
+        this.trendChartData.labels = ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'];
+        
+        // Group by category_name
+        const grouped: { [key: string]: number[] } = {};
+        for (const row of data.chartData) {
+          if (!grouped[row.category_name]) {
+            grouped[row.category_name] = [0, 0, 0, 0];
+          }
+          const qIdx = parseInt(row.quarter) - 1;
+          if (qIdx >= 0 && qIdx < 4) {
+             grouped[row.category_name][qIdx] = Number(row.total_issued);
+          }
+        }
+        
+        const colors = ['#1a7a3e', '#e07b39', '#e8c547', '#1d3557', '#c77dff', '#2d6a4f'];
+        let cIdx = 0;
+        this.trendChartData.datasets = Object.keys(grouped).map(catName => {
+          const ds = {
+            label: catName,
+            data: grouped[catName],
+            backgroundColor: colors[cIdx % colors.length]
+          };
+          cIdx++;
+          return ds;
+        });
+        
+        // trigger chart update
+        this.trendChartData = { ...this.trendChartData };
+      },
+      error: (err) => console.error('Error fetching usage trend', err)
+    });
+  }
+
+  fetchCategoryBreakdown(): void {
+    this.http.get<any>('http://localhost:5000/api/reports/category-breakdown').subscribe({
+      next: (data) => {
+        const totalUsage = data.topUsage.reduce((sum: number, item: any) => sum + Number(item.total_issued), 0) || 1;
+        this.topCatUsage = data.topUsage.map((d: any) => ({
+          name: d.name,
+          pct: Math.round((Number(d.total_issued) / totalUsage) * 100) + '%'
+        }));
+        
+        const totalValue = data.topValue.reduce((sum: number, item: any) => sum + Number(item.total_value), 0) || 1;
+        this.topCatValue = data.topValue.map((d: any) => ({
+          name: d.name,
+          pct: Math.round((Number(d.total_value) / totalValue) * 100) + '%'
+        }));
+
+        this.catChartData.labels = data.topUsage.map((d: any) => d.name);
+        this.catChartData.datasets[0].data = data.topUsage.map((d: any) => Number(d.total_issued));
+        this.catChartData = { ...this.catChartData };
+      },
+      error: (err) => console.error('Error fetching category breakdown', err)
+    });
+  }
+
+  fetchAllocationEfficiency(): void {
+    this.http.get<any>('http://localhost:5000/api/reports/allocation-efficiency').subscribe({
+      next: (data) => {
+        if (data.overall) {
+           this.effSummary = {
+             avgProcessingDays: Number(data.overall.avg_processing_days) || 0,
+             avgItemsPerRequest: Number(data.overall.avg_items_per_request) || 0,
+             approvalRate: Number(data.overall.approval_rate) || 0
+           };
+        }
+        
+        this.effChartData = {
+          labels: data.chartData.map((d: any) => d.timeline),
+          datasets: [
+            {
+              ...this.effChartData.datasets[0],
+              data: data.chartData.map((d: any) => Number(d.allocation_time_days) || 0)
+            },
+            {
+              ...this.effChartData.datasets[1],
+              data: data.chartData.map((d: any) => Number(d.approval_rate) || 0)
+            }
+          ]
+        };
+        this.effChartData = { ...this.effChartData };
+      },
+      error: (err) => console.error('Error fetching allocation efficiency', err)
+    });
+  }
 
   setTab(tab: 'detailed' | 'trend' | 'distribution' | 'category' | 'efficiency'): void {
     this.activeAnalysisTab = tab;
@@ -234,6 +373,33 @@ export class AnalysisComponent implements OnInit {
   getOfficeFullName(abbr: string | undefined): string {
     if (!abbr) return '';
     return this.officeNames[abbr] || 'Department Office';
+  }
+
+  exportGraph(reportName: string): void {
+    const element = document.querySelector('.chart-tab-layout') as HTMLElement;
+    if (!element) return;
+    
+    const opt = {
+      margin:       0.5,
+      filename:     `${reportName}_Report.pdf`,
+      image:        { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in' as const, format: 'letter' as const, orientation: 'landscape' as const }
+    };
+
+    const header = document.createElement('div');
+    header.innerHTML = `
+      <div style="text-align: center; margin-bottom: 20px; font-family: sans-serif; width: 100%;">
+        <h2 style="color: #1a7a3e; margin: 0; font-size: 24px;">BSP Inventory Analysis</h2>
+        <h4 style="color: #666; margin: 5px 0; font-size: 18px;">${reportName.replace(/_/g, ' ')} Report</h4>
+        <p style="color: #999; font-size: 12px;">Generated on: ${new Date().toLocaleDateString()}</p>
+      </div>
+    `;
+    element.insertBefore(header, element.firstChild);
+
+    html2pdf().set(opt).from(element).save().then(() => {
+       element.removeChild(header);
+    }).catch((err: any) => console.error("Error generating pdf", err));
   }
 
   getRemarksClass(remarks: string | undefined): string {

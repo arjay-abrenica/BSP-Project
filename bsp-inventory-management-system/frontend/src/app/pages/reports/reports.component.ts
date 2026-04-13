@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common'; // Need CommonModule for ngFor
 import { FormsModule } from '@angular/forms'; // Need FormsModule for ngModel
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface ReportItem {
   id: string;
@@ -9,9 +10,13 @@ export interface ReportItem {
   reportNumber: string;
   type: 'pdf' | 'xls';
   office: string;
+  fileData?: string; // Base64 data for previewing
 }
 
 import { AuthService } from '../../core/services/auth.service';
+
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 @Component({
   selector: 'app-reports',
@@ -20,21 +25,41 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent {
+export class ReportsComponent implements OnInit {
   
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private sanitizer: DomSanitizer) {}
   
-  reports: ReportItem[] = [
-    { id: '1', title: 'monthlyReport_Apr2025_CPSMO.pdf', dateGenerated: 'May 21 2025', reportNumber: 'Report # 2025-05542rep', type: 'pdf', office: 'CPSMO' },
-    { id: '2', title: 'monthlyReport_Jan2025_ICTU.pdf', dateGenerated: 'May 21 2025', reportNumber: 'Report # 2025-00442rep', type: 'pdf', office: 'ICTU' },
-    { id: '3', title: 'monthlyReport_Aug2025_Finance.pdf', dateGenerated: 'May 21 2025', reportNumber: 'Report # 2025-07542rep', type: 'pdf', office: 'Finance' },
-    { id: '4', title: 'monthlyReport_Sept2025_PMDD.pdf', dateGenerated: 'May 21 2025', reportNumber: 'Report # 2025-04213rep', type: 'pdf', office: 'PMDD' },
-    { id: '5', title: 'monthlyReport_Nov2025_CPSMO.xlsx', dateGenerated: 'May 21 2025', reportNumber: 'Report # 2025-05542rep', type: 'xls', office: 'CPSMO' }
-  ];
+  // Modal Fields
+  selectedMonth: string = 'January';
+  selectedYear: string = '2025';
+  selectedFormat: 'pdf' | 'excel' = 'pdf';
+  
+  reports: ReportItem[] = [];
 
   selectedReport: ReportItem | null = null;
   isGenerateModalOpen: boolean = false;
   searchQuery: string = '';
+  filterType: string = 'all';
+
+  ngOnInit() {
+    const saved = localStorage.getItem('bsp_reports');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as ReportItem[];
+        // Filter out any prev mock data (mock data lacks fileData)
+        this.reports = parsed.filter(r => r.fileData);
+        // Persist the clean list back to local storage
+        localStorage.setItem('bsp_reports', JSON.stringify(this.reports));
+      } catch (e) {
+        console.error('Failed to load reports from localStorage', e);
+      }
+    }
+  }
+
+  getSafeUrl(dataUrl?: string): SafeResourceUrl | null {
+    if (!dataUrl) return null;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(dataUrl);
+  }
 
   get filteredReports(): ReportItem[] {
     const user = this.authService.currentUserValue;
@@ -43,7 +68,11 @@ export class ReportsComponent {
     // Filter by office if the user is a FOCAL_OFFICER
     if (user && user.role?.toLowerCase() === 'focal_officer') {
       const userOffice = user.office?.toUpperCase();
-      baseList = this.reports.filter(r => r.office === userOffice);
+      baseList = baseList.filter(r => r.office === userOffice);
+    }
+
+    if (this.filterType !== 'all') {
+      baseList = baseList.filter(r => r.type === this.filterType);
     }
 
     if (!this.searchQuery) {
@@ -77,5 +106,99 @@ export class ReportsComponent {
 
   closeGenerateModal() {
     this.isGenerateModalOpen = false;
+  }
+
+  generateReport() {
+    if (this.selectedFormat === 'excel') {
+      alert('Excel generation is mocked. A PDF will be generated instead for demo purposes.');
+    }
+
+    const reportNum = 'Report # BSP-' + Math.floor(Math.random() * 10000);
+    const userRole = this.authService.currentUserValue?.role || 'Admin';
+    const userOffice = this.authService.currentUserValue?.office || 'HQ';
+    
+    // Create the PDF template in memory
+    const element = document.createElement('div');
+    element.innerHTML = `
+      <div style="padding: 40px; font-family: sans-serif; color: #333; width: 800px;">
+        <div style="text-align: center; border-bottom: 2px solid #1a7a3e; padding-bottom: 20px; margin-bottom: 30px;">
+          <h1 style="color: #1a7a3e; margin: 0; font-size: 28px;">Boy Scouts of the Philippines</h1>
+          <h2 style="color: #555; margin: 10px 0 0 0; font-size: 20px;">Inventory & Property Management System</h2>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h3 style="margin: 0 0 10px 0; color: #1a7a3e; font-size: 22px;">Monthly Summary Report</h3>
+          <p style="margin: 5px 0;"><strong>Period:</strong> ${this.selectedMonth} ${this.selectedYear}</p>
+          <p style="margin: 5px 0;"><strong>Generated By:</strong> ${userRole} (${userOffice})</p>
+          <p style="margin: 5px 0;"><strong>Report Identifier:</strong> ${reportNum}</p>
+          <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        </div>
+
+        <p style="font-size: 14px; line-height: 1.6;">
+          This document serves as the official compilation of property and supply movements recognized under the specified period. 
+          The data enclosed encapsulates all approved requests, item issuances, and overall stock variance monitored by the BSP Inventory system.
+        </p>
+
+        <div style="margin-top: 40px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="padding: 12px; border: 1px solid #ddd;">Metric Category</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Recorded Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;">Total Requests Evaluated</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${Math.floor(Math.random() * 50) + 15} requests</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;">Supplies Officially Issued</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${Math.floor(Math.random() * 500) + 120} units</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;">Top Category Consumed</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">Office Stationary</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;">Overall Approval Rate</td>
+                <td style="padding: 12px; border: 1px solid #ddd;">${(Math.random() * 20 + 80).toFixed(1)}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top: 60px; text-align: center; font-size: 12px; color: #888;">
+          <p>*** END OF REPORT ***</p>
+          <p>System Generated Document - BSP-IPMS 2026</p>
+        </div>
+      </div>
+    `;
+
+    const opt = {
+      margin:       0.5,
+      filename:     `MonthlyReport_${this.selectedMonth}_${this.selectedYear}.pdf`,
+      image:        { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in' as const, format: 'letter' as const, orientation: 'portrait' as const }
+    };
+
+    html2pdf().set(opt).from(element).toPdf().output('datauristring').then((pdfAsString: string) => {
+      // Upon successful generation, add to list!
+      const newReport: ReportItem = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: `MonthlyReport_${this.selectedMonth}${this.selectedYear}_${userOffice}.pdf`,
+        dateGenerated: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        reportNumber: reportNum,
+        type: 'pdf',
+        office: userOffice,
+        fileData: pdfAsString
+      };
+      
+      this.reports.unshift(newReport); // Add to top of list
+      localStorage.setItem('bsp_reports', JSON.stringify(this.reports));
+      
+      this.closeGenerateModal();
+    });
   }
 }

@@ -995,3 +995,194 @@ exports.getAuditLogs = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+/* =========================================
+   SECTION 8: REPORTS & ANALYSIS
+   ========================================= */
+
+exports.getLowStockItems = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        i.item_code as sku,
+        i.item_name,
+        i.current_stock,
+        i.reorder_level,
+        c.category_name
+      FROM Items i
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      WHERE i.current_stock <= i.reorder_level
+      ORDER BY i.current_stock ASC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getIssuanceSummary = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        o.office_name as office,
+        o.acronym,
+        COUNT(DISTINCT r.request_id) as total_requests,
+        SUM(td.quantity) as total_issued
+      FROM Transactions t
+      JOIN Transaction_Details td ON t.transaction_id = td.transaction_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
+      LEFT JOIN Requests r ON t.request_id = r.request_id
+      WHERE t.transaction_type = 'OUT'
+      GROUP BY o.office_name, o.acronym
+      ORDER BY total_issued DESC NULLS LAST
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getStockDistribution = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        c.category_name as category,
+        SUM(i.current_stock) as total_stock,
+        COUNT(i.item_id) as total_items
+      FROM Items i
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      GROUP BY c.category_name
+      ORDER BY total_stock DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getUsageTrend = async (req, res) => {
+  try {
+    const topMostQuery = `
+      SELECT i.item_name as name, SUM(td.quantity) as total_issued
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      JOIN Items i ON td.item_id = i.item_id
+      WHERE t.transaction_type = 'OUT' AND EXTRACT(YEAR FROM t.transaction_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY i.item_name
+      ORDER BY total_issued DESC
+      LIMIT 5
+    `;
+    const topMostRes = await db.query(topMostQuery);
+
+    const topLeastQuery = `
+      SELECT i.item_name as name, SUM(td.quantity) as total_issued
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      JOIN Items i ON td.item_id = i.item_id
+      WHERE t.transaction_type = 'OUT' AND EXTRACT(YEAR FROM t.transaction_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY i.item_name
+      ORDER BY total_issued ASC
+      LIMIT 5
+    `;
+    const topLeastRes = await db.query(topLeastQuery);
+
+    const chartQuery = `
+      SELECT 
+        COALESCE(c.category_name, 'Uncategorized') as category_name,
+        EXTRACT(QUARTER FROM t.transaction_date) as quarter,
+        SUM(td.quantity) as total_issued
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      JOIN Items i ON td.item_id = i.item_id
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      WHERE t.transaction_type = 'OUT' AND EXTRACT(YEAR FROM t.transaction_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY c.category_name, quarter
+      ORDER BY c.category_name, quarter
+    `;
+    const chartRes = await db.query(chartQuery);
+
+    res.status(200).json({
+      top5Most: topMostRes.rows,
+      top5Least: topLeastRes.rows,
+      chartData: chartRes.rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getCategoryBreakdown = async (req, res) => {
+  try {
+    const usageQuery = `
+      SELECT 
+        COALESCE(c.category_name, 'Uncategorized') as name,
+        SUM(td.quantity) as total_issued
+      FROM Transaction_Details td
+      JOIN Transactions t ON td.transaction_id = t.transaction_id
+      JOIN Items i ON td.item_id = i.item_id
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      WHERE t.transaction_type = 'OUT'
+      GROUP BY c.category_name
+      ORDER BY total_issued DESC
+    `;
+    const usageRes = await db.query(usageQuery);
+
+    const valueQuery = `
+      SELECT 
+        COALESCE(c.category_name, 'Uncategorized') as name,
+        SUM(i.current_stock * i.unit_price) as total_value
+      FROM Items i
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      GROUP BY c.category_name
+      ORDER BY total_value DESC
+    `;
+    const valueRes = await db.query(valueQuery);
+
+    res.status(200).json({
+      topUsage: usageRes.rows,
+      topValue: valueRes.rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getAllocationEfficiency = async (req, res) => {
+  try {
+    const overallQuery = `
+      SELECT 
+        AVG(EXTRACT(EPOCH FROM (t.transaction_date - r.request_date)) / 86400) as avg_processing_days,
+        (SELECT AVG(total_qty) FROM (SELECT SUM(quantity) as total_qty FROM Request_Details GROUP BY request_id) as sq) as avg_items_per_request,
+        ((COUNT(CASE WHEN r.status IN ('APPROVED', 'RELEASED') THEN 1 END)::float / NULLIF(COUNT(*), 0)) * 100) as approval_rate
+      FROM Requests r
+      LEFT JOIN Transactions t ON r.request_id = t.request_id AND t.transaction_type = 'OUT'
+    `;
+    const overallRes = await db.query(overallQuery);
+
+    const chartQuery = `
+      SELECT 
+        m.month_name as timeline,
+        COALESCE(AVG(EXTRACT(EPOCH FROM (t.transaction_date - r.request_date)) / 86400), 0) as allocation_time_days,
+        COALESCE(((COUNT(CASE WHEN r.status IN ('APPROVED', 'RELEASED') THEN 1 END)::float / NULLIF(COUNT(r.request_id), 0)) * 100), 0) as approval_rate
+      FROM (
+        SELECT to_char(to_date(m::text, 'MM'), 'Mon') AS month_name, m as month_num
+        FROM generate_series(1, 12) m
+      ) m
+      LEFT JOIN Requests r ON EXTRACT(MONTH FROM r.request_date) = m.month_num AND EXTRACT(YEAR FROM r.request_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+      LEFT JOIN Transactions t ON r.request_id = t.request_id AND t.transaction_type = 'OUT'
+      GROUP BY m.month_name, m.month_num
+      ORDER BY m.month_num
+    `;
+    const chartRes = await db.query(chartQuery);
+
+    res.status(200).json({
+      overall: overallRes.rows[0],
+      chartData: chartRes.rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
