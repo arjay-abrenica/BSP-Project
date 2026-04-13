@@ -31,8 +31,20 @@ export class OutflowComponent implements OnInit {
   approvedOffices: any[] = [];
   selectedApprovedOfficeId: number = -1;
   officeTransactions: any[] = [];
+  paginatedTransactions: any[] = [];
   selectedRequest: any = null;
   searchQuery: string = '';
+
+  // Pagination for Approved History
+  currentPage: number = 1;
+  pageSize: number = 5;
+  totalPages: number = 0;
+
+  // Pagination for Direct Allocation
+  directCurrentPage: number = 1;
+  directPageSize: number = 10;
+  directTotalPages: number = 0;
+  paginatedDirectItems: any[] = [];
   
   // Print state
   printData: any = null;
@@ -150,6 +162,25 @@ export class OutflowComponent implements OnInit {
         }
       });
     });
+    this.updatePaginatedTransactions();
+  }
+
+  updatePaginatedTransactions() {
+    this.totalPages = Math.ceil(this.officeTransactions.length / this.pageSize) || 1;
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedTransactions = this.officeTransactions.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePaginatedTransactions();
+    }
+  }
+
+  getPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
   fetchOffices(): void {
@@ -233,6 +264,7 @@ export class OutflowComponent implements OnInit {
       next: (res) => {
         this.inventoryItems = res;
         this.filteredItems = res;
+        this.updatePaginatedDirectItems();
       },
       error: (err) => console.error('Failed to fetch inventory', err)
     });
@@ -245,6 +277,26 @@ export class OutflowComponent implements OnInit {
       (item.item_code && item.item_code.toLowerCase().includes(query)) ||
       (item.category_name && item.category_name.toLowerCase().includes(query))
     );
+    this.directCurrentPage = 1;
+    this.updatePaginatedDirectItems();
+  }
+
+  updatePaginatedDirectItems() {
+    this.directTotalPages = Math.ceil(this.filteredItems.length / this.directPageSize) || 1;
+    const startIndex = (this.directCurrentPage - 1) * this.directPageSize;
+    const endIndex = startIndex + this.directPageSize;
+    this.paginatedDirectItems = this.filteredItems.slice(startIndex, endIndex);
+  }
+
+  goToDirectPage(page: number) {
+    if (page >= 1 && page <= this.directTotalPages) {
+      this.directCurrentPage = page;
+      this.updatePaginatedDirectItems();
+    }
+  }
+
+  getDirectPages(): number[] {
+    return Array.from({ length: this.directTotalPages }, (_, i) => i + 1);
   }
 
   onQuantityChange(item: any, event: any) {

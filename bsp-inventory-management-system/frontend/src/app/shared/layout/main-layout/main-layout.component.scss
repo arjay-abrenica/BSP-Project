@@ -15,7 +15,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    padding-bottom: 32px; /* Force bottom padding */
+    padding: 0; /* Removed padding to maximize space */
 
     @media (max-width: 1024px) {
         padding-left: 70px; /* Make room for the fixed primary icon rail */
