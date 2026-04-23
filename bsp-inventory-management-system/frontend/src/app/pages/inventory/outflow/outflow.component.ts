@@ -47,6 +47,10 @@ export class OutflowComponent implements OnInit {
   directTotalPages: number = 0;
   paginatedDirectItems: any[] = [];
   
+  // Filtering
+  categories: string[] = [];
+  selectedCategory: string = 'All';
+  
   // Print state
   printData: any = null;
   showPrintPreview: boolean = false;
@@ -59,6 +63,20 @@ export class OutflowComponent implements OnInit {
   // Direct Allocation state
   currentDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   generatedIssuanceNumber = 'Loading...';
+
+  // Toast State
+  toastMessage: string = '';
+  showToast: boolean = false;
+  toastType: 'success' | 'error' = 'success';
+
+  displayToast(message: string, type: 'success' | 'error' = 'success') {
+    this.toastMessage = message;
+    this.toastType = type;
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -163,6 +181,9 @@ export class OutflowComponent implements OnInit {
         }
       });
     });
+    
+    // Reset to first page when selecting a new office
+    this.currentPage = 1;
     this.updatePaginatedTransactions();
   }
 
@@ -265,20 +286,30 @@ export class OutflowComponent implements OnInit {
       next: (res) => {
         this.inventoryItems = res;
         this.filteredItems = res;
+        this.categories = [...new Set(res.map(item => item.category_name).filter(c => c))].sort();
       },
       error: (err) => console.error('Failed to fetch inventory', err)
     });
   }
 
-  onSearch(event: any) {
-    const query = event.target.value.toLowerCase();
-    this.filteredItems = this.inventoryItems.filter(item => 
-      (item.item_name && item.item_name.toLowerCase().includes(query)) ||
-      (item.item_code && item.item_code.toLowerCase().includes(query)) ||
-      (item.category_name && item.category_name.toLowerCase().includes(query))
-    );
+  onSearch(event?: any) {
+    const query = this.searchQuery.toLowerCase();
+    this.filteredItems = this.inventoryItems.filter(item => {
+      const matchesSearch = 
+        (item.item_name && item.item_name.toLowerCase().includes(query)) ||
+        (item.item_code && item.item_code.toLowerCase().includes(query)) ||
+        (item.category_name && item.category_name.toLowerCase().includes(query));
+      
+      const matchesCategory = this.selectedCategory === 'All' || item.category_name === this.selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
     this.directCurrentPage = 1;
     this.updatePaginatedDirectItems();
+  }
+
+  onCategoryChange(event: any) {
+    this.onSearch();
   }
 
   updatePaginatedDirectItems() {
@@ -329,14 +360,14 @@ export class OutflowComponent implements OnInit {
     const qty = Number(this.quantityInput);
     if (!isNaN(qty) && qty > 0) {
       if (qty > this.selectedItemForQty.current_stock) {
-        alert(`Cannot issue more than current stock (${this.selectedItemForQty.current_stock}) for ${this.selectedItemForQty.item_name}`);
+        this.displayToast(`Cannot issue more than current stock (${this.selectedItemForQty.current_stock}) for ${this.selectedItemForQty.item_name}`, 'error');
         this.issueQuantities[this.selectedItemForQty.item_id] = this.selectedItemForQty.current_stock;
       } else {
         this.issueQuantities[this.selectedItemForQty.item_id] = qty;
       }
       this.closeQuantityModal();
     } else {
-      alert("Invalid quantity entered.");
+      this.displayToast("Invalid quantity entered.", 'error');
     }
   }
 
@@ -363,6 +394,10 @@ export class OutflowComponent implements OnInit {
     this.issueForm.get('remarks')?.setValue('');
   }
 
+  onImageError(event: any) {
+    event.target.src = 'assets/img/placeholder.svg';
+  }
+
   startNewIssuance() {
     this.selectedRequest = null;
     this.issueQuantities = {};
@@ -379,7 +414,7 @@ export class OutflowComponent implements OnInit {
     // Used for Pending tab
     if (this.issueForm.get('ris_no')?.invalid) {
       this.issueForm.get('ris_no')?.markAsTouched();
-      alert('Please fill out the required RIS Number before approving.');
+      this.displayToast('Please fill out the required RIS Number before approving.', 'error');
       return;
     }
 
@@ -398,7 +433,7 @@ export class OutflowComponent implements OnInit {
       });
 
     if (itemsToIssue.length === 0) {
-      alert('Please specify a quantity to issue for at least one item.');
+      this.displayToast('Please specify a quantity to issue for at least one item.', 'error');
       return;
     }
 
@@ -415,7 +450,7 @@ export class OutflowComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to update request status', err);
-        alert('Failed to update request status. Issuance cancelled.');
+        this.displayToast('Failed to update request status. Issuance cancelled.', 'error');
       }
     });
   }
@@ -428,13 +463,13 @@ export class OutflowComponent implements OnInit {
       this.http.put(`http://localhost:5000/api/requests/${this.selectedRequest.id}/reject`, {}).subscribe({
         next: () => {
           this.isSubmitting = false;
-          alert('Request rejected.');
+          this.displayToast('Request rejected.', 'success');
           this.fetchRequests();
           this.selectedRequest = null;
         },
         error: (err) => {
           this.isSubmitting = false;
-          alert('Failed to reject request: ' + (err.error?.error || 'Unknown error'));
+          this.displayToast('Failed to reject request: ' + (err.error?.error || 'Unknown error'), 'error');
         }
       });
     }
@@ -468,13 +503,13 @@ export class OutflowComponent implements OnInit {
     this.itemsToIssue = this.getCartItems();
 
     if (this.itemsToIssue.length === 0) {
-      alert('Your cart is empty. Please add items before confirming.');
+      this.displayToast('Your cart is empty. Please add items before confirming.', 'error');
       return;
     }
 
     if (this.issueForm.get('department_id')?.invalid) {
       this.issueForm.get('department_id')?.markAsTouched();
-      alert('Please select a Recipient Office.');
+      this.displayToast('Please select a Recipient Office.', 'error');
       return;
     }
 
@@ -558,7 +593,7 @@ export class OutflowComponent implements OnInit {
     this.http.post('http://localhost:5000/api/transactions/issue', payload).subscribe({
       next: (res: any) => {
         this.isSubmitting = false;
-        alert('Issuance recorded successfully!');
+        this.displayToast('Issuance recorded successfully!', 'success');
         
         const newTransactionId = res.transaction_id;
 
@@ -577,7 +612,7 @@ export class OutflowComponent implements OnInit {
       error: (err) => {
         this.isSubmitting = false;
         const errorMsg = err.error?.error || 'Failed to process issuance.';
-        alert(errorMsg);
+        this.displayToast(errorMsg, 'error');
       }
     });
   }

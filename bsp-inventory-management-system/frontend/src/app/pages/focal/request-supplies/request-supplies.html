@@ -44,46 +44,28 @@
               </div>
             </div>
           </div>
-          
-          <div class="empty-state-grid" *ngIf="filteredItems.length === 0">
-            <p>No items found matching your search.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT PANEL: CART -->
-    <div class="panel cart-panel">
-      <div class="staged-list">
-        <div class="staged-header">
-          <span>My Requisition Cart ({{ selectedItemsCount }})</span>
-        </div>
-        
-        <ng-container *ngFor="let cartItem of items">
-          <div class="staged-card" *ngIf="cartItem.requestQuantity && cartItem.requestQuantity > 0">
-            <div class="req-info" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;">
-              <div>
-                <div class="req-title" style="font-size: 13px;">{{ cartItem.item_name }}</div>
-                <div class="req-items">{{ cartItem.requestQuantity }} {{ cartItem.unit_of_measure }}</div>
-              </div>
-              <button type="button" class="btn-remove" (click)="cartItem.requestQuantity = null" title="Remove item">×</button>
-            </div>
-          </div>
-        </ng-container>
-
-        <div class="empty-staged" *ngIf="selectedItemsCount === 0">
-          <p>Your cart is empty.</p>
-          <small>Select items from the left panel to add them here.</small>
-        </div>
-
-        <div style="padding: 20px 0; margin-top: auto;" *ngIf="selectedItemsCount > 0">
-          <button type="button" class="btn-primary" style="width: 100%; padding: 12px; font-size: 14px;" (click)="openPreview()">
-            Review Requisition
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+        </td>
+        <td class="col-category">{{ item.category_name }}</td>
+        <td class="col-qty text-center">
+          <span class="stock-badge" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
+            {{ item.current_stock }}
+          </span>
+        </td>
+        <td class="col-request text-center">
+          <input type="number" 
+                 [ngModel]="item.requestQuantity" 
+                 (ngModelChange)="validateQuantity(item, $event)"
+                 min="0" 
+                 [max]="item.current_stock"
+                 placeholder="0" 
+                 class="qty-input">
+        </td>
+      </tr>
+      <tr *ngIf="filteredItems.length === 0">
+        <td colspan="5" class="empty-state">No items found matching your search.</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <!-- Quantity Modal -->
@@ -271,5 +253,23 @@
         <p style="margin-top: 5px;">Head of Office/Authorized Representative</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container">
+  <div *ngFor="let toast of toasts; let i = index" class="toast-message">
+    <svg class="toast-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div class="toast-content">{{ toast.message }}</div>
+    <button class="toast-close" (click)="removeToast(i)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
   </div>
 </div>
