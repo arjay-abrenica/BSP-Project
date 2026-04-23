@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -11,7 +11,7 @@ import { Router, RouterModule } from '@angular/router';
   templateUrl: './add-item.html',
   styleUrls: ['./add-item.css']
 })
-export class AddItem {
+export class AddItem implements OnInit {
   addItemForm: FormGroup;
   isSubmitting = false;
   batchItems: any[] = [];
@@ -21,6 +21,7 @@ export class AddItem {
   filteredSuppliers: any[] = [];
   showSuggestions = false;
   showSupplierSuggestions = false;
+  baseNextSkuId: number = 0;
 
   // Modal State
   showModal: boolean = false;
@@ -33,7 +34,7 @@ export class AddItem {
     private router: Router
   ) {
     this.addItemForm = this.fb.group({
-      item_code: ['', Validators.required],
+      item_code: [''],
       item_name: ['', Validators.required],
       category_id: ['', Validators.required],
       unit_of_measure: ['', Validators.required],
@@ -49,6 +50,29 @@ export class AddItem {
 
     this.fetchExistingItems();
     this.fetchSuppliers();
+  }
+
+  ngOnInit(): void {
+    this.fetchNextSku();
+  }
+
+  fetchNextSku(): void {
+    this.http.get<{nextSku: string}>('http://localhost:5000/api/items/next-sku').subscribe({
+      next: (res) => {
+        const idPart = parseInt(res.nextSku.replace('ITM-', ''), 10);
+        this.baseNextSkuId = idPart;
+        this.updateSkuDisplay();
+      },
+      error: (err) => console.error('Failed to fetch next SKU', err)
+    });
+  }
+
+  updateSkuDisplay(): void {
+    if (this.baseNextSkuId > 0) {
+      const nextId = this.baseNextSkuId + this.batchItems.length;
+      const skuStr = 'ITM-' + String(nextId).padStart(6, '0');
+      this.addItemForm.patchValue({ item_code: skuStr });
+    }
   }
 
   fetchExistingItems(): void {
@@ -146,6 +170,7 @@ export class AddItem {
 
   removeFromBatch(index: number): void {
     this.batchItems.splice(index, 1);
+    this.updateSkuDisplay();
   }
 
   onFileSelected(event: any): void {
@@ -261,5 +286,6 @@ export class AddItem {
       quantity: 0,
       reorder_level: 10
     });
+    this.updateSkuDisplay();
   }
 }

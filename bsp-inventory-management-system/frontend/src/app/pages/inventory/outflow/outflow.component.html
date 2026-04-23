@@ -39,35 +39,30 @@
         </div>
       </div>
 
-      <!-- Direct Allocation Tab Content (Left Panel) -->
+      <!-- Direct Allocation Tab Content (Left Panel - Cart) -->
       <div class="requests-list staged-list" *ngIf="activeTab === 'direct'">
         <div class="staged-header">
-          <span>Queued Issuances ({{ stagedIssuances.length }})</span>
+          <span>Cart ({{ getCartItems().length }})</span>
         </div>
         
-        <div class="request-card staged-card" *ngFor="let staged of stagedIssuances; let i = index" 
-             [class.selected]="selectedStagedIndex === i" (click)="selectStaged(i)">
-          <div class="req-avatar avatar-direct">{{ staged.acronym }}</div>
-          <div class="req-info">
-            <div class="req-title">{{ staged.office_name }}</div>
-            <div class="req-items">{{ staged.itemsCount }} Items</div>
-            <div class="req-date">{{ staged.date }}</div>
-          </div>
-          <div class="staged-actions">
-            <div class="req-number">{{ staged.ris_no }}</div>
-            <button class="btn-remove" (click)="removeFromCart(i, $event)" title="Remove from queue">×</button>
+        <div class="request-card staged-card" *ngFor="let cartItem of getCartItems(); let i = index">
+          <div class="req-info" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+              <div class="req-title" style="font-size: 13px;">{{ cartItem.item_name }}</div>
+              <div class="req-items">{{ cartItem.quantity }} {{ cartItem.unit }}</div>
+            </div>
+            <button type="button" class="btn-remove" (click)="removeItemFromCart(cartItem.item_id)" title="Remove item">×</button>
           </div>
         </div>
 
-        <div class="empty-staged" *ngIf="stagedIssuances.length === 0">
-          <p>Your queue is empty.</p>
-          <small>Fill the form and click "Add Issuance" to add to this list.</small>
+        <div class="empty-staged" *ngIf="getCartItems().length === 0">
+          <p>Your cart is empty.</p>
+          <small>Select items from the right panel to add them here.</small>
         </div>
 
-        <div class="direct-nav-content" *ngIf="stagedIssuances.length > 0">
-          <button class="btn-add-issuance btn-proceed-bulk" (click)="proceedDirectAllocation()" [disabled]="isSubmitting">
-            <span *ngIf="isSubmitting" class="spinner"></span>
-            Proceed ({{ stagedIssuances.length }})
+        <div class="direct-nav-content" style="padding: 20px 0;" *ngIf="getCartItems().length > 0">
+          <button type="button" class="btn-add-issuance btn-proceed-bulk" style="width: 100%;" (click)="confirmDirectIssuance()">
+            Confirm Issuance
           </button>
         </div>
       </div>
@@ -75,7 +70,7 @@
 
     <!-- Right Panel -->
     <div class="panel details-panel">
-      <div class="page-title-bar">
+      <div class="page-title-bar" *ngIf="activeTab !== 'direct'">
         <h2>Outflow / Issuance</h2>
       </div>
       
@@ -300,162 +295,51 @@
 
       <!-- DIRECT ALLOCATION TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'direct'">
-        
-        <!-- View Staged Details if one is selected -->
-        <div class="staged-details-view" *ngIf="selectedStagedIndex !== -1">
-          <div class="panel-header">
-            <div class="header-with-back" style="display: flex; align-items: center; gap: 15px;">
-              <button class="back-link" (click)="selectedStagedIndex = -1" style="background: none; border: none; color: #2563eb; cursor: pointer; font-weight: 500;">← Back to Form</button>
-              <h3 style="margin: 0;">Queued Issuance Details</h3>
-            </div>
-          </div>
-          
-          <div class="details-content">
-            <div class="details-info-grid">
-              <div class="info-block">
-                <label>Recipient Office</label>
-                <div class="info-value">{{ stagedIssuances[selectedStagedIndex].office_name }}</div>
-              </div>
-              <div class="info-block">
-                <label>Date Staged</label>
-                <div class="info-value">{{ stagedIssuances[selectedStagedIndex].date }}</div>
-              </div>
-              <div class="info-block">
-                <label>RIS Number</label>
-                <div class="info-value-bold" style="color: #2563eb;">{{ stagedIssuances[selectedStagedIndex].ris_no }}</div>
-              </div>
-            </div>
-
-            <div class="info-block full-width">
-              <label>Purpose / Remarks</label>
-              <div class="info-value">{{ stagedIssuances[selectedStagedIndex].remarks || '(No remarks)' }}</div>
-            </div>
-
-            <hr class="separator">
-
-            <h4 class="table-title">Items in this Issuance</h4>
-            <table class="request-table">
-              <thead>
-                <tr>
-                  <th>Item No.</th>
-                  <th>Qty to Issue</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let item of stagedIssuances[selectedStagedIndex].items; let idx = index">
-                  <td class="center-text">{{ idx + 1 }}</td>
-                  <td class="center-text">{{ item.quantity }}</td>
-                  <td>{{ item.item_name }}</td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <div class="form-actions-vertical" style="margin-top: 20px;">
-              <button class="btn btn-reject" (click)="removeFromCart(selectedStagedIndex, $event); selectedStagedIndex = -1">Remove from Queue</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Default Form View -->
-        <ng-container *ngIf="selectedStagedIndex === -1">
-          <div class="panel-header">
-            <h3>Item Issuance Form</h3>
-          </div>
-
-          <form [formGroup]="issueForm" (ngSubmit)="addToCart()">
-            <div class="details-content direct-allocation-content">
-              
-              <div class="direct-info-grid">
-                <div class="info-block">
-                  <label>Recipient Office</label>
-                  <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched">
-                    <option value="" disabled selected>Select Office</option>
-                    <option *ngFor="let office of offices" [value]="office.office_id">{{ office.office_name }}</option>
-                  </select>
-                </div>
-                <div class="info-block">
-                  <label>Date Requested</label>
-                  <div class="info-value-bold">{{ currentDate }}</div>
-                </div>
-                <div class="info-block right-align">
-                  <label>RIS Number</label>
-                  <div class="info-value-bold">{{ generatedIssuanceNumber }}</div>
-                </div>
-              </div>
-
-              <div class="info-block full-width" style="margin-bottom: 20px;">
-                <label>Purpose of the Issuance</label>
-                <div class="input-with-clear">
-                  <input type="text" formControlName="remarks" class="direct-input">
-                  <button type="button" class="clear-btn" (click)="clearRemarks()">×</button>
-                </div>
-              </div>
-
-              <hr class="separator">
-
-              <div class="section-header-flex">
-                <h4 class="table-title">Item Selection List</h4>
+        <div class="details-content direct-allocation-content" style="padding-top: 0;">
+          <div class="section-header-flex" style="margin-top: 15px; background-color: #e6f4ea; padding: 15px; border-radius: 8px; flex-direction: column; align-items: stretch; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h4 class="table-title" style="margin: 0;">Item Selection List</h4>
                 <div class="search-wrapper">
                   <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                   <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
                 </div>
-              </div>
+            </div>
+            <div [formGroup]="issueForm" style="width: 100%; display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green); white-space: nowrap;">Recipient Office:</label>
+              <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched" style="font-size: 13px; padding: 8px; width: 100%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                <option value="" disabled selected>Select Office</option>
+                <option *ngFor="let office of offices" [value]="office.office_id">{{ office.office_name }}</option>
+              </select>
+            </div>
+          </div>
 
-              <div class="table-container">
-                <table class="request-table direct-table">
-                  <thead>
-                    <tr>
-                      <th>SKU</th>
-                      <th>Item Name</th>
-                      <th class="center-text">In Stock Qty</th>
-                      <th>Unit</th>
-                      <th class="center-text">Qty to Issue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr *ngFor="let item of paginatedDirectItems">
-                      <td class="font-medium">{{ item.item_code || 'N/A' }}</td>
-                      <td>{{ item.item_name }}</td>
-                      <td class="center-text">{{ item.current_stock }}</td>
-                      <td>{{ item.unit_of_measure }}</td>
-                      <td class="center-text">
-                        <input type="number" class="issue-input" min="0" [max]="item.current_stock" [value]="getQty(item.item_id)" (change)="onQuantityChange(item, $event)">
-                      </td>
-                    </tr>
-                    <tr *ngIf="paginatedDirectItems.length === 0">
-                      <td colspan="5" class="empty-state">No items found matching your search.</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <div class="direct-items-grid">
+                <div class="direct-item-card" *ngFor="let item of filteredItems">
+                  <div class="item-image-wrapper">
+                    <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/placeholder.png'" 
+                         alt="Item Image" class="item-image">
+                    <span class="item-stock-status" [ngClass]="getStockStatusClass(item)">
+                      {{ getStockStatus(item) }}
+                    </span>
+                  </div>
+                  
+                  <div class="item-details">
+                    <div class="item-name">{{ item.item_name }}</div>
+                    <div class="item-stock-info">Available: {{ item.current_stock }} {{ item.unit_of_measure }}</div>
+                  </div>
 
-              <!-- Pagination Controls for Direct Allocation Items -->
-              <div class="history-pagination" *ngIf="directTotalPages > 1" style="margin-top: 0; padding-top: 10px; border-top: none;">
-                <button class="page-btn" type="button" [disabled]="directCurrentPage === 1" (click)="goToDirectPage(directCurrentPage - 1)">
-                  Previous
-                </button>
-                
-                <div class="page-numbers">
-                  <button *ngFor="let p of getDirectPages()" type="button" class="page-number-btn" [class.active]="p === directCurrentPage" (click)="goToDirectPage(p)">
-                    {{ p }}
-                  </button>
+                  <div class="item-actions">
+                    <button type="button" class="btn-add-item" [class.added]="getQty(item.item_id)" (click)="openQuantityModal(item)">
+                      {{ getQty(item.item_id) ? 'QTY: ' + getQty(item.item_id) + ' (EDIT)' : 'ADD' }}
+                    </button>
+                  </div>
                 </div>
-
-                <button class="page-btn" type="button" [disabled]="directCurrentPage === directTotalPages" (click)="goToDirectPage(directCurrentPage + 1)">
-                  Next
-                </button>
-              </div>
-
-              <div class="direct-footer">
-                <div class="allocatable-count">Allocatable Items: {{ inventoryItems.length }} Items</div>
-                <button type="submit" class="btn btn-approve btn-proceed">
-                  Add Issuance
-                </button>
+                
+                <div class="empty-state-grid" *ngIf="filteredItems.length === 0">
+                  <p>No items found matching your search.</p>
+                </div>
               </div>
             </div>
-          </form>
-        </ng-container>
       </ng-container>
 
     </div>
@@ -607,4 +491,76 @@
   </div>
 </div>
 
+</div>
+
+<!-- QUANTITY MODAL -->
+<div class="quantity-modal-overlay" *ngIf="showQuantityModal">
+  <div class="quantity-modal-content">
+    <div class="quantity-modal-header">
+      <h4>Add Quantity</h4>
+      <button class="btn-close" (click)="closeQuantityModal()">&times;</button>
+    </div>
+    <div class="quantity-modal-body">
+      <p class="modal-item-name">{{ selectedItemForQty?.item_name }}</p>
+      <p class="modal-item-stock">Available: {{ selectedItemForQty?.current_stock }} {{ selectedItemForQty?.unit_of_measure }}</p>
+      
+      <div class="modal-input-group">
+        <label>Quantity to Issue</label>
+        <input type="number" [(ngModel)]="quantityInput" class="quantity-modal-input" min="0" [max]="selectedItemForQty?.current_stock" (keyup.enter)="confirmQuantity()" autofocus>
+      </div>
+    </div>
+    <div class="quantity-modal-footer">
+      <button class="btn-secondary" (click)="closeQuantityModal()">Cancel</button>
+      <button class="btn-primary" (click)="confirmQuantity()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM ISSUANCE MODAL -->
+<div class="quantity-modal-overlay" *ngIf="showConfirmModal">
+  <div class="quantity-modal-content" style="max-width: 500px;">
+    <div class="quantity-modal-header">
+      <h4>Confirm Issuance Overview</h4>
+      <button class="btn-close" (click)="closeConfirmModal()">&times;</button>
+    </div>
+    <div class="quantity-modal-body" style="padding: 24px;" [formGroup]="issueForm">
+      <div style="margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: center;">
+          <span style="font-size: 12px; color: #64748b; font-weight: 600;">Recipient Office:</span>
+          <span style="font-size: 13px; font-weight: 700; color: var(--bsp-dark-green);">{{ confirmOfficeName }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+          <span style="font-size: 12px; color: #64748b; font-weight: 600;">RIS Number:</span>
+          <span style="font-size: 13px; font-weight: 700; color: var(--bsp-dark-green);">{{ generatedIssuanceNumber }}</span>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 8px;">Purpose / Remarks:</span>
+          <textarea formControlName="remarks" class="direct-input" rows="3" style="font-size: 13px; padding: 8px; resize: vertical; width: 100%; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+        </div>
+      </div>
+      
+      <h5 style="margin: 0 0 12px 0; font-size: 14px; color: #1e293b; font-weight: 700;">Items to Issue ({{ itemsToIssue.length }})</h5>
+      
+      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background-color: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+              <th style="padding: 8px 12px; text-align: left; font-size: 11px; color: #475569; font-weight: 700;">ITEM</th>
+              <th style="padding: 8px 12px; text-align: right; font-size: 11px; color: #475569; font-weight: 700;">QTY</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of itemsToIssue" style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 8px 12px; font-size: 13px; color: #334155;">{{ item.item_name }}</td>
+              <td style="padding: 8px 12px; text-align: right; font-size: 13px; font-weight: 600; color: var(--bsp-dark-green);">{{ item.quantity }} {{ item.unit }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="quantity-modal-footer" style="justify-content: flex-end; gap: 12px;">
+      <button class="btn-secondary" (click)="closeConfirmModal()">Cancel</button>
+      <button class="btn-primary" (click)="proceedWithIssuance()">Yes, Proceed</button>
+    </div>
+  </div>
 </div>

@@ -23,6 +23,7 @@ export class OutflowComponent implements OnInit {
   inventoryItems: any[] = [];
   filteredItems: any[] = [];
   issueQuantities: { [key: number]: number } = {};
+  showQuantityInput: { [key: number]: boolean } = {};
   offices: any[] = [];
 
   // Requests state
@@ -264,7 +265,6 @@ export class OutflowComponent implements OnInit {
       next: (res) => {
         this.inventoryItems = res;
         this.filteredItems = res;
-        this.updatePaginatedDirectItems();
       },
       error: (err) => console.error('Failed to fetch inventory', err)
     });
@@ -299,20 +299,60 @@ export class OutflowComponent implements OnInit {
     return Array.from({ length: this.directTotalPages }, (_, i) => i + 1);
   }
 
-  onQuantityChange(item: any, event: any) {
-    const qty = parseInt(event.target.value, 10);
-    if (qty > 0) {
-      if (qty > item.current_stock) {
-        alert(`Cannot issue more than current stock (${item.current_stock}) for ${item.item_name}`);
-        event.target.value = item.current_stock;
-        this.issueQuantities[item.item_id] = item.current_stock;
-      } else {
-        this.issueQuantities[item.item_id] = qty;
-      }
-    } else {
-      delete this.issueQuantities[item.item_id];
-      event.target.value = '';
+  // Quantity Modal state
+  showQuantityModal = false;
+  selectedItemForQty: any = null;
+  quantityInput: number | string = '';
+
+  openQuantityModal(item: any) {
+    this.selectedItemForQty = item;
+    const currentQty = this.issueQuantities[item.item_id] || '';
+    this.quantityInput = currentQty;
+    this.showQuantityModal = true;
+  }
+
+  closeQuantityModal() {
+    this.showQuantityModal = false;
+    this.selectedItemForQty = null;
+    this.quantityInput = '';
+  }
+
+  confirmQuantity() {
+    if (!this.selectedItemForQty) return;
+
+    if (this.quantityInput === null || String(this.quantityInput).trim() === '' || Number(this.quantityInput) === 0) {
+      delete this.issueQuantities[this.selectedItemForQty.item_id];
+      this.closeQuantityModal();
+      return;
     }
+
+    const qty = Number(this.quantityInput);
+    if (!isNaN(qty) && qty > 0) {
+      if (qty > this.selectedItemForQty.current_stock) {
+        alert(`Cannot issue more than current stock (${this.selectedItemForQty.current_stock}) for ${this.selectedItemForQty.item_name}`);
+        this.issueQuantities[this.selectedItemForQty.item_id] = this.selectedItemForQty.current_stock;
+      } else {
+        this.issueQuantities[this.selectedItemForQty.item_id] = qty;
+      }
+      this.closeQuantityModal();
+    } else {
+      alert("Invalid quantity entered.");
+    }
+  }
+
+  getStockStatus(item: any): string {
+    const stock = item.current_stock || 0;
+    const threshold = item.reorder_level || 10;
+    if (stock === 0) return 'Out of Stock';
+    if (stock <= threshold) return 'Low Stock';
+    return 'In Stock';
+  }
+
+  getStockStatusClass(item: any): string {
+    const status = this.getStockStatus(item);
+    if (status === 'Out of Stock') return 'status-out';
+    if (status === 'Low Stock') return 'status-low';
+    return 'status-in';
   }
 
   getQty(itemId: number): number | string {
@@ -400,48 +440,38 @@ export class OutflowComponent implements OnInit {
     }
   }
 
-  proceedDirectAllocation(): void {
-    if (this.stagedIssuances.length === 0) {
-      alert('Your cart is empty. Please add at least one issuance first.');
-      return;
-    }
-
-    if (confirm(`Are you sure you want to proceed with ${this.stagedIssuances.length} issuance(s)?`)) {
-      this.isSubmitting = true;
-      this.saveStagedSequentially(0);
-    }
-  }
-
-  saveStagedSequentially(index: number) {
-    if (index >= this.stagedIssuances.length) {
-      this.isSubmitting = false;
-      alert('All issuances recorded successfully!');
-      this.stagedIssuances = [];
-      this.activeTab = 'approved';
-      this.fetchApprovedRequests();
-      this.fetchInventory();
-      return;
-    }
-
-    const staged = this.stagedIssuances[index];
-    const payload = {
-      ris_no: staged.ris_no,
-      office_id: staged.office_id,
-      transaction_date: new Date().toISOString().split('T')[0],
-      remarks: staged.remarks,
-      items: staged.items
-    };
-
-    this.http.post('http://localhost:5000/api/transactions/issue', payload).subscribe({
-      next: () => this.saveStagedSequentially(index + 1),
-      error: (err) => {
-        this.isSubmitting = false;
-        alert(`Failed at issuance #${index + 1}: ${err.error?.error || 'Unknown error'}`);
-      }
+  getCartItems() {
+    return Object.keys(this.issueQuantities).map(key => {
+      const id = parseInt(key, 10);
+      const item = this.inventoryItems.find(i => i.item_id === id);
+      return {
+        item_id: id,
+        item_name: item ? item.item_name : 'Unknown Item',
+        quantity: this.issueQuantities[id],
+        unit: item ? item.unit_of_measure : ''
+      };
     });
   }
 
-  addToCart(): void {
+  removeItemFromCart(itemId: number) {
+    delete this.issueQuantities[itemId];
+    this.showQuantityInput[itemId] = false;
+  }
+
+  // Confirm Issuance Modal state
+  showConfirmModal = false;
+  itemsToIssue: any[] = [];
+  confirmOfficeName: string = '';
+  confirmRemarks: string = '';
+
+  openConfirmModal() {
+    this.itemsToIssue = this.getCartItems();
+
+    if (this.itemsToIssue.length === 0) {
+      alert('Your cart is empty. Please add items before confirming.');
+      return;
+    }
+
     if (this.issueForm.get('department_id')?.invalid) {
       this.issueForm.get('department_id')?.markAsTouched();
       alert('Please select a Recipient Office.');
@@ -449,49 +479,33 @@ export class OutflowComponent implements OnInit {
     }
 
     const officeId = Number(this.issueForm.value.department_id);
-    const itemsToIssue = Object.keys(this.issueQuantities).map(key => {
-      const itemId = parseInt(key, 10);
-      const item = this.inventoryItems.find(i => i.item_id === itemId);
-      return {
-        item_id: itemId,
-        item_name: item ? item.item_name : 'Unknown Item',
-        quantity: this.issueQuantities[itemId]
-      };
-    });
+    const office = this.offices.find(o => o.office_id === officeId);
+    this.confirmOfficeName = office ? office.office_name : 'Unknown Office';
+    this.confirmRemarks = this.issueForm.value.remarks || '(No remarks)';
 
-    if (itemsToIssue.length === 0) {
-      alert('Please specify a quantity for at least one item.');
-      return;
-    }
-
-    const office = this.offices.find(o => o.office_id == officeId);
-    console.log('Adding to cart for office:', office);
-
-    const newStaged = {
-      ris_no: this.generatedIssuanceNumber,
-      office_id: officeId,
-      office_name: office ? office.office_name : 'Unknown Office',
-      acronym: office ? office.acronym : '??',
-      remarks: this.issueForm.value.remarks,
-      items: itemsToIssue,
-      itemsCount: itemsToIssue.length,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    };
-
-    this.stagedIssuances.push(newStaged);
-    this.startNewIssuance(); // Clear form for next issuance
+    this.showConfirmModal = true;
   }
 
-  removeFromCart(index: number, event: Event) {
-    event.stopPropagation();
-    this.stagedIssuances.splice(index, 1);
-    if (this.selectedStagedIndex === index) {
-      this.selectedStagedIndex = -1;
-    }
+  closeConfirmModal() {
+    this.showConfirmModal = false;
+    this.itemsToIssue = [];
   }
 
-  selectStaged(index: number) {
-    this.selectedStagedIndex = index;
+  proceedWithIssuance() {
+    this.showConfirmModal = false;
+    const finalItems = this.itemsToIssue.map(ci => ({
+      item_id: ci.item_id,
+      quantity: ci.quantity
+    }));
+    this.submitIssuance(
+      finalItems, 
+      Number(this.issueForm.value.department_id), 
+      this.issueForm.value.remarks
+    );
+  }
+
+  confirmDirectIssuance(): void {
+    this.openConfirmModal();
   }
 
   printRis(data: any) {
