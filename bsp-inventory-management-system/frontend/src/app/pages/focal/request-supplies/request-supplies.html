@@ -56,10 +56,13 @@
           </span>
         </td>
         <td class="col-request text-center">
-          <input *ngIf="isBorrowable(item)" type="number" [(ngModel)]="item.requestQuantity" min="0" placeholder="0" class="qty-input">
-          <div *ngIf="!isBorrowable(item)" style="display: inline-block; padding: 4px 8px; background-color: #fee2e2; color: #dc2626; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid #fecaca;" title="Item stock has reached critical threshold (<=30%). It can only be requested via Direct Issuance by an Administrator.">
-            Direct Issue Only
-          </div>
+          <input type="number" 
+                 [ngModel]="item.requestQuantity" 
+                 (ngModelChange)="validateQuantity(item, $event)"
+                 min="0" 
+                 [max]="item.current_stock"
+                 placeholder="0" 
+                 class="qty-input">
         </td>
       </tr>
       <tr *ngIf="filteredItems.length === 0">
@@ -245,5 +248,23 @@
         <p style="margin-top: 5px;">Head of Office/Authorized Representative</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container">
+  <div *ngFor="let toast of toasts; let i = index" class="toast-message">
+    <svg class="toast-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div class="toast-content">{{ toast.message }}</div>
+    <button class="toast-close" (click)="removeToast(i)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
   </div>
 </div>
