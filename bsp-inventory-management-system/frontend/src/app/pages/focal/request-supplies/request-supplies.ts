@@ -81,6 +81,12 @@ export class RequestSupplies implements OnInit {
     return this.items.filter(item => item.requestQuantity && item.requestQuantity > 0).length;
   }
 
+  isBorrowable(item: any): boolean {
+    if (!item.reorder_level || item.reorder_level === 0) return true;
+    const stockPercentage = (item.current_stock / item.reorder_level) * 100;
+    return stockPercentage > 30;
+  }
+
   selectCategory(category: string) {
     this.selectedCategory = category;
   }
