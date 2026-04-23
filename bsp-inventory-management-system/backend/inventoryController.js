@@ -40,6 +40,18 @@ exports.getAllItems = async (req, res) => {
   }
 };
 
+exports.getNextSku = async (req, res) => {
+  try {
+    // Get the maximum item_id so far and add 1
+    const result = await db.query("SELECT COALESCE(MAX(item_id), 0) + 1 AS next_id FROM Items");
+    const nextId = result.rows[0].next_id;
+    const nextSku = 'ITM-' + String(nextId).padStart(6, '0');
+    res.status(200).json({ nextSku });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.createItem = async (req, res) => {
   // Handle both single item with image (multipart/form-data) and batch (JSON)
   let itemsToCreate = [];
@@ -128,7 +140,7 @@ exports.createItem = async (req, res) => {
           `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock, image_url) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
           [
-            item_code ? item_code.toUpperCase() : null,
+            null, // Temporarily null, will be updated to system generated SKU
             item_name ? item_name.toUpperCase() : null,
             description ? description.toUpperCase() : null,
             unit_of_measure ? unit_of_measure.toUpperCase() : null,
@@ -141,6 +153,11 @@ exports.createItem = async (req, res) => {
           ]
         );
         newItem = result.rows[0];
+
+        // Generate and update SKU for the new item
+        const generatedSku = 'ITM-' + String(newItem.item_id).padStart(6, '0');
+        await client.query(`UPDATE Items SET item_code = $1 WHERE item_id = $2`, [generatedSku, newItem.item_id]);
+        newItem.item_code = generatedSku;
       }
 
       // 2. If quantity > 0, create a Transaction IN

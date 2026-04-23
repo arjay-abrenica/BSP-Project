@@ -47,8 +47,10 @@ export class Catalog implements OnInit {
   filteredSuggestions: any[] = [];
   showSuggestions = false;
   isSkuExisting = false;
+  baseNextSkuId: number = 0;
 
   // Delete Item Modal State
+// ... Wait, need to properly match and replace ...
   showDeleteModal: boolean = false;
   deletePassword = '';
   isDeleting = false;
@@ -90,7 +92,7 @@ export class Catalog implements OnInit {
   ) {
     this.addItemForm = this.fb.group({
       item_id: [null], // Hidden field for editing
-      item_code: ['', Validators.required],
+      item_code: [''],
       item_name: ['', Validators.required],
       category_id: ['', Validators.required],
       unit_of_measure: ['', Validators.required],
@@ -381,6 +383,25 @@ export class Catalog implements OnInit {
     });
   }
 
+  fetchNextSku(): void {
+    this.http.get<{nextSku: string}>('http://localhost:5000/api/items/next-sku').subscribe({
+      next: (res) => {
+        const idPart = parseInt(res.nextSku.replace('ITM-', ''), 10);
+        this.baseNextSkuId = idPart;
+        this.updateSkuDisplay();
+      },
+      error: (err) => console.error('Failed to fetch next SKU', err)
+    });
+  }
+
+  updateSkuDisplay(): void {
+    if (!this.isEditing && this.baseNextSkuId > 0) {
+      const nextId = this.baseNextSkuId + this.batchItems.length;
+      const skuStr = 'ITM-' + String(nextId).padStart(6, '0');
+      this.addItemForm.patchValue({ item_code: skuStr });
+    }
+  }
+
   openItemDetails(item: any): void {
     this.selectedItemDetails = item;
     this.showItemDetailsModal = true;
@@ -570,6 +591,7 @@ export class Catalog implements OnInit {
       quantity: 0,
       reorder_level: 10
     });
+    this.updateSkuDisplay();
   }
 
   onSkuInput(event: any): void {

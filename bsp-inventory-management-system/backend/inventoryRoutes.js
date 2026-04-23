@@ -21,6 +21,7 @@ const upload = multer({
 router.get('/offices', inventoryController.getAllOffices);
 router.get('/suppliers', inventoryController.getAllSuppliers);
 router.get('/items', inventoryController.getAllItems);
+router.get('/items/next-sku', inventoryController.getNextSku);
 router.post('/items', upload.single('image'), inventoryController.createItem);
 router.put('/items/:id', upload.single('image'), inventoryController.updateItem);
 router.delete('/items/:id', inventoryController.deleteItem);
