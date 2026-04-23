@@ -691,14 +691,14 @@ exports.getRequestDetails = async (req, res) => {
   const { id } = req.params;
   try {
     const query = `
-      SELECT 
+      SELECT
         rd.item_id,
         rd.quantity as "reqQty",
+        rd.approved_quantity as "issueQty",
         i.item_name as description,
         i.unit_of_measure as unit,
         i.current_stock as "inStock"
-      FROM Request_Details rd
-      JOIN Items i ON rd.item_id = i.item_id
+      FROM Request_Details rd      JOIN Items i ON rd.item_id = i.item_id
       WHERE rd.request_id = $1
     `;
     const result = await db.query(query, [id]);
@@ -726,25 +726,42 @@ exports.getRequestsHistory = async (req, res) => {
   const { office } = req.query;
   try {
     let query = `
-      SELECT 
-        t.ris_no as "risNo",
-        COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
-        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
-        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
-        (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
-        'RELEASED' as status
-      FROM Transactions t
-      LEFT JOIN Offices o ON t.office_id = o.office_id
-      WHERE t.transaction_type = 'OUT'
+      SELECT * FROM (
+        SELECT 
+          t.ris_no as "risNo",
+          COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
+          TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
+          TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
+          (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
+          'RELEASED' as status,
+          t.transaction_date as "sortDate",
+          t.transaction_id as "sortId"
+        FROM Transactions t
+        LEFT JOIN Offices o ON t.office_id = o.office_id
+        WHERE t.transaction_type = 'OUT'
+        UNION ALL
+        SELECT 
+          r.request_number as "risNo",
+          COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
+          TO_CHAR(r.request_date, 'MM/DD/YYYY') as "dateRequested",
+          '-' as "dateReleased",
+          (SELECT COALESCE(SUM(quantity), 0) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "noOfItems",
+          r.status as status,
+          r.request_date as "sortDate",
+          r.request_id as "sortId"
+        FROM Requests r
+        LEFT JOIN Offices o ON r.office_id = o.office_id
+        WHERE r.status IN ('REJECTED', 'CANCELLED')
+      ) AS history_data
     `;
 
     const params = [];
     if (office && office !== 'N/A') {
       params.push(office);
-      query += ` AND (o.office_name = $1 OR o.acronym = $1)`;
+      query += ` WHERE "requestingOffice" = $1`;
     }
 
-    query += ` ORDER BY t.transaction_date DESC, t.transaction_id DESC`;
+    query += ` ORDER BY "sortDate" DESC, "sortId" DESC`;
     
     const result = await db.query(query, params);
     res.status(200).json(result.rows);
