@@ -81,6 +81,31 @@ export class RequestSupplies implements OnInit {
     return this.items.filter(item => item.requestQuantity && item.requestQuantity > 0).length;
   }
 
+  // Toast Notification System
+  toasts: { message: string }[] = [];
+
+  showToast(message: string) {
+    this.toasts.push({ message });
+    setTimeout(() => {
+      this.toasts.shift();
+    }, 5000);
+  }
+
+  removeToast(index: number) {
+    this.toasts.splice(index, 1);
+  }
+
+  validateQuantity(item: any, value: number) {
+    if (value > item.current_stock) {
+      this.showToast(`Warning: Cannot request more than available stock (${item.current_stock}).`);
+      item.requestQuantity = item.current_stock;
+    } else if (value < 0) {
+      item.requestQuantity = 0;
+    } else {
+      item.requestQuantity = value;
+    }
+  }
+
   selectCategory(category: string) {
     this.selectedCategory = category;
   }
