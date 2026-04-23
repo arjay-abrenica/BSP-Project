@@ -52,6 +52,7 @@ export class RequestLogComponent implements OnInit {
     const q = this.searchQuery.toLowerCase();
     this.filteredLogs = this.requestLogs.filter(log => 
       (log.reqNumber && log.reqNumber.toLowerCase().includes(q)) || 
+      (log.risNumber && log.risNumber.toLowerCase().includes(q)) ||
       (log.purpose && log.purpose.toLowerCase().includes(q)) ||
       (log.status && log.status.toLowerCase().includes(q))
     );

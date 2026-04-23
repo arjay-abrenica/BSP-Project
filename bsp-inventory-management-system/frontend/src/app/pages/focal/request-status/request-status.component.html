@@ -27,9 +27,13 @@
       
       <div class="card-body">
         <p class="purpose">{{req.purpose}}</p>
-        <div class="meta">
+        <div class="meta" style="display: flex; justify-content: space-between; align-items: center;">
           <span class="date">{{req.date}}</span>
           <span class="items">{{req.itemsCount}} items</span>
+        </div>
+        
+        <div *ngIf="req.risNumber" class="ris-tag" style="margin-top: 8px; font-size: 11px; background: #e6f4ea; color: var(--bsp-dark-green); padding: 2px 8px; border-radius: 4px; display: inline-block; font-weight: 600;">
+          RIS: {{req.risNumber}}
         </div>
 
         <div class="mini-timeline">
@@ -73,6 +77,10 @@
         <div class="info-row">
             <label>Purpose</label>
             <p>{{selectedRequest.purpose}}</p>
+        </div>
+        <div class="info-row" *ngIf="selectedRequest.risNumber">
+            <label>RIS Number</label>
+            <p style="font-weight: 700; color: var(--bsp-dark-green);">{{selectedRequest.risNumber}}</p>
         </div>
         <div class="info-row" *ngIf="selectedRequest.priority !== 'NORMAL'">
             <label>Priority Reason</label>

@@ -23,9 +23,8 @@
         <div class="direct-items-grid">
           <div class="direct-item-card" *ngFor="let item of filteredItems">
             <div class="item-image-wrapper">
-              <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/placeholder.png'" 
-                   alt="Item Image" class="item-image">
-              <span class="item-stock-status" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
+              <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/bspLogo.png'"
+                   alt="Item Image" class="item-image">              <span class="item-stock-status" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
                 {{ item.current_stock > 10 ? 'In Stock' : 'Low Stock' }}
               </span>
             </div>

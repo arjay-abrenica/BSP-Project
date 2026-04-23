@@ -694,16 +694,18 @@ exports.getRequestDetails = async (req, res) => {
       SELECT
         rd.item_id,
         rd.quantity as "reqQty",
-        rd.approved_quantity as "issueQty",
+        COALESCE(rd.approved_quantity, 0) as "issueQty",
         i.item_name as description,
         i.unit_of_measure as unit,
         i.current_stock as "inStock"
-      FROM Request_Details rd      JOIN Items i ON rd.item_id = i.item_id
+      FROM Request_Details rd
+      JOIN Items i ON rd.item_id = i.item_id
       WHERE rd.request_id = $1
     `;
     const result = await db.query(query, [id]);
     res.status(200).json(result.rows);
   } catch (err) {
+    console.error('Error in getRequestDetails:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -801,6 +803,7 @@ exports.getMyRequests = async (req, res) => {
       SELECT 
         r.request_id as id,
         r.request_number as "reqNumber",
+        (SELECT ris_no FROM Transactions t WHERE t.request_id = r.request_id AND t.transaction_type = 'OUT' LIMIT 1) as "risNumber",
         r.purpose,
         r.status,
         r.priority,

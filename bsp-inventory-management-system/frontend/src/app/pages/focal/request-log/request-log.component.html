@@ -16,6 +16,7 @@
       <tr>
         <th class="col-date">Date</th>
         <th class="col-reqno">Request #</th>
+        <th class="col-risno">RIS #</th>
         <th class="col-purpose">Purpose</th>
         <th class="col-items text-center">Items</th>
         <th class="col-status text-center">Status</th>
@@ -26,6 +27,7 @@
       <tr *ngFor="let log of filteredLogs">
         <td class="col-date">{{log.date}}</td>
         <td class="col-reqno req-no">{{log.reqNumber}}</td>
+        <td class="col-risno">{{log.risNumber || '-'}}</td>
         <td class="col-purpose purpose-cell">{{log.purpose}}</td>
         <td class="col-items text-center">{{log.itemsCount}}</td>
         <td class="col-status text-center">
@@ -56,6 +58,10 @@
         <div class="info-item">
           <label>Date Requested</label>
           <span>{{selectedRequest.date}}</span>
+        </div>
+        <div class="info-item" *ngIf="selectedRequest.risNumber">
+          <label>RIS Number</label>
+          <span style="font-weight: 600; color: var(--bsp-dark-green);">{{selectedRequest.risNumber}}</span>
         </div>
         <div class="info-item">
           <label>Final Status</label>
