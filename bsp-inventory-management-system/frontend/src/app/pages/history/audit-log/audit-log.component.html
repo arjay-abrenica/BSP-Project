@@ -3,35 +3,113 @@
     <h2 class="catalog-title">Audit Log</h2>
   </div>
 
-  <table class="data-table" style="margin-top: 12px; border-top: 1px solid #E5E7EB;">
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" placeholder="Search by Log ID, Details, etc..." [(ngModel)]="searchQuery" (input)="applyFilters()">
+    </div>
+    
+    <div class="actions-wrapper">
+      <div class="filter-dropdown-container">
+        <button class="btn-filter" (click)="toggleFilter()" [class.active]="isFilterOpen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filter
+        </button>
+
+        @if (isFilterOpen) {
+          <div class="filter-dropdown" style="width: 320px;">
+            <div class="filter-header">
+              <h3>Filter By</h3>
+              <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
+            </div>
+            
+            <div class="filter-body">
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <div class="filter-group" style="flex:1;">
+                  <label>Start Date</label>
+                  <input type="date" class="filter-select" style="padding: 6px;" [(ngModel)]="filters.startDate" />
+                </div>
+                <div class="filter-group" style="flex:1;">
+                  <label>End Date</label>
+                  <input type="date" class="filter-select" style="padding: 6px;" [(ngModel)]="filters.endDate" />
+                </div>
+              </div>
+
+              <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 12px 0;" />
+
+              <div class="filter-group">
+                <label>Action</label>
+                <select class="filter-select" [(ngModel)]="filters.action">
+                  <option value="">All Actions</option>
+                  @for (action of uniqueActions; track action) {
+                    <option [value]="action">{{ action }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label>User</label>
+                <select class="filter-select" [(ngModel)]="filters.username">
+                  <option value="">All Users</option>
+                  @for (user of uniqueUsers; track user) {
+                    <option [value]="user">{{ user }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-footer">
+              <button class="btn-primary w-full" (click)="applyFilters(); toggleFilter()">Apply Filter</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <table class="data-table">
       <thead>
           <tr>
-              <th>Log ID</th>
-              <th class="text-center">Timestamp</th>
-              <th class="text-center">User</th>
-              <th class="text-center">Action</th>
-              <th>Entity</th>
-              <th>Details</th>
+              <th class="col-id">Log ID</th>
+              <th class="col-time text-center">Timestamp</th>
+              <th class="col-user text-center">User</th>
+              <th class="col-action text-center">Action</th>
+              <th class="col-entity">Entity</th>
+              <th class="col-details">Details</th>
           </tr>
       </thead>
       <tbody>
-          @for (item of auditData; track item.log_id) {
+          @for (item of paginatedData; track item.log_id) {
           <tr class="clickable-row">
-              <td class="font-medium">{{ item.log_id }}</td>
-              <td class="text-center">{{ item.timestamp }}</td>
-              <td class="text-center">{{ item.username || 'SYSTEM' }}</td>
-              <td class="text-center">
-                  <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'EDIT' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'EDIT' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '11px', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
+              <td class="col-id font-medium">{{ item.log_id }}</td>
+              <td class="col-time text-center">{{ item.timestamp }}</td>
+              <td class="col-user text-center"><span class="category-pill">{{ item.username || 'SYSTEM' }}</span></td>
+              <td class="col-action text-center">
+                  <span [ngStyle]="{'background-color': item.action === 'DELETE' ? '#fee2e2' : item.action === 'UPDATE' ? '#fef3c7' : '#dcfce3', 'color': item.action === 'DELETE' ? '#b91c1c' : item.action === 'UPDATE' ? '#b45309' : '#166534', 'padding': '4px 8px', 'border-radius': '4px', 'font-weight': 'bold', 'font-size': '11px', 'letter-spacing': '0.05em'}">{{ item.action }}</span>
               </td>
-              <td>{{ item.entity }} <span style="color: var(--bsp-text-muted); font-size: 11px;">(ID: {{ item.entity_id }})</span></td>
-              <td class="text-muted">{{ item.details }}</td>
+              <td class="col-entity">{{ item.entity }} <span style="color: var(--bsp-text-muted); font-size: 11px;">(ID: {{ item.entity_id }})</span></td>
+              <td class="col-details text-muted">{{ item.details }}</td>
           </tr>
           }
-          @if (auditData.length === 0) {
+          @if (filteredData.length === 0) {
               <tr>
                   <td colspan="6" class="text-center empty-state" style="padding: 32px; color: var(--bsp-text-muted);">No audit logs found.</td>
               </tr>
           }
       </tbody>
   </table>
+
+  <div class="pagination-controls">
+    <div class="page-info-detailed">
+      Showing {{ filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredData.length) }} of {{ filteredData.length }} entries
+    </div>
+    <div class="page-buttons">
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Previous</button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">Next</button>
+    </div>
+  </div>
 </div>

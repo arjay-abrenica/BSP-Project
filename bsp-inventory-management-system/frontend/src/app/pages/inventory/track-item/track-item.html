@@ -44,12 +44,10 @@
         @if (itemDetails) {
           <div class="details-main">
             <div class="item-image-container">
-              <!-- Placeholder for Item Image -->
-              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-                <rect width="200" height="200" fill="#f9fafb"/>
-                <path d="M60 140L90 100L110 120L140 80L160 140H60Z" fill="#d1d5db"/>
-                <circle cx="80" cy="80" r="10" fill="#d1d5db"/>
-              </svg>
+              <!-- Item Image -->
+              <img [src]="itemDetails.image_url ? (itemDetails.image_url.startsWith('data:') ? itemDetails.image_url : 'http://localhost:5000' + itemDetails.image_url) : 'assets/img/placeholder.svg'" 
+                   (error)="onImageError($event)"
+                   alt="Item Image" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
             <div class="info-stacked">
               <div class="info-item">
@@ -76,10 +74,10 @@
           </div>
           
           <div class="action-buttons-grid">
-            <button class="btn-primary">Edit Item</button>
-            <button class="btn-primary">Log Transaction</button>
-            <button class="btn-primary">View Transactions</button>
-            <button class="btn-primary">View Allocation</button>
+            <button class="btn-primary" (click)="onAction('edit')">Edit Item</button>
+            <button class="btn-primary" (click)="onAction('log')">Log Transaction</button>
+            <button class="btn-primary" (click)="onAction('history')">View Transactions</button>
+            <button class="btn-primary" (click)="onAction('allocation')">View Allocation</button>
           </div>
         } @else {
           <div class="empty-state">

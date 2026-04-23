@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -82,12 +82,17 @@ export class Catalog implements OnInit {
   intakeSummaryData: any = null;
   intakeGrandTotal: number = 0;
 
+  // Pending action from query params
+  pendingAction: string | null = null;
+  pendingSku: string | null = null;
+
   Math = Math; // Make Math available to template
 
   constructor(
     private http: HttpClient,
     private fb: FormBuilder,
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService
   ) {
     this.addItemForm = this.fb.group({
@@ -369,6 +374,32 @@ export class Catalog implements OnInit {
 
   ngOnInit(): void {
     this.fetchItems();
+    this.route.queryParams.subscribe(params => {
+      this.pendingAction = params['action'];
+      this.pendingSku = params['sku'];
+      this.processPendingAction();
+    });
+  }
+
+  processPendingAction(): void {
+    if (this.pendingAction && this.pendingSku && this.items.length > 0) {
+      const item = this.items.find(i => i.item_code === this.pendingSku);
+      if (item) {
+        this.selectedItemDetails = item;
+        // Small delay to ensure Angular change detection runs
+        setTimeout(() => {
+          switch (this.pendingAction) {
+            case 'edit': this.onEditItem(); break;
+            case 'log': this.onLogTransaction(); break;
+            case 'history': this.onViewTransactions(); break;
+            case 'allocation': this.onViewAllocation(); break;
+          }
+          this.pendingAction = null;
+          this.pendingSku = null;
+          this.router.navigate([], { queryParams: {} });
+        });
+      }
+    }
   }
 
   fetchItems(): void {
@@ -378,6 +409,7 @@ export class Catalog implements OnInit {
         this.filteredItems = data;
         this.extractFilterOptions(data);
         this.updatePagination();
+        this.processPendingAction();
       },
       error: (err) => console.error('Failed to fetch items', err)
     });

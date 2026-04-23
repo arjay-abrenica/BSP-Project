@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-track-item',
@@ -15,7 +16,7 @@ export class TrackItem {
   itemDetails: any = null;
   errorMsg: string = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   onSearch(): void {
     if (!this.trackingCode) return;
@@ -30,6 +31,20 @@ export class TrackItem {
         this.errorMsg = 'Item not found. Please check the tracking number.';
         console.error(err);
       }
+    });
+  }
+
+  onImageError(event: any) {
+    event.target.src = 'assets/img/placeholder.svg';
+  }
+
+  onAction(action: string) {
+    if (!this.itemDetails) return;
+    this.router.navigate(['/inventory/catalog'], { 
+      queryParams: { 
+        sku: this.itemDetails.item_code, 
+        action: action 
+      } 
     });
   }
 }

@@ -1,4 +1,13 @@
 <div class="outflow-page">
+  <!-- Toast Notification -->
+  <div class="toast-notification" [ngClass]="toastType" *ngIf="showToast">
+    <div class="toast-content">
+      <svg *ngIf="toastType === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      <svg *ngIf="toastType === 'error'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+      <span>{{ toastMessage }}</span>
+    </div>
+  </div>
+
   <div class="main-content">
     
     <!-- Left Panel: Requests Navigation -->
@@ -296,25 +305,34 @@
       <!-- DIRECT ALLOCATION TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'direct'">
         <div class="details-content direct-allocation-content" style="padding-top: 0;">
-          <div class="section-header-flex" style="margin-top: 15px; background-color: #e6f4ea; padding: 15px; border-radius: 8px; flex-direction: column; align-items: stretch; gap: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <h4 class="table-title" style="margin: 0;">Item Selection List</h4>
-                <div class="search-wrapper">
-                  <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
-                </div>
+          <div class="section-header-flex" style="margin-top: 15px; background-color: var(--bsp-light-green-bg); padding: 15px; border-radius: var(--radius-sm); border: none; display: flex; flex-direction: column; gap: 15px;">
+            <div style="width: 100%;">
+              <h4 class="table-title" style="margin: 0; color: var(--bsp-dark-green); font-size: 1.1rem;">Item Selection List</h4>
             </div>
-            <div [formGroup]="issueForm" style="width: 100%; display: flex; align-items: center; gap: 15px;">
-              <div style="display: flex; align-items: center; gap: 10px; flex: 1; max-width: 400px;">
+            
+            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+              <!-- Recipient Office -->
+              <div [formGroup]="issueForm" style="display: flex; align-items: center; gap: 10px; flex: 1;">
                 <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green); white-space: nowrap;">Recipient Office:</label>
                 <select class="direct-select" formControlName="department_id" [class.error]="issueForm.get('department_id')?.invalid && issueForm.get('department_id')?.touched" style="font-size: 13px; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 4px; background: white;">
                   <option value="" disabled selected>Select Office</option>
                   <option *ngFor="let office of offices" [value]="office.office_id">{{ office.office_name }}</option>
                 </select>
               </div>
-              <div *ngIf="issueForm.get('department_id')?.value" style="display: flex; align-items: center; gap: 10px; background: #fff; padding: 6px 12px; border-radius: 4px; border: 1px dashed var(--bsp-dark-green);">
-                <span style="font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase;">Generated RIS:</span>
-                <span style="font-size: 13px; font-weight: 700; color: var(--bsp-dark-green);">{{ generatedIssuanceNumber }}</span>
+
+              <!-- Category Filter -->
+              <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green); white-space: nowrap;">Category:</label>
+                <select class="direct-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange($event)" [ngModelOptions]="{standalone: true}" style="font-size: 13px; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                  <option value="All">All Categories</option>
+                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                </select>
+              </div>
+
+              <!-- Search -->
+              <div class="search-wrapper" style="margin: 0; flex: 0.7; position: relative;">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search items..." (input)="onSearch($event)" style="padding-left: 35px; width: 100%; box-sizing: border-box; font-size: 13px; padding-top: 8px; padding-bottom: 8px; border: 1px solid #ccc; border-radius: 4px;">
               </div>
             </div>
           </div>
@@ -322,7 +340,8 @@
               <div class="direct-items-grid">
                 <div class="direct-item-card" *ngFor="let item of filteredItems">
                   <div class="item-image-wrapper">
-                    <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/bspLogo.png'" 
+                    <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/placeholder.svg'" 
+                         (error)="onImageError($event)"
                          alt="Item Image" class="item-image">
                     <span class="item-stock-status" [ngClass]="getStockStatusClass(item)">
                       {{ getStockStatus(item) }}
