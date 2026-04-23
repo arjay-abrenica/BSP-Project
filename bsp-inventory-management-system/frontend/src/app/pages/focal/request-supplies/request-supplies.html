@@ -1,51 +1,46 @@
-<div class="table-container">
-  <div class="catalog-header">
-    <h2 class="catalog-title">Request Supplies</h2>
-    <p class="catalog-subtitle">Select quantities for the items you need, then review your cart below to submit.</p>
-  </div>
-
-  <div class="toolbar-enhanced">
-    <div class="search-wrapper">
-      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" [(ngModel)]="searchQuery" class="search-input" placeholder="Search by name, SKU, or category...">
-    </div>
+<div class="request-page">
+  <div class="main-content">
     
-    <div class="category-pills">
-      <button *ngFor="let cat of availableCategories" 
-              class="pill" 
-              [class.active]="selectedCategory === cat" 
-              (click)="selectCategory(cat)">
-        {{ cat }}
-      </button>
-    </div>
-  </div>
+    <!-- LEFT PANEL: CATALOG -->
+    <div class="panel catalog-panel">
+      <div class="details-content" style="padding-top: 0;">
+        <div style="margin-top: 15px; background-color: #e6f4ea; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; align-items: stretch; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <h4 style="margin: 0; font-size: 1rem; color: var(--bsp-dark-green); font-weight: 700;">Supply Catalog</h4>
+              <div class="search-wrapper">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search by SKU, Item Name, Category, etc">
+              </div>
+          </div>
+          <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
+            <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green); white-space: nowrap;">Category:</label>
+            <select [(ngModel)]="selectedCategory" (change)="selectCategory(selectedCategory)" style="font-size: 13px; padding: 8px; width: 100%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+              <option *ngFor="let cat of availableCategories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+        </div>
 
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th class="col-sku">SKU</th>
-        <th class="col-item">Item Name</th>
-        <th class="col-category">Category</th>
-        <th class="col-qty text-center">Available</th>
-        <th class="col-request text-center" style="width: 150px;">Quantity to Request</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let item of filteredItems">
-        <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
-        <td class="col-item">
-          <div class="product-cell">
-            <div class="product-thumb">
-              <img *ngIf="item.image_url" [src]="item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url" [alt]="item.item_name">
-              <svg *ngIf="!item.image_url" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <rect width="200" height="200" fill="#f9fafb"/>
-                <path d="M60 140L90 100L110 120L140 80L160 140H60Z" fill="#d1d5db"/>
-                <circle cx="80" cy="80" r="10" fill="#d1d5db"/>
-              </svg>
+        <div class="direct-items-grid">
+          <div class="direct-item-card" *ngFor="let item of filteredItems">
+            <div class="item-image-wrapper">
+              <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/bspLogo.png'"
+                   alt="Item Image" class="item-image">              <span class="item-stock-status" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
+                {{ item.current_stock > 10 ? 'In Stock' : 'Low Stock' }}
+              </span>
             </div>
-            <div class="product-info">
+            
+            <div class="item-details">
               <div class="item-name">{{ item.item_name }}</div>
-              <div class="item-unit">{{ item.unit_of_measure }}</div>
+              <div class="item-stock-info">Available: {{ item.current_stock }} {{ item.unit_of_measure }}</div>
+            </div>
+
+            <div class="item-actions">
+              <button *ngIf="isBorrowable(item)" type="button" class="btn-add-item" [class.added]="item.requestQuantity > 0" (click)="openQuantityModal(item)">
+                {{ item.requestQuantity > 0 ? 'QTY: ' + item.requestQuantity + ' (EDIT)' : 'ADD' }}
+              </button>
+              <div *ngIf="!isBorrowable(item)" style="width: 100%; text-align: center; padding: 6px 10px; background-color: #fee2e2; color: #dc2626; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid #fecaca; box-sizing: border-box;" title="Item stock has reached critical threshold (<=30%). It can only be requested via Direct Issuance by an Administrator.">
+                Direct Issue Only
+              </div>
             </div>
           </div>
         </td>
@@ -72,20 +67,29 @@
   </table>
 </div>
 
-<!-- Floating Shopping Cart Bar -->
-<div class="floating-cart-bar">
-  <div class="cart-info">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="9" cy="21" r="1"></circle>
-      <circle cx="20" cy="21" r="1"></circle>
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-    </svg>
-    <div class="cart-text">
-      <span class="count-badge">{{ selectedItemsCount }}</span>
-      <span class="text">{{ selectedItemsCount === 1 ? 'item' : 'items' }} selected</span>
+<!-- Quantity Modal -->
+<div class="modal-overlay" *ngIf="isQuantityModalOpen" (click)="closeQuantityModal()">
+  <div class="modal-content quantity-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Quantity</h2>
+      <button class="close-btn" (click)="closeQuantityModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="item-title">{{ selectedItemForQty?.item_name }}</p>
+      <p class="item-avail">Available: {{ selectedItemForQty?.current_stock }} {{ selectedItemForQty?.unit_of_measure }}</p>
+      
+      <div class="form-group">
+        <label>Quantity to Request</label>
+        <input type="number" [(ngModel)]="quantityInput" min="0" [max]="selectedItemForQty?.current_stock" (keyup.enter)="confirmQuantity()" autofocus>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeQuantityModal()">Cancel</button>
+      <button class="btn-submit-full" (click)="confirmQuantity()" style="padding: 0.5rem 1.5rem;">Confirm</button>
     </div>
   </div>
-  <button class="btn-primary cart-checkout-btn" (click)="openPreview()" [disabled]="selectedItemsCount === 0">Review Requisition →</button>
 </div>
 
 <!-- Preview Modal -->

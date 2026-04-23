@@ -26,6 +26,36 @@ export class RequestSupplies implements OnInit {
   isPreviewModalOpen: boolean = false;
   selectedItems: any[] = [];
   
+  // Quantity Modal Logic
+  isQuantityModalOpen: boolean = false;
+  selectedItemForQty: any = null;
+  quantityInput: number | null = null;
+
+  openQuantityModal(item: any) {
+    if (!this.isBorrowable(item)) return;
+    this.selectedItemForQty = item;
+    this.quantityInput = item.requestQuantity || null;
+    this.isQuantityModalOpen = true;
+  }
+
+  closeQuantityModal() {
+    this.isQuantityModalOpen = false;
+    this.selectedItemForQty = null;
+    this.quantityInput = null;
+  }
+
+  confirmQuantity() {
+    if (this.selectedItemForQty) {
+      if (this.quantityInput !== null && this.quantityInput > this.selectedItemForQty.current_stock) {
+        alert(`Cannot request more than available stock (${this.selectedItemForQty.current_stock}).`);
+        this.selectedItemForQty.requestQuantity = this.selectedItemForQty.current_stock;
+      } else if (this.quantityInput !== null && this.quantityInput >= 0) {
+        this.selectedItemForQty.requestQuantity = this.quantityInput === 0 ? null : this.quantityInput;
+      }
+    }
+    this.closeQuantityModal();
+  }
+
   // Request Header Info
   requestPurpose: string = '';
   requestPriority: string = 'NORMAL';
