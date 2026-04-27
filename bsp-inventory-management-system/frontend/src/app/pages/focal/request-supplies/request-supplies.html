@@ -4,27 +4,35 @@
     <!-- LEFT PANEL: CATALOG -->
     <div class="panel catalog-panel">
       <div class="details-content" style="padding-top: 0;">
-        <div style="margin-top: 15px; background-color: #e6f4ea; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; align-items: stretch; gap: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <h4 style="margin: 0; font-size: 1rem; color: var(--bsp-dark-green); font-weight: 700;">Supply Catalog</h4>
-              <div class="search-wrapper">
-                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search by SKU, Item Name, Category, etc">
-              </div>
+        <div class="section-header-flex" style="margin-top: 15px; background-color: var(--bsp-light-green-bg, #e6f4ea); padding: 15px; border-radius: var(--radius-sm, 8px); border: none; display: flex; flex-direction: column; gap: 15px;">
+          <div style="width: 100%;">
+            <h4 class="table-title" style="margin: 0; color: var(--bsp-dark-green, #005E38); font-size: 1.1rem; font-weight: 700;">Supply Catalog</h4>
           </div>
-          <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
-            <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green); white-space: nowrap;">Category:</label>
-            <select [(ngModel)]="selectedCategory" (change)="selectCategory(selectedCategory)" style="font-size: 13px; padding: 8px; width: 100%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px; background: white;">
-              <option *ngFor="let cat of availableCategories" [value]="cat">{{ cat }}</option>
-            </select>
+          
+          <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+            <!-- Category Filter -->
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+              <label style="font-size: 12px; font-weight: 600; color: var(--bsp-dark-green, #005E38); white-space: nowrap;">Category:</label>
+              <select class="direct-select" [(ngModel)]="selectedCategory" (change)="selectCategory(selectedCategory)" [ngModelOptions]="{standalone: true}" style="font-size: 13px; padding: 8px; width: 100%; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                <option *ngFor="let cat of availableCategories" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
+
+            <!-- Search -->
+            <div class="search-wrapper" style="margin: 0; flex: 0.7; position: relative;">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" [(ngModel)]="searchQuery" [ngModelOptions]="{standalone: true}" class="search-input" placeholder="Search items..." style="padding-left: 35px; width: 100%; box-sizing: border-box; font-size: 13px; padding-top: 8px; padding-bottom: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
           </div>
         </div>
 
         <div class="direct-items-grid">
           <div class="direct-item-card" *ngFor="let item of filteredItems">
             <div class="item-image-wrapper">
-              <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/bspLogo.png'"
-                   alt="Item Image" class="item-image">              <span class="item-stock-status" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
+              <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/placeholder.svg'"
+                   (error)="onImageError($event)"
+                   alt="Item Image" class="item-image">
+              <span class="item-stock-status" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
                 {{ item.current_stock > 10 ? 'In Stock' : 'Low Stock' }}
               </span>
             </div>
@@ -43,28 +51,48 @@
               </div>
             </div>
           </div>
-        </td>
-        <td class="col-category">{{ item.category_name }}</td>
-        <td class="col-qty text-center">
-          <span class="stock-badge" [ngClass]="item.current_stock > 10 ? 'in-stock' : 'low-stock'">
-            {{ item.current_stock }}
-          </span>
-        </td>
-        <td class="col-request text-center">
-          <input type="number" 
-                 [ngModel]="item.requestQuantity" 
-                 (ngModelChange)="validateQuantity(item, $event)"
-                 min="0" 
-                 [max]="item.current_stock"
-                 placeholder="0" 
-                 class="qty-input">
-        </td>
-      </tr>
-      <tr *ngIf="filteredItems.length === 0">
-        <td colspan="5" class="empty-state">No items found matching your search.</td>
-      </tr>
-    </tbody>
-  </table>
+        </div>
+        
+        <div class="empty-state" *ngIf="filteredItems.length === 0" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6b7280; font-size: 14px;">
+          No items found matching your search.
+        </div>
+      </div>
+    </div>
+    
+    <!-- RIGHT PANEL: CART -->
+    <div class="panel cart-panel">
+      <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+        <h3 style="margin: 0; font-size: 1.1rem; color: var(--bsp-dark-green, #005E38);">Your Requisition Cart</h3>
+      </div>
+      
+      <div class="staged-list">
+        <div class="staged-header" style="border: none; padding-bottom: 0;">
+          <span>Items Selected ({{ selectedItemsCount }})</span>
+        </div>
+        
+        <ng-container *ngFor="let item of items">
+          <div class="staged-card" *ngIf="item.requestQuantity > 0" style="margin-bottom: 8px;">
+            <div class="req-info" style="flex-direction: row; justify-content: space-between; align-items: center; width: 100%;">
+              <div>
+                <div class="req-title" style="font-size: 13px;">{{ item.item_name }}</div>
+                <div class="req-items">{{ item.requestQuantity }} {{ item.unit_of_measure }}</div>
+              </div>
+              <button type="button" class="btn-remove" (click)="item.requestQuantity = null" title="Remove item">×</button>
+            </div>
+          </div>
+        </ng-container>
+
+        <div class="empty-staged" *ngIf="selectedItemsCount === 0">
+          <p>Your cart is empty.</p>
+          <small>Select items from the catalog to add them here.</small>
+        </div>
+
+        <div style="margin-top: auto; padding-top: 20px;" *ngIf="selectedItemsCount > 0">
+          <button class="btn-primary" style="width: 100%; text-align: center;" (click)="openPreview()">Review Requisition →</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Quantity Modal -->
