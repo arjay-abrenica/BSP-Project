@@ -28,10 +28,7 @@ export class RequestLogComponent implements OnInit {
   }
 
   fetchRequestLogs(): void {
-    const user = this.authService.currentUserValue;
-    const office_id = user?.office_id || 1;
-    
-    this.http.get<any[]>(`http://localhost:5000/api/requests/my?office_id=${office_id}&type=log`).subscribe({
+    this.http.get<any[]>(`http://localhost:5000/api/requests/my?type=log`).subscribe({
       next: (data) => {
         this.requestLogs = data;
         this.filteredLogs = data;

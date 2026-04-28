@@ -52,18 +52,18 @@ export class AnalysisComponent implements OnInit {
   selectedRow: DetailedAnalysisRow | null = null;
 
   officeNames: { [key: string]: string } = {
-    'PMDD': 'Property Management Development Division',
-    'CPSMO': 'Corporate Planning and Strategy Management Office',
-    'FOD': 'Facilities Operations Department',
-    'LSO': 'Logistics Support Office',
-    'IAO': 'Internal Audit Office',
-    'NSS': 'Network Security Services',
-    'Admin': 'Administration Office',
-    'Finance': 'Finance Department',
-    'ONP': 'Office of National Planning',
     'OSG': 'Office of the Secretary General',
-    'SU': 'Supply Unit/Admin',
-    'CO': 'Corporate Planning and Strategy Management Office'
+    'OBS': 'Office of the Board Secretary',
+    'ODSG': 'Office of the Deputy Secretary General',
+    'ONP': 'Office of the National President',
+    'LSO': 'Legal Services Office',
+    'FOD': 'Field Operations Division',
+    'CPSMO': 'Corporate Planning and Strategic Management Office',
+    'ADMIN': 'Administration Division',
+    'FINANCE': 'Finance Division',
+    'NSS': 'National Scout Shop',
+    'IAO': 'Internal Audit Office',
+    'PMDD': 'Property Management and Development Division'
   };
 
   mockItemBreakdown: ItemBreakdownRow[] = [];
@@ -98,10 +98,10 @@ export class AnalysisComponent implements OnInit {
   /* ── Tab C: Stock Distribution ── */
   distChartType: 'doughnut' = 'doughnut';
   distChartData: ChartData<'doughnut'> = {
-    labels: ['FOD', 'CPSMO', 'LSO', 'IAO', 'NSS', 'Administration', 'Finance', 'PMDD', 'ONP', 'OSG'],
+    labels: ['FOD', 'CPSMO', 'LSO', 'IAO', 'NSS', 'ADMIN', 'FINANCE', 'PMDD', 'OBS', 'OSG', 'ONP'],
     datasets: [{
-      data: [16, 11, 4, 3.3, 20, 22, 5, 8, 5, 6],
-      backgroundColor: ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#b7e4c7', '#d8f3dc', '#a8dadc', '#457b9d', '#1d3557'],
+      data: [16, 11, 4, 3.3, 20, 22, 5, 8, 5, 6, 4],
+      backgroundColor: ['#2d6a4f', '#40916c', '#52b788', '#74c69d', '#95d5b2', '#b7e4c7', '#d8f3dc', '#a8dadc', '#457b9d', '#1d3557', '#e76f51'],
       hoverOffset: 4
     }]
   };

@@ -413,11 +413,18 @@ exports.getNextRisNo = async (req, res) => {
 };
 
 exports.createRequest = async (req, res) => {
-  const { office_id, purpose, priority, justification, items } = req.body;
+  console.log('--- CREATE REQUEST START ---');
+  console.log('User from token:', req.user);
+  let { purpose, priority, justification, items } = req.body;
+  let office_id = req.body.office_id;
   
-  if (!office_id || !items || !Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Office ID and items are required' });
+  // If user is FOCAL_OFFICER, ALWAYS use their own office_id from token, ignoring any provided ID
+  if (req.user && req.user.role === 'FOCAL_OFFICER') {
+    office_id = req.user.office_id;
+    console.log(`Focal Officer detected. Forcing office_id: ${office_id} for user: ${req.user.username}`);
   }
+
+  console.log('Final office_id to be used:', office_id);
 
   let client;
   try {
@@ -725,13 +732,16 @@ exports.rejectRequest = async (req, res) => {
 };
 
 exports.getRequestsHistory = async (req, res) => {
-  const { office } = req.query;
+  const { office, status } = req.query;
+  const user = req.user;
+
   try {
     let query = `
       SELECT * FROM (
         SELECT 
           t.ris_no as "risNo",
           COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
+          o.office_id,
           TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
           TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
           (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
@@ -745,6 +755,7 @@ exports.getRequestsHistory = async (req, res) => {
         SELECT 
           r.request_number as "risNo",
           COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
+          o.office_id,
           TO_CHAR(r.request_date, 'MM/DD/YYYY') as "dateRequested",
           '-' as "dateReleased",
           (SELECT COALESCE(SUM(quantity), 0) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "noOfItems",
@@ -753,14 +764,27 @@ exports.getRequestsHistory = async (req, res) => {
           r.request_id as "sortId"
         FROM Requests r
         LEFT JOIN Offices o ON r.office_id = o.office_id
-        WHERE r.status IN ('REJECTED', 'CANCELLED')
+        WHERE r.status IN ('REJECTED', 'CANCELLED', 'PENDING', 'APPROVED', 'PARTIAL')
       ) AS history_data
+      WHERE 1=1
     `;
 
     const params = [];
-    if (office && office !== 'N/A') {
+    let paramIndex = 1;
+
+    // SECURITY: If user is FOCAL_OFFICER, strictly limit to their office_id
+    if (user.role === 'FOCAL_OFFICER') {
+      query += ` AND office_id = $${paramIndex++}`;
+      params.push(user.office_id);
+    } else if (office && office !== 'N/A' && office !== '') {
+      // Admins can filter by office name
+      query += ` AND "requestingOffice" = $${paramIndex++}`;
       params.push(office);
-      query += ` WHERE "requestingOffice" = $1`;
+    }
+
+    if (status) {
+      query += ` AND status = $${paramIndex++}`;
+      params.push(status);
     }
 
     query += ` ORDER BY "sortDate" DESC, "sortId" DESC`;
@@ -768,6 +792,7 @@ exports.getRequestsHistory = async (req, res) => {
     const result = await db.query(query, params);
     res.status(200).json(result.rows);
   } catch (err) {
+    console.error('Error in getRequestsHistory:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -797,7 +822,13 @@ exports.getActivityLog = async (req, res) => {
 };
 
 exports.getMyRequests = async (req, res) => {
-  const { office_id, type } = req.query; // type: 'active' or 'log'
+  const { type } = req.query; // type: 'active' or 'log'
+  const office_id = req.user.office_id; // Get from token
+
+  if (!office_id) {
+    return res.status(400).json({ error: 'User office ID not found in token' });
+  }
+
   try {
     let query = `
       SELECT 
@@ -942,70 +973,6 @@ exports.getItemAllocationPerOffice = async (req, res) => {
   }
 };
 
-
-exports.registerUser = async (req, res) => {
-  const { username, password, role } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Username and password are required' });
-  }
-
-  try {
-    const checkUser = await db.query('SELECT * FROM Users WHERE username = $1', [username]);
-    if (checkUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Username already taken' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await db.query(
-      'INSERT INTO Users (username, password, role) VALUES ($1, $2, $3) RETURNING user_id, username, role',
-      [username, hashedPassword, role || 'staff']
-    );
-    res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-exports.loginUser = async (req, res) => {
-  const { username, password } = req.body;
-  try {
-    const result = await db.query('SELECT * FROM Users WHERE username = $1', [username]);
-    if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
-
-    const user = result.rows[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
-      // Fallback for existing plain text passwords if any (optional, but good for transition)
-      if (user.password === password) {
-        // Auto-update to hashed password
-        const newHash = await bcrypt.hash(password, 10);
-        await db.query('UPDATE Users SET password = $1 WHERE user_id = $2', [newHash, user.user_id]);
-      } else {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-    }
-
-    const token = jwt.sign(
-      { id: user.user_id, username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'bsp_inventory_secret_key_2026',
-      { expiresIn: '8h' }
-    );
-
-    res.status(200).json({ 
-      message: 'Login successful', 
-      token,
-      user: { 
-        id: user.user_id, 
-        username: user.username, 
-        role: user.role,
-        office_id: user.office_id
-      } 
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
 
 /* =========================================
    SECTION 7: AUDIT LOGS (Superadmin)

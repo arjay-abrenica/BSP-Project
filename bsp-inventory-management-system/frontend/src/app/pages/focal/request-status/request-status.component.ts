@@ -32,10 +32,7 @@ export class RequestStatusComponent implements OnInit {
   }
 
   fetchActiveRequests(): void {
-    const user = this.authService.currentUserValue;
-    const office_id = user?.office_id || 1;
-    
-    this.http.get<any[]>(`http://localhost:5000/api/requests/my?office_id=${office_id}&type=active`).subscribe({
+    this.http.get<any[]>(`http://localhost:5000/api/requests/my?type=active`).subscribe({
       next: (data) => {
         this.activeRequests = data;
         this.isLoading = false;
