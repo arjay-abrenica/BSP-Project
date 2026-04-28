@@ -51,7 +51,13 @@ exports.login = async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { id: user.user_id, username: user.username, role: user.role, office: user.office },
+      { 
+        id: user.user_id, 
+        username: user.username, 
+        role: user.role, 
+        office: user.office,
+        office_id: user.office_id 
+      },
       JWT_SECRET,
       { expiresIn: '1d' }
     );
@@ -67,6 +73,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         office: user.office,
+        office_id: user.office_id,
         status: user.status
       }
     });

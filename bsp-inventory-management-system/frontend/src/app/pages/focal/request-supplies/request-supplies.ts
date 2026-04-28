@@ -183,7 +183,12 @@ export class RequestSupplies implements OnInit {
     this.isSubmitting = true;
 
     const user = this.authService.currentUserValue;
-    const office_id = user?.office_id || 1; 
+    const office_id = user?.office_id; 
+
+    if (!office_id) {
+      alert('Error: Your session is missing office information. Please log out and log back in.');
+      return;
+    }
 
     const payload = {
       office_id: office_id,

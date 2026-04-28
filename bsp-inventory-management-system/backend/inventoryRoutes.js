@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const inventoryController = require('./inventoryController');
 const multer = require('multer');
+const { authenticateToken, authorizeRoles } = require('./middleware/auth');
 
 // --- Multer Configuration for Item Images ---
 const storage = multer.memoryStorage();
@@ -17,41 +18,42 @@ const upload = multer({
   }
 });
 
+// --- Middleware: Apply authentication to all inventory routes ---
+router.use(authenticateToken);
+
 // --- Item Management ---
 router.get('/offices', inventoryController.getAllOffices);
 router.get('/suppliers', inventoryController.getAllSuppliers);
 router.get('/items', inventoryController.getAllItems);
-router.get('/items/next-sku', inventoryController.getNextSku);
-router.post('/items', upload.single('image'), inventoryController.createItem);
-router.put('/items/:id', upload.single('image'), inventoryController.updateItem);
-router.delete('/items/:id', inventoryController.deleteItem);
+router.get('/items/next-sku', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getNextSku);
+router.post('/items', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), upload.single('image'), inventoryController.createItem);
+router.put('/items/:id', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), upload.single('image'), inventoryController.updateItem);
+router.delete('/items/:id', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.deleteItem);
 
 // --- Transactions: Restocking (IN) ---
-router.post('/transactions/restock', inventoryController.restockItems);
+router.post('/transactions/restock', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.restockItems);
 
 // --- Transactions: Issuance (OUT) ---
-router.post('/transactions/issue', inventoryController.issueItems);
+router.post('/transactions/issue', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.issueItems);
 router.get('/transactions/next-ris/:officeId', inventoryController.getNextRisNo);
 
 // --- Requests ---
-router.get('/requests/pending', inventoryController.getPendingRequests);
-router.get('/requests/approved', inventoryController.getApprovedRequests);
+router.get('/requests/pending', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getPendingRequests);
+router.get('/requests/approved', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getApprovedRequests);
 router.get('/requests/my', inventoryController.getMyRequests);
 router.get('/requests/:id/details', inventoryController.getRequestDetails);
-router.post('/requests', inventoryController.createRequest);
-router.put('/requests/:id/status', inventoryController.updateRequestStatus);
-router.put('/requests/:id/reject', inventoryController.rejectRequest);
+router.post('/requests', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'), inventoryController.createRequest);
+router.put('/requests/:id/status', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.updateRequestStatus);
+router.put('/requests/:id/reject', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.rejectRequest);
 
 // --- Tracking & Scanners ---
-// Example usage: /api/scan/item/494
 router.get('/scan/item/:code', inventoryController.getItemByCode);
-// Example usage: /api/scan/ris/24-05-0062
 router.get('/scan/ris/:ris_no', inventoryController.getTransactionByRis);
 
 // --- History & Activity Log ---
 router.get('/history/requests', inventoryController.getRequestsHistory);
-router.get('/history/activity', inventoryController.getActivityLog);
-router.get('/history/audit-logs', inventoryController.getAuditLogs);
+router.get('/history/activity', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getActivityLog);
+router.get('/history/audit-logs', authorizeRoles('SUPERADMIN'), inventoryController.getAuditLogs);
 router.get('/items/:id/history', inventoryController.getItemTransactionHistory);
 router.get('/items/:id/latest-intake', inventoryController.getLatestIntakeForItem);
 router.get('/items/:id/allocation', inventoryController.getItemAllocationPerOffice);

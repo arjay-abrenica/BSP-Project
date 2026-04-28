@@ -99,9 +99,11 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL, -- In production, this should be hashed (e.g., bcrypt)
     email VARCHAR(100),
     office VARCHAR(100),
+    office_id INT,
     role VARCHAR(50) DEFAULT 'STAFF', -- 'ADMIN' or 'STAFF' or 'FOCAL_USER' or 'SUPERADMIN'
     status VARCHAR(20) DEFAULT 'Active', -- 'Active' or 'Inactive'
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (office_id) REFERENCES Offices(office_id)
 );
 
 -- 10. Create System Settings Table
@@ -111,6 +113,22 @@ CREATE TABLE System_Settings (
     setting_value TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 11. Create Audit Logs Table
+CREATE TABLE Audit_Logs (
+    log_id SERIAL PRIMARY KEY,
+    user_id INT,
+    username VARCHAR(50),
+    action VARCHAR(50),
+    entity VARCHAR(50),
+    entity_id INT,
+    details TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- STEP 2: INSERT DEFAULT DATA
+-- =========================================================
 
 -- Insert Default Settings
 INSERT INTO System_Settings (setting_key, setting_value) VALUES 
@@ -123,41 +141,35 @@ INSERT INTO System_Settings (setting_key, setting_value) VALUES
 ('notification_sound', 'false'),
 ('email_server', 'bsp-ims@scouts.gov.ph');
 
--- =========================================================
--- STEP 2: INSERT SAMPLE DATA
--- =========================================================
-
-INSERT INTO Categories (category_name) VALUES ('OFFICE SUPPLIES'), ('ELECTRICAL'), ('HARDWARE'), ('MEDICAL/SANITARY');
-INSERT INTO Suppliers (supplier_name) VALUES ('CHAMPION HARDWARE & CO. INC.'), ('PS-PHILGEPS');
+-- Insert Corrected Offices
 INSERT INTO Offices (office_name, acronym, dept_code) VALUES 
-('NATIONAL SCOUT SHOP', 'SS', 'NSS'), 
-('SUPPLY UNIT/ADMIN', 'SU', 'ADMIN'),
-('OFFICE OF THE SECRETARY GENERAL', 'SG', 'OSG'),
-('CORPORATE PLANNING AND STRATEGY MANAGEMENT OFFICE', 'CO', 'CPSMO'),
-('INTERNAL AUDIT OFFICE', 'IA', 'IAO');
-
-INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, current_stock) VALUES 
-('494', 'FLOURESCENT LAMP (40WATTS) O/T', 'CITY LIGHT', 'PCS', 180.00, 2, 1, 17),
-('499', 'LONG NOSE PLIER', 'STANLEY', 'PCS', 320.00, 3, 1, 1),
-(NULL, 'ALCOHOL, 500 ML, 70% GREENCROSS', 'BOTTLE', 'BOT', 55.62, 4, 2, 9),
-(NULL, 'BOND PAPER A4', 'PARAMOUNT PAPER A4', 'RMS', 0.00, 1, NULL, 50),
-(NULL, 'MASKING TAPE 2"', 'MASKING TAPE', 'ROLL', 0.00, 1, NULL, 15);
-
-INSERT INTO Transactions (ris_no, transaction_type, transaction_date, office_id, received_by, remarks) VALUES 
-('24-05-0062', 'OUT', '2024-05-31', 1, 'JUAN DELA CRUZ', 'RSMI MAY 2024 ISSUANCE');
-
-INSERT INTO Transaction_Details (transaction_id, item_id, quantity, unit_cost) VALUES (1, 4, 2, 0.00), (1, 3, 1, 55.62), (1, 5, 1, 0.00);
-
--- Insert Sample Requests
-INSERT INTO Requests (request_number, office_id, request_date, purpose) VALUES 
-('REQ-2025-001', 3, '2025-09-29', 'Daily office operations and documentation requirements'),
-('REQ-2025-002', 1, '2025-09-25', 'Restocking retail supplies'),
-('REQ-2025-003', 5, '2025-09-23', 'Audit fieldwork supplies');
-
-INSERT INTO Request_Details (request_id, item_id, quantity) VALUES 
-(1, 4, 10), (1, 5, 5),
-(2, 3, 8),
-(3, 1, 5), (3, 2, 2);
+('OFFICE OF THE SECRETARY GENERAL', 'OSG', 'OSG'),
+('OFFICE OF THE BOARD SECRETARY', 'OBS', 'OBS'),
+('OFFICE OF THE DEPUTY SECRETARY GENERAL', 'ODSG', 'ODSG'),
+('OFFICE OF THE NATIONAL PRESIDENT', 'ONP', 'ONP'),
+('LEGAL SERVICES OFFICE', 'LSO', 'LSO'),
+('FIELD OPERATIONS DIVISION', 'FOD', 'FOD'),
+('CORPORATE PLANNING AND STRATEGIC MANAGEMENT OFFICE', 'CPSMO', 'CPSMO'),
+('ADMINISTRATION DIVISION', 'ADMIN', 'ADMIN'),
+('FINANCE DIVISION', 'FINANCE', 'FINANCE'),
+('NATIONAL SCOUT SHOP', 'NSS', 'NSS'),
+('INTERNAL AUDIT OFFICE', 'IAO', 'IAO'),
+('PROPERTY MANAGEMENT AND DEVELOPMENT DIVISION', 'PMDD', 'PMDD');
 
 -- Insert a Default Admin User (Password: admin123)
 INSERT INTO Users (username, password, role) VALUES ('admin', 'admin123', 'SUPERADMIN');
+
+-- Insert Focal Officer Accounts (Default Password: BSPLagingHanda - Note: These should be hashed in production)
+INSERT INTO Users (username, password, email, office, role, status) VALUES 
+('focal_osg', 'BSPLagingHanda', 'osg.focal@scouts.gov.ph', 'OSG', 'FOCAL_OFFICER', 'Active'),
+('focal_obs', 'BSPLagingHanda', 'obs.focal@scouts.gov.ph', 'OBS', 'FOCAL_OFFICER', 'Active'),
+('focal_odsg', 'BSPLagingHanda', 'odsg.focal@scouts.gov.ph', 'ODSG', 'FOCAL_OFFICER', 'Active'),
+('focal_onp', 'BSPLagingHanda', 'onp.focal@scouts.gov.ph', 'ONP', 'FOCAL_OFFICER', 'Active'),
+('focal_lso', 'BSPLagingHanda', 'lso.focal@scouts.gov.ph', 'LSO', 'FOCAL_OFFICER', 'Active'),
+('focal_fod', 'BSPLagingHanda', 'fod.focal@scouts.gov.ph', 'FOD', 'FOCAL_OFFICER', 'Active'),
+('focal_cpsmo', 'BSPLagingHanda', 'cpsmo.focal@scouts.gov.ph', 'CPSMO', 'FOCAL_OFFICER', 'Active'),
+('focal_admin', 'BSPLagingHanda', 'admin.focal@scouts.gov.ph', 'ADMIN', 'FOCAL_OFFICER', 'Active'),
+('focal_finance', 'BSPLagingHanda', 'finance.focal@scouts.gov.ph', 'FINANCE', 'FOCAL_OFFICER', 'Active'),
+('focal_nss', 'BSPLagingHanda', 'nss.focal@scouts.gov.ph', 'NSS', 'FOCAL_OFFICER', 'Active'),
+('focal_iao', 'BSPLagingHanda', 'iao.focal@scouts.gov.ph', 'IAO', 'FOCAL_OFFICER', 'Active'),
+('focal_pmdd', 'BSPLagingHanda', 'pmdd.focal@scouts.gov.ph', 'PMDD', 'FOCAL_OFFICER', 'Active');
