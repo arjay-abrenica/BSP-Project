@@ -432,9 +432,15 @@ exports.createRequest = async (req, res) => {
     await client.query('BEGIN');
 
     // 1. Generate Request Number
-    const countRes = await client.query('SELECT COUNT(*) FROM Requests');
-    const count = parseInt(countRes.rows[0].count) + 1;
-    const request_number = `REQ-${new Date().getFullYear()}-${String(count).padStart(4, '0')}`;
+    const year = new Date().getFullYear();
+    const countRes = await client.query('SELECT request_number FROM Requests WHERE request_number LIKE $1 ORDER BY request_id DESC LIMIT 1', [`REQ-${year}-%`]);
+    let nextSeq = 1;
+    if (countRes.rows.length > 0) {
+      const lastReq = countRes.rows[0].request_number;
+      const parts = lastReq.split('-');
+      nextSeq = parseInt(parts[2], 10) + 1;
+    }
+    const request_number = `REQ-${year}-${String(nextSeq).padStart(4, '0')}`;
 
     // 2. Insert Request Header
     const requestRes = await client.query(
@@ -650,12 +656,13 @@ exports.getPendingRequests = async (req, res) => {
         o.office_name,
         o.acronym,
         o.dept_code as "deptCode",
-        TO_CHAR(r.request_date, 'Month DD, YYYY') as date,
+        TO_CHAR(r.request_date AT TIME ZONE 'Asia/Manila', 'FMMonth DD, YYYY') as date,
+        TO_CHAR(r.request_date AT TIME ZONE 'Asia/Manila', 'HH:MI AM') as time,
         (SELECT COUNT(*) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "itemsCount"
       FROM Requests r
       JOIN Offices o ON r.office_id = o.office_id
       WHERE r.status = 'PENDING'
-      ORDER BY r.request_date DESC
+      ORDER BY r.request_date DESC, r.request_id DESC
     `;
     const result = await db.query(query);
     res.status(200).json(result.rows);
@@ -675,8 +682,8 @@ exports.getApprovedRequests = async (req, res) => {
         o.office_name as "deptName",
         o.acronym,
         o.dept_code as "deptCode",
-        TO_CHAR(t.transaction_date, 'Month DD, YYYY') as date,
-        TO_CHAR(t.transaction_date, 'HH:MI AM') as time,
+        TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'FMMonth DD, YYYY') as date,
+        TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'HH:MI AM') as time,
         (SELECT COUNT(*) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "itemsCount",
         COALESCE(r.purpose, t.remarks) as purpose,
         t.remarks,
@@ -742,8 +749,8 @@ exports.getRequestsHistory = async (req, res) => {
           t.ris_no as "risNo",
           COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
           o.office_id,
-          TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateRequested",
-          TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as "dateReleased",
+          TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY') as "dateRequested",
+          TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY') as "dateReleased",
           (SELECT COALESCE(SUM(quantity), 0) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "noOfItems",
           'RELEASED' as status,
           t.transaction_date as "sortDate",
@@ -756,7 +763,7 @@ exports.getRequestsHistory = async (req, res) => {
           r.request_number as "risNo",
           COALESCE(o.office_name, 'UNKNOWN OFFICE') as "requestingOffice",
           o.office_id,
-          TO_CHAR(r.request_date, 'MM/DD/YYYY') as "dateRequested",
+          TO_CHAR(r.request_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY') as "dateRequested",
           '-' as "dateReleased",
           (SELECT COALESCE(SUM(quantity), 0) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "noOfItems",
           r.status as status,
@@ -801,8 +808,8 @@ exports.getActivityLog = async (req, res) => {
   try {
     const query = `
       SELECT 
-        'ALOG-' || TO_CHAR(t.transaction_date, 'YYYY') || '-' || LPAD(t.transaction_id::text, 3, '0') as "activityLogId",
-        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') || ' 09:00 AM' as timestamp,
+        'ALOG-' || TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'YYYY') || '-' || LPAD(t.transaction_id::text, 3, '0') as "activityLogId",
+        TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY HH:MI AM') as timestamp,
         COALESCE(o.office_name, '-') as office,
         'SYSTEM' as role,
         CASE 
@@ -838,7 +845,8 @@ exports.getMyRequests = async (req, res) => {
         r.purpose,
         r.status,
         r.priority,
-        TO_CHAR(r.request_date, 'MM/DD/YYYY') as date,
+        TO_CHAR(r.request_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY') as date,
+        TO_CHAR(r.request_date AT TIME ZONE 'Asia/Manila', 'HH:MI AM') as time,
         (SELECT COUNT(*) FROM Request_Details rd WHERE rd.request_id = r.request_id) as "itemsCount"
       FROM Requests r
       WHERE r.office_id = $1
@@ -850,7 +858,7 @@ exports.getMyRequests = async (req, res) => {
       query += " AND r.status IN ('RELEASED', 'REJECTED', 'CANCELLED')";
     }
 
-    query += " ORDER BY r.request_date DESC";
+    query += " ORDER BY r.request_date DESC, r.request_id DESC";
     const result = await db.query(query, [office_id]);
     res.status(200).json(result.rows);
   } catch (err) {
@@ -929,7 +937,7 @@ exports.getItemTransactionHistory = async (req, res) => {
       SELECT 
         t.transaction_id,
         t.transaction_type,
-        TO_CHAR(t.transaction_date, 'MM/DD/YYYY') as date,
+        TO_CHAR(t.transaction_date AT TIME ZONE 'Asia/Manila', 'MM/DD/YYYY') as date,
         t.ris_no,
         t.delivery_number,
         o.office_name as recipient,
