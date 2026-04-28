@@ -29,7 +29,7 @@
           <div class="req-info">
             <div class="req-title">{{ req.deptCode }}</div>
             <div class="req-items">{{ req.itemsCount }} Items</div>
-            <div class="req-date">{{ req.date }}</div>
+            <div class="req-date">{{ req.date }} at {{ req.time }}</div>
           </div>
           <div class="req-number">{{ req.reqNumber }}</div>
         </div>
@@ -43,7 +43,7 @@
           <div class="req-info">
             <div class="req-title">{{ office.deptCode }}</div>
             <div class="req-items">{{ office.transactionCount }} Issuance(s)</div>
-            <div class="req-date">Last: {{ office.lastDate }}</div>
+            <div class="req-date">Last: {{ office.lastDate }} <span *ngIf="office.lastTime">at {{ office.lastTime }}</span></div>
           </div>
         </div>
       </div>

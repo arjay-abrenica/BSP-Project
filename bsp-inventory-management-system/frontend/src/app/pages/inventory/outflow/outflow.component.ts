@@ -132,6 +132,7 @@ export class OutflowComponent implements OnInit {
               deptCode: item.deptCode,
               acronym: item.acronym,
               lastDate: item.date,
+              lastTime: item.time,
               transactionCount: 0
             });
           }
