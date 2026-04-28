@@ -107,9 +107,13 @@
       Showing {{ filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredData.length) }} of {{ filteredData.length }} entries
     </div>
     <div class="page-buttons">
-      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Previous</button>
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
       <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">Next</button>
+      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
     </div>
   </div>
 </div>

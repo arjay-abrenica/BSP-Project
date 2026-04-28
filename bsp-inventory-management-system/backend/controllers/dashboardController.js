@@ -31,6 +31,7 @@ exports.getDashboardStats = async (req, res) => {
         JOIN Transactions t ON td.transaction_id = t.transaction_id
         WHERE t.transaction_type = 'OUT' 
         AND t.transaction_date >= date_trunc('month', (SELECT MAX(transaction_date) FROM Transactions))
+        ${req.user.role === 'FOCAL_OFFICER' ? `AND t.office_id = ${req.user.office_id}` : ''}
       `),
 
       // 3. Percentage Stock Used
@@ -41,6 +42,7 @@ exports.getDashboardStats = async (req, res) => {
           JOIN Transactions t ON td.transaction_id = t.transaction_id
           WHERE t.transaction_type = 'OUT' 
           AND t.transaction_date >= date_trunc('month', (SELECT MAX(transaction_date) FROM Transactions))
+          ${req.user.role === 'FOCAL_OFFICER' ? `AND t.office_id = ${req.user.office_id}` : ''}
         ),
         total_stock AS (
           SELECT COALESCE(SUM(current_stock), 0) as current_total FROM Items
@@ -60,6 +62,7 @@ exports.getDashboardStats = async (req, res) => {
         FROM Requests r
         JOIN Offices o ON r.office_id = o.office_id
         WHERE r.status = 'PENDING'
+        ${req.user.role === 'FOCAL_OFFICER' ? `AND r.office_id = ${req.user.office_id}` : ''}
         ORDER BY r.request_date DESC
         LIMIT 5
       `),
@@ -75,6 +78,7 @@ exports.getDashboardStats = async (req, res) => {
         JOIN Categories c ON i.category_id = c.category_id
         WHERE t.transaction_type = 'OUT' 
         AND EXTRACT(YEAR FROM t.transaction_date) = (SELECT EXTRACT(YEAR FROM MAX(transaction_date)) FROM Transactions)
+        ${req.user.role === 'FOCAL_OFFICER' ? `AND t.office_id = ${req.user.office_id}` : ''}
         GROUP BY c.category_name, quarter
         ORDER BY c.category_name, quarter
       `),
@@ -86,6 +90,7 @@ exports.getDashboardStats = async (req, res) => {
         JOIN Transactions t ON td.transaction_id = t.transaction_id
         JOIN Offices o ON t.office_id = o.office_id
         WHERE t.transaction_type = 'OUT'
+        ${req.user.role === 'FOCAL_OFFICER' ? `AND t.office_id = ${req.user.office_id}` : ''}
         GROUP BY o.acronym
         ORDER BY value DESC
       `),
@@ -99,6 +104,7 @@ exports.getDashboardStats = async (req, res) => {
         FROM Transaction_Details td
         JOIN Transactions t ON td.transaction_id = t.transaction_id
         JOIN Offices o ON t.office_id = o.office_id
+        ${req.user.role === 'FOCAL_OFFICER' ? `WHERE t.office_id = ${req.user.office_id}` : ''}
         GROUP BY o.acronym
       `),
 
@@ -109,6 +115,7 @@ exports.getDashboardStats = async (req, res) => {
                transaction_date as date
         FROM Transactions t
         LEFT JOIN Offices o ON t.office_id = o.office_id
+        ${req.user.role === 'FOCAL_OFFICER' ? `WHERE t.office_id = ${req.user.office_id}` : ''}
         ORDER BY transaction_date DESC
         LIMIT 3
       `),
@@ -120,6 +127,7 @@ exports.getDashboardStats = async (req, res) => {
                request_date as date
         FROM Requests r
         JOIN Offices o ON r.office_id = o.office_id
+        ${req.user.role === 'FOCAL_OFFICER' ? `WHERE r.office_id = ${req.user.office_id}` : ''}
         ORDER BY request_date DESC
         LIMIT 3
       `)
