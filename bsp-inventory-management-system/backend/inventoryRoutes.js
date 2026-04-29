@@ -38,8 +38,8 @@ router.post('/transactions/issue', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'
 router.get('/transactions/next-ris/:officeId', inventoryController.getNextRisNo);
 
 // --- Requests ---
-router.get('/requests/pending', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getPendingRequests);
-router.get('/requests/approved', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER'), inventoryController.getApprovedRequests);
+router.get('/requests/pending', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'), inventoryController.getPendingRequests);
+router.get('/requests/approved', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'), inventoryController.getApprovedRequests);
 router.get('/requests/my', inventoryController.getMyRequests);
 router.get('/requests/:id/details', inventoryController.getRequestDetails);
 router.post('/requests', authorizeRoles('SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'), inventoryController.createRequest);
@@ -65,5 +65,10 @@ router.get('/reports/stock-distribution', inventoryController.getStockDistributi
 router.get('/reports/usage-trend', inventoryController.getUsageTrend);
 router.get('/reports/category-breakdown', inventoryController.getCategoryBreakdown);
 router.get('/reports/allocation-efficiency', inventoryController.getAllocationEfficiency);
+
+// --- Notifications ---
+router.get('/notifications', inventoryController.getNotifications);
+router.put('/notifications/:id/read', inventoryController.markNotificationRead);
+router.put('/notifications/mark-all-read', inventoryController.markAllRead);
 
 module.exports = router;
