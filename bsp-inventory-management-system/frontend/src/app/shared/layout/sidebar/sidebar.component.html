@@ -45,7 +45,7 @@
                 </a>
             </li>
             <li title="Requests" [class.active]="router.url.includes('focal')"
-                *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])">
+                *ngIf="hasRole(['SUPERADMIN', 'FOCAL_OFFICER'])">
                 <a routerLink="/focal/request" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/document.png'); mask-image: url('Icons/document.png');"></span>
@@ -156,7 +156,7 @@
 
             <!-- Request Supplies Menu (Focal Person) -->
             <div class="menu-group"
-                *ngIf="router.url.includes('focal') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'])"
+                *ngIf="router.url.includes('focal') && hasRole(['SUPERADMIN', 'FOCAL_OFFICER'])"
                 [class.active-group]="true">
                     <div class="group-header">
                         <span>Requests</span>

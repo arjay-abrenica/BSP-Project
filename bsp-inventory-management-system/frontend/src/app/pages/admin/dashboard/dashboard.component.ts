@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChartConfiguration, ChartOptions, Chart } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { RouterModule } from '@angular/router';
 import { DashboardService } from '../../../core/services/dashboard.service';
 
 // Register the datalabels plugin globally for all charts
@@ -11,7 +12,7 @@ Chart.register(ChartDataLabels);
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [CommonModule, BaseChartDirective],
+    imports: [CommonModule, BaseChartDirective, RouterModule],
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss']
 })

@@ -73,7 +73,7 @@ export const routes: Routes = [
             {
                 path: 'focal',
                 canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
+                data: { roles: ['SUPERADMIN', 'FOCAL_OFFICER'] },
                 children: [
                     { path: '', redirectTo: 'request', pathMatch: 'full' },
                     { path: 'request', loadComponent: () => import('./pages/focal/request-supplies/request-supplies').then(c => c.RequestSupplies) },

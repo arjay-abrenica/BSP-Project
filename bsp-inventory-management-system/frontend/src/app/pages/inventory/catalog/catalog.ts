@@ -17,6 +17,7 @@ export class Catalog implements OnInit {
   filteredItems: any[] = [];
   paginatedItems: any[] = [];
   searchTerm: string = '';
+  isLoading: boolean = true;
 
   // Pagination state
   currentPage: number = 1;
@@ -403,6 +404,7 @@ export class Catalog implements OnInit {
   }
 
   fetchItems(): void {
+    this.isLoading = true;
     this.http.get<any[]>('http://localhost:5000/api/items').subscribe({
       next: (data) => {
         this.items = data;
@@ -410,8 +412,12 @@ export class Catalog implements OnInit {
         this.extractFilterOptions(data);
         this.updatePagination();
         this.processPendingAction();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Failed to fetch items', err)
+      error: (err) => {
+        console.error('Failed to fetch items', err);
+        this.isLoading = false;
+      }
     });
   }
 

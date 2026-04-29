@@ -17,6 +17,7 @@ import html2pdf from 'html2pdf.js';
 export class RequestSupplies implements OnInit {
   items: any[] = [];
   searchQuery: string = '';
+  isLoading: boolean = true;
   
   // Category Filtering
   availableCategories: string[] = ['All'];
@@ -83,8 +84,12 @@ export class RequestSupplies implements OnInit {
         // Extract unique categories
         const categories = this.items.map(item => item.category_name).filter(Boolean);
         this.availableCategories = ['All', ...Array.from(new Set(categories))];
+        this.isLoading = false;
       },
-      error: (err) => console.error('Failed to load inventory', err)
+      error: (err) => {
+        console.error('Failed to load inventory', err);
+        this.isLoading = false;
+      }
     });
   }
 

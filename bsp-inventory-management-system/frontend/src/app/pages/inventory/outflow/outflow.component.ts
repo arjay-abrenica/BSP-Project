@@ -15,7 +15,7 @@ import html2pdf from 'html2pdf.js';
   styleUrls: ['./outflow.component.scss']
 })
 export class OutflowComponent implements OnInit {
-  activeTab: string = 'direct';
+  activeTab: string = 'pending';
   issueForm: FormGroup;
   isSubmitting = false;
   
