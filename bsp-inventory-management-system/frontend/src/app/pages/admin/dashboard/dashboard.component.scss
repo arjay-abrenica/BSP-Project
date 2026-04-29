@@ -472,3 +472,24 @@
         }
     }
 }
+
+/* Clickable Rows */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    border-radius: 4px;
+    
+    &:hover {
+        background-color: rgba(0, 94, 56, 0.05);
+    }
+    
+    &:active {
+        transform: scale(0.99);
+    }
+}
+
+.activity-list li.clickable-row {
+    padding: 0.25rem 0.5rem;
+    margin-left: -0.5rem; /* offset padding to align text */
+    margin-right: -0.5rem;
+}

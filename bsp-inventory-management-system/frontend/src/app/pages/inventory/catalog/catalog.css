@@ -1010,3 +1010,30 @@
   border: none;
   cursor: pointer;
 }
+
+/* Skeleton Loader for Table */
+.skeleton-row {
+  pointer-events: none;
+}
+
+.skeleton-text {
+  background: #e2e8f0;
+  border-radius: 4px;
+  height: 14px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-sku { width: 80%; }
+.skeleton-item { width: 90%; }
+.skeleton-desc { width: 100%; }
+.skeleton-qty { width: 40px; margin: 0 auto; }
+.skeleton-unit { width: 60%; }
+.skeleton-stock { width: 70%; }
+.skeleton-status { width: 80px; border-radius: 12px; height: 22px; }
+.skeleton-supplier { width: 85%; }
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

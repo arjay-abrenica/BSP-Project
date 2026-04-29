@@ -26,7 +26,21 @@
           </div>
         </div>
 
-        <div class="direct-items-grid">
+        <!-- Skeleton Loader -->
+        <div class="direct-items-grid" *ngIf="isLoading">
+          <div class="direct-item-card skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+            <div class="item-image-wrapper skeleton-img"></div>
+            <div class="item-details">
+              <div class="skeleton-text skeleton-title"></div>
+              <div class="skeleton-text skeleton-subtitle"></div>
+            </div>
+            <div class="item-actions">
+              <div class="skeleton-button"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="direct-items-grid" *ngIf="!isLoading">
           <div class="direct-item-card" *ngFor="let item of filteredItems">
             <div class="item-image-wrapper">
               <img [src]="item.image_url ? (item.image_url.startsWith('data:') ? item.image_url : 'http://localhost:5000' + item.image_url) : 'assets/img/placeholder.svg'"
@@ -53,7 +67,7 @@
           </div>
         </div>
         
-        <div class="empty-state" *ngIf="filteredItems.length === 0" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6b7280; font-size: 14px;">
+        <div class="empty-state" *ngIf="!isLoading && filteredItems.length === 0" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6b7280; font-size: 14px;">
           No items found matching your search.
         </div>
       </div>

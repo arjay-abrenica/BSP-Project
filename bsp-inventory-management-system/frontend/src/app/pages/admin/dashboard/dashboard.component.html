@@ -43,10 +43,10 @@
             <div class="card-content">
                 <table class="simple-table">
                     <tbody>
-                        <tr *ngFor="let req of pendingRequests; let i = index">
+                        <tr *ngFor="let req of pendingRequests; let i = index" routerLink="/inventory/outflow" class="clickable-row" title="View in Outflow">
                             <td>{{i + 1}}</td>
                             <td>{{req.office}}</td>
-                            <td>{{req.request_date | date:'MM/dd/yyyy'}}</td>
+                            <td>{{req.request_date | date:'MM/dd/yyyy h:mm a'}}</td>
                         </tr>
                         <tr *ngIf="pendingRequests.length === 0">
                             <td colspan="3" style="text-align: center;">No pending requests</td>
@@ -90,10 +90,10 @@
                 <div class="card-header">Quick Links</div>
                 <div class="card-content">
                     <ul class="links-list">
-                        <li><a href="#">Generate Monthly Report</a></li>
-                        <li><a href="#">Replenish Stock</a></li>
-                        <li><a href="#">Add New Item</a></li>
-                        <li><a href="#">Track Inventory</a></li>
+                        <li><a routerLink="/reports">Generate Monthly Report</a></li>
+                        <li><a routerLink="/inventory/catalog">Replenish Stock</a></li>
+                        <li><a routerLink="/inventory/add-item">Add New Item</a></li>
+                        <li><a routerLink="/inventory/track-item">Track Inventory</a></li>
                     </ul>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                 <div class="card-header">Recent Activity</div>
                 <div class="card-content">
                     <ul class="activity-list">
-                        <li *ngFor="let activity of recentActivities">
+                        <li *ngFor="let activity of recentActivities" routerLink="/history/activity-log" class="clickable-row" title="View Activity Log">
                             <span class="dot"></span> {{activity.description}} - {{activity.date | date:'MM/dd/yy'}}
                         </li>
                         <li *ngIf="recentActivities.length === 0">
