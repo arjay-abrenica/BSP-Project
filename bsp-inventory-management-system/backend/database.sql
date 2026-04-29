@@ -126,6 +126,20 @@ CREATE TABLE Audit_Logs (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 12. Create Notifications Table
+CREATE TABLE Notifications (
+    notification_id SERIAL PRIMARY KEY,
+    user_id INT,
+    office_id INT,
+    target_role VARCHAR(50), -- e.g., 'SUPPLY_OFFICER', 'FOCAL_OFFICER'
+    message TEXT NOT NULL,
+    type VARCHAR(20) DEFAULT 'INFO', -- 'INFO', 'SUCCESS', 'WARNING', 'ERROR'
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (office_id) REFERENCES Offices(office_id)
+);
+
 -- =========================================================
 -- STEP 2: INSERT DEFAULT DATA
 -- =========================================================

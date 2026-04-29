@@ -241,7 +241,17 @@ exports.updateItem = async (req, res) => {
       [userId, username, 'EDIT', 'ITEM', id, `Updated item details: ${result.rows[0].item_name}`]
     );
 
-    res.status(200).json(result.rows[0]);
+    // Check for low stock after update and notify
+    const updatedItem = result.rows[0];
+    if (updatedItem.current_stock <= updatedItem.reorder_level) {
+      await createNotification(db, {
+        target_role: 'SUPPLY_OFFICER',
+        message: `Low stock alert: ${updatedItem.item_name} has only ${updatedItem.current_stock} remaining.`,
+        type: 'WARNING'
+      });
+    }
+
+    res.status(200).json(updatedItem);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -459,6 +469,19 @@ exports.createRequest = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // 4. Notify Admin (Supply Officer) of the incoming request
+    const officeRes = await db.query('SELECT office_name FROM Offices WHERE office_id = $1', [office_id]);
+    const officeName = officeRes.rows[0]?.office_name || 'An office';
+
+    await createNotification(db, {
+      target_role: 'SUPPLY_OFFICER',
+      message: `New supply request ${request_number} submitted from ${officeName}.`,
+      type: 'INFO'
+    });
+
+    res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
+
     res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
   } catch (err) {
     if (client) await client.query('ROLLBACK');
@@ -494,6 +517,26 @@ exports.updateRequestStatus = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // 3. Notify the requesting office AND the Admin (Receiving)
+    const reqInfo = await db.query('SELECT request_number, office_id FROM Requests WHERE request_id = $1', [id]);
+    if (reqInfo.rows.length > 0) {
+      const { request_number, office_id } = reqInfo.rows[0];
+      // Notify Focal (The user whose request was processed)
+      await createNotification(db, {
+        office_id: office_id,
+        target_role: 'FOCAL_OFFICER',
+        message: `Your request ${request_number} has been ${status.toLowerCase()}.`,
+        type: status === 'REJECTED' ? 'ERROR' : 'SUCCESS'
+      });
+      // Notify Admin (Information only)
+      await createNotification(db, {
+        target_role: 'SUPPLY_OFFICER',
+        message: `Request ${request_number} has been ${status.toLowerCase()} by a Focal Officer.`,
+        type: 'INFO'
+      });
+    }
+
     res.status(200).json({ message: `Request status updated to ${status}` });
   } catch (err) {
     if (client) await client.query('ROLLBACK');
@@ -567,12 +610,23 @@ exports.issueItems = async (req, res) => {
       );
     }
 
-    // 3. If it was from a Request, update the request status to RELEASED
+    // 3. If it was from a Request, update the request status to RELEASED and notify
     if (request_id) {
       await client.query(
         `UPDATE Requests SET status = 'RELEASED' WHERE request_id = $1`,
         [request_id]
       );
+
+      const reqInfo = await db.query('SELECT request_number, office_id FROM Requests WHERE request_id = $1', [request_id]);
+      if (reqInfo.rows.length > 0) {
+        const { request_number, office_id } = reqInfo.rows[0];
+        await createNotification(db, {
+          office_id: office_id,
+          target_role: 'FOCAL_OFFICER',
+          message: `Supplies for request ${request_number} have been released. RIS: ${ris_no}.`,
+          type: 'SUCCESS'
+        });
+      }
     }
 
     await client.query('COMMIT');
@@ -981,6 +1035,70 @@ exports.getItemAllocationPerOffice = async (req, res) => {
   }
 };
 
+
+/* =========================================
+   SECTION 9: NOTIFICATIONS
+   ========================================= */
+
+const createNotification = async (client, data) => {
+  const { user_id, office_id, target_role, message, type } = data;
+  try {
+    await client.query(
+      'INSERT INTO Notifications (user_id, office_id, target_role, message, type) VALUES ($1, $2, $3, $4, $5)',
+      [user_id || null, office_id || null, target_role || null, message, type || 'INFO']
+    );
+  } catch (err) {
+    console.error('Failed to create notification:', err);
+  }
+};
+
+exports.getNotifications = async (req, res) => {
+  const user = req.user;
+  try {
+    let query = `
+      SELECT notification_id as id, message, type, is_read, 
+             TO_CHAR(created_at, 'MM/DD/YYYY HH:MI AM') as time
+      FROM Notifications
+      WHERE ($3 = 'SUPERADMIN' 
+         OR user_id = $1 
+         OR (office_id = $2 AND (target_role IS NULL OR target_role = $3))
+         OR (office_id IS NULL AND target_role = $3))
+      ORDER BY created_at DESC
+      LIMIT 50
+    `;
+    const result = await db.query(query, [user.id, user.office_id, user.role]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.markNotificationRead = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('UPDATE Notifications SET is_read = TRUE WHERE notification_id = $1', [id]);
+    res.status(200).json({ message: 'Notification marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.markAllRead = async (req, res) => {
+  const user = req.user;
+  try {
+    if (user.role === 'SUPERADMIN') {
+      await db.query('UPDATE Notifications SET is_read = TRUE');
+    } else {
+      await db.query(
+        'UPDATE Notifications SET is_read = TRUE WHERE (user_id = $1 OR office_id = $2 OR target_role = $3)',
+        [user.id, user.office_id, user.role]
+      );
+    }
+    res.status(200).json({ message: 'All notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 /* =========================================
    SECTION 7: AUDIT LOGS (Superadmin)

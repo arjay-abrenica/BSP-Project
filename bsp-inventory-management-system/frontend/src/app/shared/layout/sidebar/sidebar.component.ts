@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
     selector: 'app-sidebar',
@@ -18,7 +19,14 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     showLogoutModal = false;
     private lastScrollTop = 0;
 
-    constructor(public router: Router, private authService: AuthService) { }
+    // Notifications
+    showNotifDropdown = false;
+
+    constructor(
+        public router: Router, 
+        private authService: AuthService,
+        public notifService: NotificationService
+    ) { }
 
     get userName() {
         return this.authService.currentUserValue?.username || 'User';
@@ -30,6 +38,24 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
     ngOnInit() {
         this.checkWindowSize();
+    }
+
+    toggleNotifDropdown(event: Event) {
+        event.stopPropagation();
+        this.showNotifDropdown = !this.showNotifDropdown;
+    }
+
+    markRead(id: number) {
+        this.notifService.markAsRead(id);
+    }
+
+    markAllRead() {
+        this.notifService.markAllAsRead();
+    }
+
+    @HostListener('document:click')
+    closeDropdowns() {
+        this.showNotifDropdown = false;
     }
 
     ngAfterViewInit() {
