@@ -53,6 +53,15 @@ export class SidebarComponent implements OnInit, AfterViewInit {
         this.notifService.markAllAsRead();
     }
 
+    handleNotifClick(n: any, event: Event) {
+        event.stopPropagation();
+        this.notifService.markAsRead(n.id);
+        if (n.action_link) {
+            this.router.navigateByUrl(n.action_link);
+            this.showNotifDropdown = false;
+        }
+    }
+
     @HostListener('document:click')
     closeDropdowns() {
         this.showNotifDropdown = false;

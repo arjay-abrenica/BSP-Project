@@ -116,6 +116,13 @@ export const routes: Routes = [
                     import('./pages/history/activity-log/activity-log.component').then(c => c.ActivityLogComponent)
             },
             {
+                path: 'history/notifications',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER', 'FOCAL_OFFICER'] },
+                loadComponent: () =>
+                    import('./pages/history/notifications/notifications').then(c => c.Notifications)
+            },
+            {
                 path: 'history/audit-log',
                 canActivate: [AuthGuard, RoleGuard],
                 data: { roles: ['SUPERADMIN'] },

@@ -477,10 +477,10 @@ exports.createRequest = async (req, res) => {
     await createNotification(db, {
       target_role: 'SUPPLY_OFFICER',
       message: `New supply request ${request_number} submitted from ${officeName}.`,
-      type: 'INFO'
+      type: 'WARNING',
+      action_link: '/inventory/outflow',
+      action_label: 'Process Request'
     });
-
-    res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
 
     res.status(201).json({ message: 'Request submitted successfully', request_id: requestId, request_number });
   } catch (err) {
@@ -527,13 +527,17 @@ exports.updateRequestStatus = async (req, res) => {
         office_id: office_id,
         target_role: 'FOCAL_OFFICER',
         message: `Your request ${request_number} has been ${status.toLowerCase()}.`,
-        type: status === 'REJECTED' ? 'ERROR' : 'SUCCESS'
+        type: status === 'REJECTED' ? 'ERROR' : 'SUCCESS',
+        action_link: '/focal/status',
+        action_label: 'View Status'
       });
       // Notify Admin (Information only)
       await createNotification(db, {
         target_role: 'SUPPLY_OFFICER',
         message: `Request ${request_number} has been ${status.toLowerCase()} by a Focal Officer.`,
-        type: 'INFO'
+        type: 'INFO',
+        action_link: '/history',
+        action_label: 'View History'
       });
     }
 
@@ -604,10 +608,21 @@ exports.issueItems = async (req, res) => {
       );
 
       // Deduct Stock
-      await client.query(
-        `UPDATE Items SET current_stock = current_stock - $1 WHERE item_id = $2`,
+      const updateRes = await client.query(
+        `UPDATE Items SET current_stock = current_stock - $1 WHERE item_id = $2 RETURNING item_code, item_name, current_stock, reorder_level`,
         [item.quantity, item.item_id]
       );
+      
+      const updatedItem = updateRes.rows[0];
+      if (updatedItem && updatedItem.current_stock <= updatedItem.reorder_level) {
+        await createNotification(client, {
+          target_role: 'SUPPLY_OFFICER',
+          message: `Low Stock Alert: ${updatedItem.item_name} has fallen to ${updatedItem.current_stock} units.`,
+          type: 'ERROR',
+          action_label: 'Replenish',
+          action_link: `/inventory/catalog?action=replenish&sku=${updatedItem.item_code}`
+        });
+      }
     }
 
     // 3. If it was from a Request, update the request status to RELEASED and notify
@@ -624,7 +639,9 @@ exports.issueItems = async (req, res) => {
           office_id: office_id,
           target_role: 'FOCAL_OFFICER',
           message: `Supplies for request ${request_number} have been released. RIS: ${ris_no}.`,
-          type: 'SUCCESS'
+          type: 'SUCCESS',
+          action_link: '/focal/log',
+          action_label: 'View Log'
         });
       }
     }
@@ -1041,11 +1058,11 @@ exports.getItemAllocationPerOffice = async (req, res) => {
    ========================================= */
 
 const createNotification = async (client, data) => {
-  const { user_id, office_id, target_role, message, type } = data;
+  const { user_id, office_id, target_role, message, type, action_link, action_label } = data;
   try {
     await client.query(
-      'INSERT INTO Notifications (user_id, office_id, target_role, message, type) VALUES ($1, $2, $3, $4, $5)',
-      [user_id || null, office_id || null, target_role || null, message, type || 'INFO']
+      'INSERT INTO Notifications (user_id, office_id, target_role, message, type, action_link, action_label) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [user_id || null, office_id || null, target_role || null, message, type || 'INFO', action_link || null, action_label || null]
     );
   } catch (err) {
     console.error('Failed to create notification:', err);
@@ -1056,7 +1073,7 @@ exports.getNotifications = async (req, res) => {
   const user = req.user;
   try {
     let query = `
-      SELECT notification_id as id, message, type, is_read, 
+      SELECT notification_id as id, message, type, is_read, action_link, action_label,
              TO_CHAR(created_at, 'MM/DD/YYYY HH:MI AM') as time
       FROM Notifications
       WHERE ($3 = 'SUPERADMIN' 
@@ -1078,6 +1095,26 @@ exports.markNotificationRead = async (req, res) => {
   try {
     await db.query('UPDATE Notifications SET is_read = TRUE WHERE notification_id = $1', [id]);
     res.status(200).json({ message: 'Notification marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getNotificationHistory = async (req, res) => {
+  const user = req.user;
+  try {
+    let query = `
+      SELECT notification_id as id, message, type, is_read, action_link, action_label,
+             TO_CHAR(created_at, 'MM/DD/YYYY HH:MI AM') as time
+      FROM Notifications
+      WHERE ($3 = 'SUPERADMIN' 
+         OR user_id = $1 
+         OR (office_id = $2 AND (target_role IS NULL OR target_role = $3))
+         OR (office_id IS NULL AND target_role = $3))
+      ORDER BY created_at DESC
+    `;
+    const result = await db.query(query, [user.id, user.office_id, user.role]);
+    res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

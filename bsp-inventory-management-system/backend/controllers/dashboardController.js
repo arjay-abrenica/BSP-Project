@@ -17,7 +17,7 @@ exports.getDashboardStats = async (req, res) => {
       // 1. Low Stock Items
       db.query(`
         SELECT item_code, item_name, current_stock, reorder_level,
-        CASE WHEN reorder_level > 0 THEN ROUND((current_stock::numeric / reorder_level::numeric) * 100) ELSE 0 END as stock_percentage
+        CAST(CASE WHEN reorder_level > 0 THEN ROUND((GREATEST(current_stock, 0)::numeric / reorder_level::numeric) * 100) ELSE 0 END AS INTEGER) as stock_percentage
         FROM Items 
         WHERE current_stock <= reorder_level 
         ORDER BY current_stock ASC 
@@ -48,11 +48,11 @@ exports.getDashboardStats = async (req, res) => {
           SELECT COALESCE(SUM(current_stock), 0) as current_total FROM Items
         )
         SELECT 
-          CASE 
+          CAST(CASE 
             WHEN (current_total + outflow) > 0 
             THEN ROUND((outflow::numeric / (current_total + outflow)::numeric) * 100) 
             ELSE 0 
-          END as percentage_used
+          END AS INTEGER) as percentage_used
         FROM monthly_outflow, total_stock
       `),
 

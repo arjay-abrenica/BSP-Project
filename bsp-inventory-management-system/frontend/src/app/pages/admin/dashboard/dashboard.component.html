@@ -13,10 +13,24 @@
                 <div class="supply-section">
                     <h3>Low Stock Items</h3>
                     <ul class="stock-list">
-                        <li *ngFor="let item of lowStockItems">
-                            <span>{{item.item_code || 'N/A'}}</span> 
-                            <span>{{item.item_name}}</span> 
-                            <span class="alert">{{item.stock_percentage}}%</span>
+                        <li *ngFor="let item of lowStockItems" [routerLink]="['/inventory/catalog']"
+                            [queryParams]="{ action: 'replenish', sku: item.item_code }" class="clickable-row"
+                            title="Go to Catalog to Replenish">
+                            <span>{{item.item_code || 'N/A'}}</span>
+                            <span class="item-name" [title]="item.item_name">{{item.item_name}}</span>
+                            <div class="stock-progress">
+                                <div class="progress-track" [title]="item.stock_percentage + '% of reorder level'">
+                                    <div class="progress-fill"
+                                        [style.width.%]="item.stock_percentage > 100 ? 100 : item.stock_percentage"
+                                        [ngClass]="{
+                                            'fill-green': item.stock_percentage > 50,
+                                            'fill-yellow': item.stock_percentage >= 20 && item.stock_percentage <= 50,
+                                            'fill-red': item.stock_percentage < 20
+                                         }">
+                                    </div>
+                                </div>
+                                <span class="progress-label">{{item.stock_percentage}}%</span>
+                            </div>
                         </li>
                         <li *ngIf="lowStockItems.length === 0">
                             <span>No low stock items</span>
@@ -43,7 +57,8 @@
             <div class="card-content">
                 <table class="simple-table">
                     <tbody>
-                        <tr *ngFor="let req of pendingRequests; let i = index" routerLink="/inventory/outflow" class="clickable-row" title="View in Outflow">
+                        <tr *ngFor="let req of pendingRequests; let i = index" routerLink="/inventory/outflow"
+                            class="clickable-row" title="View in Outflow">
                             <td>{{i + 1}}</td>
                             <td>{{req.office}}</td>
                             <td>{{req.request_date | date:'MM/dd/yyyy h:mm a'}}</td>
@@ -62,10 +77,7 @@
                 <div class="chart-container">
                     <h3>Quarterly Usage</h3>
                     <div class="chart-wrapper">
-                        <canvas baseChart
-                            [data]="barChartData"
-                            [options]="barChartOptions"
-                            [type]="'bar'">
+                        <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="'bar'">
                         </canvas>
                     </div>
                     <button class="bsp-btn" (click)="openQuarterlyUsageModal()">More Info</button>
@@ -73,9 +85,7 @@
                 <div class="chart-container">
                     <h3>Stock Distribution by Office</h3>
                     <div class="chart-wrapper">
-                        <canvas baseChart
-                            [data]="doughnutChartData"
-                            [options]="doughnutChartOptions"
+                        <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions"
                             [type]="'doughnut'">
                         </canvas>
                     </div>
@@ -102,7 +112,8 @@
                 <div class="card-header">Recent Activity</div>
                 <div class="card-content">
                     <ul class="activity-list">
-                        <li *ngFor="let activity of recentActivities" routerLink="/history/activity-log" class="clickable-row" title="View Activity Log">
+                        <li *ngFor="let activity of recentActivities" routerLink="/history/activity-log"
+                            class="clickable-row" title="View Activity Log">
                             <span class="dot"></span> {{activity.description}} - {{activity.date | date:'MM/dd/yy'}}
                         </li>
                         <li *ngIf="recentActivities.length === 0">
@@ -124,55 +135,53 @@
             <div class="modal-header">
                 <h2>Quarterly Usage Background</h2>
                 <button class="close-btn" (click)="closeQuarterlyUsageModal()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
             </div>
 
-        <div class="modal-body">
-            <div class="modal-left">
-                <div class="year-highlight">2025</div>
-                <div class="modal-chart-wrapper">
-                    <canvas baseChart
-                        [data]="barChartData"
-                        [options]="barChartOptions"
-                        [type]="'bar'">
-                    </canvas>
-                </div>
-            </div>
-            
-            <div class="modal-right">
-                <div class="form-group">
-                    <label>View</label>
-                    <select class="bsp-select">
-                        <option>All Quarters</option>
-                        <option>Single Quarter</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Year</label>
-                    <select class="bsp-select">
-                        <option>2025</option>
-                        <option>2024</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Quarter</label>
-                    <select class="bsp-select" disabled>
-                        <option>Q1</option>
-                        <option>Q2</option>
-                        <option>Q3</option>
-                        <option>Q4</option>
-                    </select>
+            <div class="modal-body">
+                <div class="modal-left">
+                    <div class="year-highlight">2025</div>
+                    <div class="modal-chart-wrapper">
+                        <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="'bar'">
+                        </canvas>
+                    </div>
                 </div>
 
-                <button class="bsp-btn export-btn">Export Graph</button>
+                <div class="modal-right">
+                    <div class="form-group">
+                        <label>View</label>
+                        <select class="bsp-select">
+                            <option>All Quarters</option>
+                            <option>Single Quarter</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Year</label>
+                        <select class="bsp-select">
+                            <option>2025</option>
+                            <option>2024</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quarter</label>
+                        <select class="bsp-select" disabled>
+                            <option>Q1</option>
+                            <option>Q2</option>
+                            <option>Q3</option>
+                            <option>Q4</option>
+                        </select>
+                    </div>
+
+                    <button class="bsp-btn export-btn">Export Graph</button>
+                </div>
             </div>
-        </div>
         </div>
     </div>
 </div>
@@ -183,15 +192,14 @@
         <div class="modal-inner">
             <div class="modal-header tabbed-header">
                 <div class="modal-tabs">
-                    <span class="modal-tab" 
-                          [class.active]="activeStockTab === 'distribution'"
-                          (click)="setActiveStockTab('distribution')">Stock Distribution by Office</span>
-                    <span class="modal-tab" 
-                          [class.active]="activeStockTab === 'allocation'"
-                          (click)="setActiveStockTab('allocation')">Supply Allocation Status</span>
+                    <span class="modal-tab" [class.active]="activeStockTab === 'distribution'"
+                        (click)="setActiveStockTab('distribution')">Stock Distribution by Office</span>
+                    <span class="modal-tab" [class.active]="activeStockTab === 'allocation'"
+                        (click)="setActiveStockTab('allocation')">Supply Allocation Status</span>
                 </div>
                 <button class="close-btn" (click)="closeStockDistributionModal()">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -207,14 +215,12 @@
                             <div class="quarter-highlight">Quarter 1</div>
                         </div>
                         <div class="modal-chart-wrapper doughnut-wrapper">
-                            <canvas baseChart
-                                [data]="doughnutChartData"
-                                [options]="modalDoughnutChartOptions"
+                            <canvas baseChart [data]="doughnutChartData" [options]="modalDoughnutChartOptions"
                                 [type]="'doughnut'">
                             </canvas>
                         </div>
                     </div>
-                    
+
                     <div class="modal-right">
                         <div class="form-group">
                             <label>View</label>
@@ -223,7 +229,7 @@
                                 <option>Single Quarter</option>
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Year</label>
                             <select class="bsp-select">
@@ -231,7 +237,7 @@
                                 <option>2024</option>
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Quarter</label>
                             <select class="bsp-select" disabled>
@@ -241,7 +247,7 @@
                                 <option>Q4</option>
                             </select>
                         </div>
-    
+
                         <button class="bsp-btn export-btn">Export Chart</button>
                     </div>
                 </ng-container>
@@ -254,14 +260,12 @@
                             <div class="quarter-highlight">Quarter 1</div>
                         </div>
                         <div class="modal-chart-wrapper bar-wrapper">
-                            <canvas baseChart
-                                [data]="allocationChartData"
-                                [options]="allocationChartOptions"
+                            <canvas baseChart [data]="allocationChartData" [options]="allocationChartOptions"
                                 [type]="'bar'">
                             </canvas>
                         </div>
                     </div>
-                    
+
                     <div class="modal-right">
                         <div class="form-group">
                             <label>Year</label>
@@ -270,7 +274,7 @@
                                 <option>2024</option>
                             </select>
                         </div>
-                        
+
                         <div class="form-group">
                             <label>Quarter</label>
                             <select class="bsp-select">
@@ -280,7 +284,7 @@
                                 <option>Q4</option>
                             </select>
                         </div>
-    
+
                         <button class="bsp-btn export-btn">Export Graph</button>
                     </div>
                 </ng-container>
