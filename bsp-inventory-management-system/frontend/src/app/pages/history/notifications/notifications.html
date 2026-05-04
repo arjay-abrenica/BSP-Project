@@ -1,0 +1,103 @@
+<div class="table-container">
+  <div class="catalog-header">
+    <h2 class="catalog-title">Notifications History</h2>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" placeholder="Search notifications..." [(ngModel)]="searchQuery" (input)="applyFilters()">
+    </div>
+    
+    <div class="actions-wrapper">
+      <div class="filter-dropdown-container">
+        <button class="btn-filter" (click)="toggleFilter()" [class.active]="isFilterOpen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Filter
+        </button>
+
+        @if (isFilterOpen) {
+          <div class="filter-dropdown" style="width: 250px;">
+            <div class="filter-header">
+              <h3>Filter By Type</h3>
+              <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
+            </div>
+            
+            <div class="filter-body">
+              <div class="filter-group">
+                <label>Notification Type</label>
+                <select class="filter-select" [(ngModel)]="filterType">
+                  <option value="">All Types</option>
+                  <option value="INFO">Info</option>
+                  <option value="SUCCESS">Success</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="ERROR">Error</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-footer">
+              <button class="btn-primary w-full" (click)="applyFilters(); toggleFilter()">Apply Filter</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="col-type">Type</th>
+        <th class="col-message">Message</th>
+        <th class="col-time text-center">Time</th>
+        <th class="col-action text-right">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (isLoading) {
+        <tr>
+          <td colspan="4" class="empty-state text-center" style="padding: 32px;">Loading notifications...</td>
+        </tr>
+      } @else {
+        @for (item of paginatedData; track item.id) {
+          <tr>
+            <td class="col-type">
+                <span class="category-pill" [ngClass]="item.type.toLowerCase()">{{ item.type }}</span>
+            </td>
+            <td class="col-message">{{ item.message }}</td>
+            <td class="col-time text-center text-muted">{{ item.time }}</td>
+            <td class="col-action text-right">
+              @if (item.action_link && item.action_label) {
+                <button class="btn-primary-sm" (click)="handleAction(item)">{{ item.action_label }}</button>
+              }
+            </td>
+          </tr>
+        }
+        @if (filteredData.length === 0 && !isLoading) {
+          <tr>
+            <td colspan="4" class="empty-state text-center" style="padding: 32px; color: var(--bsp-text-muted);">No notification history found.</td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+
+  <div class="pagination-controls">
+    <div class="page-info-detailed">
+      Showing {{ filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredData.length) }} of {{ filteredData.length }} entries
+    </div>
+    <div class="page-buttons">
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -219,6 +219,25 @@ export class Catalog implements OnInit {
     });
   }
 
+  onReplenishItem(): void {
+    if (!this.selectedItemDetails) return;
+    
+    this.openAddItemModal();
+    
+    // Auto-populate item details for replenishment
+    this.addItemForm.patchValue({
+      item_code: this.selectedItemDetails.item_code,
+      item_name: this.selectedItemDetails.item_name,
+      category_id: this.selectedItemDetails.category_id?.toString() || '',
+      unit_of_measure: this.selectedItemDetails.unit_of_measure?.toLowerCase() || 'pcs',
+      description: this.selectedItemDetails.description,
+      supplier_name: this.selectedItemDetails.supplier_name,
+      unit_price: this.selectedItemDetails.unit_price || 0,
+      reorder_level: this.selectedItemDetails.reorder_level || 10
+    });
+    this.isSkuExisting = true;
+  }
+
   onLogTransaction(): void {
     if (!this.selectedItemDetails) return;
     
@@ -394,6 +413,7 @@ export class Catalog implements OnInit {
             case 'log': this.onLogTransaction(); break;
             case 'history': this.onViewTransactions(); break;
             case 'allocation': this.onViewAllocation(); break;
+            case 'replenish': this.onReplenishItem(); break;
           }
           this.pendingAction = null;
           this.pendingSku = null;

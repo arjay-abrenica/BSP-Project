@@ -135,6 +135,8 @@ CREATE TABLE Notifications (
     message TEXT NOT NULL,
     type VARCHAR(20) DEFAULT 'INFO', -- 'INFO', 'SUCCESS', 'WARNING', 'ERROR'
     is_read BOOLEAN DEFAULT FALSE,
+    action_link VARCHAR(255),
+    action_label VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (office_id) REFERENCES Offices(office_id)

@@ -68,7 +68,8 @@ router.get('/reports/allocation-efficiency', inventoryController.getAllocationEf
 
 // --- Notifications ---
 router.get('/notifications', inventoryController.getNotifications);
-router.put('/notifications/:id/read', inventoryController.markNotificationRead);
+router.get('/notifications/history', inventoryController.getNotificationHistory);
 router.put('/notifications/mark-all-read', inventoryController.markAllRead);
+router.put('/notifications/:id/read', inventoryController.markNotificationRead);
 
 module.exports = router;

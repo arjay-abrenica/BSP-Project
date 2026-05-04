@@ -8,6 +8,8 @@ export interface Notification {
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
   is_read: boolean;
   time: string;
+  action_link?: string;
+  action_label?: string;
 }
 
 @Injectable({
@@ -41,6 +43,10 @@ export class NotificationService {
         this.unreadCountSubject.next(unread);
       })
     );
+  }
+
+  fetchNotificationHistory(): Observable<Notification[]> {
+    return this.http.get<Notification[]>(`${this.API_URL}/history`);
   }
 
   markAsRead(id: number): void {
