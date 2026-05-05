@@ -65,6 +65,13 @@ router.get('/reports/stock-distribution', inventoryController.getStockDistributi
 router.get('/reports/usage-trend', inventoryController.getUsageTrend);
 router.get('/reports/category-breakdown', inventoryController.getCategoryBreakdown);
 router.get('/reports/allocation-efficiency', inventoryController.getAllocationEfficiency);
+router.get('/reports/monthly-inventory', inventoryController.getMonthlyInventoryReport);
+router.get('/reports/monthly-rsmi', inventoryController.getMonthlyRSMIReport);
+
+// --- Generated Reports Storage ---
+router.get('/reports/generated', inventoryController.getGeneratedReports);
+router.post('/reports/generated', inventoryController.saveGeneratedReport);
+router.delete('/reports/generated/:id', inventoryController.deleteGeneratedReport);
 
 // --- Notifications ---
 router.get('/notifications', inventoryController.getNotifications);

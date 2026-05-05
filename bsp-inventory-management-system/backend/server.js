@@ -15,9 +15,13 @@ const app = express();
 const path = require('path');
 
 // --- Middleware ---
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(cors()); // Enable Cross-Origin Resource Sharing
+app.use(express.json({ limit: '50mb' })); // Increase limit for large PDF data
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(cors({
+  origin: 'http://localhost:4200',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- API Routes ---
