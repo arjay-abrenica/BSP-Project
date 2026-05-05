@@ -391,17 +391,16 @@ exports.getNextRisNo = async (req, res) => {
     const today = new Date();
     const YYYY = today.getFullYear();
     const MM = String(today.getMonth() + 1).padStart(2, '0');
-    const DD = String(today.getDate()).padStart(2, '0');
     
-    // We'll search for today's transactions to find the next number
-    const risPrefix = `${acronym}-${YYYY}-${MM}-${DD}`;
+    // We'll search for this month's transactions to find the next number
+    const risPrefix = `${acronym}-${YYYY}-${MM}`;
 
-    // 3. Find latest sequence number for today for THIS specific acronym
+    // 3. Find latest sequence number for this month for THIS specific acronym
     const latestRisRes = await db.query(
       `SELECT ris_no FROM Transactions 
        WHERE ris_no LIKE $1 
        ORDER BY transaction_id DESC LIMIT 1`,
-      [`${acronym}-${YYYY}-${MM}-${DD}-%`]
+      [`${acronym}-${YYYY}-${MM}-%`]
     );
 
     let nextSequence = 1;
@@ -415,7 +414,7 @@ exports.getNextRisNo = async (req, res) => {
       }
     }
 
-    const nextRis = `${risPrefix}-${String(nextSequence).padStart(2, '0')}`;
+    const nextRis = `${risPrefix}-${String(nextSequence).padStart(4, '0')}`;
     res.status(200).json({ nextRis });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1349,6 +1348,139 @@ exports.getAllocationEfficiency = async (req, res) => {
       overall: overallRes.rows[0],
       chartData: chartRes.rows
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getMonthlyInventoryReport = async (req, res) => {
+  const { month, year } = req.query;
+  if (!month || !year) return res.status(400).json({ error: "Month and Year are required" });
+
+  try {
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const query = `
+      WITH BeginningInventory AS (
+          SELECT 
+              i.item_id,
+              COALESCE(SUM(CASE WHEN t.transaction_type = 'IN' THEN td.quantity ELSE -td.quantity END), 0) as beginning_qty
+          FROM Items i
+          LEFT JOIN Transaction_Details td ON i.item_id = td.item_id
+          LEFT JOIN Transactions t ON td.transaction_id = t.transaction_id AND t.transaction_date < $1
+          GROUP BY i.item_id
+      ),
+      MonthlyTransactions AS (
+          SELECT 
+              td.item_id,
+              SUM(CASE WHEN t.transaction_type = 'IN' THEN td.quantity ELSE 0 END) as total_in,
+              SUM(CASE WHEN t.transaction_type = 'OUT' THEN td.quantity ELSE 0 END) as total_out
+          FROM Transaction_Details td
+          JOIN Transactions t ON td.transaction_id = t.transaction_id
+          WHERE t.transaction_date >= $1 AND t.transaction_date <= $2
+          GROUP BY td.item_id
+      )
+      SELECT
+          i.item_id,
+          i.item_code,
+          i.item_name,
+          i.unit_of_measure,
+          i.unit_price,
+          c.category_name,
+          s.supplier_name,
+          COALESCE(bi.beginning_qty, 0) as beginning_qty,
+          COALESCE(mt.total_in, 0) as total_in,
+          COALESCE(mt.total_out, 0) as total_out,
+          (COALESCE(bi.beginning_qty, 0) + COALESCE(mt.total_in, 0) - COALESCE(mt.total_out, 0)) as ending_qty
+      FROM Items i
+      LEFT JOIN Categories c ON i.category_id = c.category_id
+      LEFT JOIN Suppliers s ON i.supplier_id = s.supplier_id
+      LEFT JOIN BeginningInventory bi ON i.item_id = bi.item_id
+      LEFT JOIN MonthlyTransactions mt ON i.item_id = mt.item_id
+      ORDER BY c.category_name, i.item_name    `;
+
+    const result = await db.query(query, [startDate, endDate]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getMonthlyRSMIReport = async (req, res) => {
+  const { month, year } = req.query;
+  if (!month || !year) return res.status(400).json({ error: "Month and Year are required" });
+
+  try {
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+    const query = `
+      SELECT 
+          t.ris_no,
+          t.transaction_date as date,
+          o.office_name,
+          i.item_code,
+          i.item_name,
+          i.unit_of_measure,
+          td.quantity,
+          td.unit_cost,
+          (td.quantity * td.unit_cost) as total_cost
+      FROM Transactions t
+      JOIN Transaction_Details td ON t.transaction_id = td.transaction_id
+      JOIN Items i ON td.item_id = i.item_id
+      LEFT JOIN Offices o ON t.office_id = o.office_id
+      WHERE t.transaction_type = 'OUT' 
+      AND t.transaction_date >= $1 
+      AND t.transaction_date <= $2
+      ORDER BY t.transaction_date ASC, t.ris_no ASC
+    `;
+
+    const result = await db.query(query, [startDate, endDate]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.saveGeneratedReport = async (req, res) => {
+  const { title, report_number, category, type, office, file_data } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const query = `
+      INSERT INTO Generated_Reports (title, report_number, category, type, office, file_data, generated_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING report_id as id
+    `;
+    const result = await db.query(query, [title, report_number, category, type, office, file_data, userId]);
+    res.status(201).json({ message: 'Report saved successfully', id: result.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getGeneratedReports = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        report_id as id, title, report_number as "reportNumber", category, type, office, file_data as "fileData",
+        TO_CHAR(created_at, 'Mon DD, YYYY') as "dateGenerated"
+      FROM Generated_Reports
+      ORDER BY created_at DESC
+    `;
+    const result = await db.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteGeneratedReport = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query('DELETE FROM Generated_Reports WHERE report_id = $1', [id]);
+    res.status(200).json({ message: 'Report deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
