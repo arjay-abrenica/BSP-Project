@@ -253,12 +253,14 @@
   color: var(--bsp-text-main);
 }
 
-.col-sku { width: 10%; font-weight: 500; }
-.col-item { width: 20%; }
-.col-desc { width: 20%; }
-.col-qty { width: 12%; }
-.col-unit { width: 6%; }
-.col-stock { width: 10%; }
+.col-sku { width: 8%; font-weight: 500; }
+.col-item { width: 15%; }
+.col-brand { width: 10%; }
+.col-size { width: 8%; }
+.col-desc { width: 15%; }
+.col-qty { width: 8%; }
+.col-unit { width: 5%; }
+.col-stock { width: 8%; }
 .col-status { width: 10%; }
 .col-category { display: none; }
 .col-supplier { width: 12%; }
