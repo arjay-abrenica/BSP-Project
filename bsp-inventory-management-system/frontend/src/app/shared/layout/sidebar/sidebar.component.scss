@@ -239,7 +239,6 @@
     margin-bottom: 1rem;
 
     @media (max-width: 768px) {
-        margin-top: auto;
         padding-bottom: 2rem;
     }
 
@@ -569,7 +568,7 @@
 }
 
 /* --- Notifications --- */
-.desktop-notif-container {
+.notif-container {
     position: relative;
     margin-top: auto;
     width: 48px;
@@ -580,10 +579,6 @@
     border-radius: 8px;
     transition: background-color 0.2s ease;
     margin-bottom: 0.5rem;
-
-    @media (max-width: 768px) {
-        display: none;
-    }
 
     .notif-btn {
         background: transparent;
@@ -637,61 +632,14 @@
         left: 60px;
         width: 320px;
         animation: slideInRight 0.2s ease-out;
-    }
-}
-
-.mobile-notif-container {
-    display: none;
-    
-    @media (max-width: 768px) {
-        display: block;
-        position: relative;
-        margin-left: auto;
-        margin-right: 0.5rem;
-    }
-
-    .notif-btn {
-        background: transparent;
-        border: none;
-        color: var(--white);
-        padding: 0.5rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        position: relative;
-
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-        }
-    }
-
-    .notif-badge {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        background: #e63946;
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        padding: 2px 5px;
-        border-radius: 10px;
-        min-width: 18px;
-        text-align: center;
-        border: 2px solid var(--bsp-dark-green);
-    }
-
-    .notif-dropdown {
-        position: absolute;
-        top: 50px;
-        right: 0;
-        width: 300px;
-        animation: slideInDown 0.2s ease-out;
         
-        @media (max-width: 400px) {
-            width: 280px;
-            right: -10px;
+        @media (max-width: 768px) {
+            position: fixed;
+            bottom: 20px;
+            left: 80px;
+            width: calc(100vw - 100px);
+            max-width: 320px;
+            z-index: 1002;
         }
     }
 }

@@ -17,6 +17,7 @@
         </button>
 
         @if (showFilterDropdown) {
+          <div class="filter-backdrop" (click)="toggleFilterDropdown()"></div>
           <div class="filter-dropdown">
             <div class="filter-header">
               <h3>Filter By</h3>
@@ -58,58 +59,60 @@
     </div>
   </div>
 
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th class="col-sku">SKU</th>
-        <th class="col-item">Item Name</th>
-        <th class="col-desc">Description</th>
-        <th class="col-qty text-center">Quantity</th>
-        <th class="col-unit">Unit</th>
-        <th class="col-stock">Stock Number</th>
-        <th class="col-status">Stock Status</th>
-        <th class="col-supplier">Supplier</th>
-      </tr>
-    </thead>
-    <tbody>
-      @if (isLoading) {
-        @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-          <tr class="skeleton-row">
-            <td><div class="skeleton-text skeleton-sku"></div></td>
-            <td><div class="skeleton-text skeleton-item"></div></td>
-            <td><div class="skeleton-text skeleton-desc"></div></td>
-            <td class="text-center"><div class="skeleton-text skeleton-qty"></div></td>
-            <td><div class="skeleton-text skeleton-unit"></div></td>
-            <td><div class="skeleton-text skeleton-stock"></div></td>
-            <td><div class="skeleton-text skeleton-status"></div></td>
-            <td><div class="skeleton-text skeleton-supplier"></div></td>
-          </tr>
+  <div class="table-responsive-wrapper">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="col-sku">SKU</th>
+          <th class="col-item">Item Name</th>
+          <th class="col-desc">Description</th>
+          <th class="col-qty text-center">Quantity</th>
+          <th class="col-unit">Unit</th>
+          <th class="col-stock">Stock Number</th>
+          <th class="col-status">Stock Status</th>
+          <th class="col-supplier">Supplier</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (isLoading) {
+          @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+            <tr class="skeleton-row">
+              <td><div class="skeleton-text skeleton-sku"></div></td>
+              <td><div class="skeleton-text skeleton-item"></div></td>
+              <td><div class="skeleton-text skeleton-desc"></div></td>
+              <td class="text-center"><div class="skeleton-text skeleton-qty"></div></td>
+              <td><div class="skeleton-text skeleton-unit"></div></td>
+              <td><div class="skeleton-text skeleton-stock"></div></td>
+              <td><div class="skeleton-text skeleton-status"></div></td>
+              <td><div class="skeleton-text skeleton-supplier"></div></td>
+            </tr>
+          }
+        } @else {
+          @for (item of paginatedItems; track item.item_id) {
+            <tr (click)="openItemDetails(item)" class="clickable-row">
+              <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
+              <td class="col-item font-medium">{{ item.item_name }}</td>
+              <td class="col-desc text-muted">{{ item.description }}</td>
+              <td class="col-qty text-center">{{ item.current_stock }}</td>
+              <td class="col-unit">{{ item.unit_of_measure }}</td>
+              <td class="col-stock">{{ item.item_id + 200000 }}</td>
+              <td class="col-status">
+                <span class="status-badge" [ngClass]="getStockStatusClass(item)">
+                  {{ getStockStatus(item) }}
+                </span>
+              </td>
+              <td class="col-supplier">{{ item.supplier_name || 'N/A' }}</td>
+            </tr>
+          }
+          @if (filteredItems.length === 0) {
+            <tr>
+              <td colspan="8" class="empty-state">No items found matching your search.</td>
+            </tr>
+          }
         }
-      } @else {
-        @for (item of paginatedItems; track item.item_id) {
-          <tr (click)="openItemDetails(item)" class="clickable-row">
-            <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
-            <td class="col-item font-medium">{{ item.item_name }}</td>
-            <td class="col-desc text-muted">{{ item.description }}</td>
-            <td class="col-qty text-center">{{ item.current_stock }}</td>
-            <td class="col-unit">{{ item.unit_of_measure }}</td>
-            <td class="col-stock">{{ item.item_id + 200000 }}</td>
-            <td class="col-status">
-              <span class="status-badge" [ngClass]="getStockStatusClass(item)">
-                {{ getStockStatus(item) }}
-              </span>
-            </td>
-            <td class="col-supplier">{{ item.supplier_name || 'N/A' }}</td>
-          </tr>
-        }
-        @if (filteredItems.length === 0) {
-          <tr>
-            <td colspan="8" class="empty-state">No items found matching your search.</td>
-          </tr>
-        }
-      }
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  </div>
 
   <div class="pagination-controls">
     <div class="page-info-detailed">

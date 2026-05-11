@@ -5,6 +5,13 @@
     overflow: hidden;
     /* Prevents the whole page from scrolling */
     background-color: var(--bsp-app-bg);
+
+    @media (max-width: 768px) {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        flex-direction: column;
+    }
 }
 
 .content-area {
@@ -24,6 +31,6 @@
     @media (max-width: 768px) {
         padding-left: 0;
         padding-top: 60px; /* Make room for the new mobile top app bar */
-        padding-bottom: 4rem; /* Additional space at the bottom on mobile */
+        padding-bottom: 0.5rem; /* Minimal bottom breathing room */
     }
 }
