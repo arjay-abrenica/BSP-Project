@@ -593,3 +593,48 @@
 }
 
 .btn-confirm:hover { opacity: 0.9; }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .add-item-page {
+    padding: 16px;
+  }
+
+  .form-card {
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .right-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .right-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summary-top {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}

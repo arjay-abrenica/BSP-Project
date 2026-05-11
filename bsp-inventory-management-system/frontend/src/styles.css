@@ -47,7 +47,8 @@ body {
     min-height: 0;
     
     @media (max-width: 768px) {
-        padding-bottom: 3rem; /* Add breathing room at the bottom of the page */
+        height: auto; /* Don't force full viewport height on mobile */
+        padding-bottom: 0.5rem;
     }
 }
 
