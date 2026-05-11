@@ -102,6 +102,8 @@ export class Catalog implements OnInit {
       item_name: ['', Validators.required],
       category_id: ['', Validators.required],
       unit_of_measure: ['', Validators.required],
+      brand: [''],
+      size: [''],
       description: [''],
       supplier_name: [''],
       unit_price: [0, Validators.min(0)],
@@ -135,9 +137,6 @@ export class Catalog implements OnInit {
 
   onDeleteItem(): void {
     if (!this.selectedItemDetails) return;
-    if (!confirm(`Are you sure you want to delete ${this.selectedItemDetails.item_name}? This action cannot be undone.`)) {
-      return;
-    }
     this.showDeleteModal = true;
     this.showItemDetailsModal = false;
     this.showAddItemModal = false;
@@ -169,14 +168,14 @@ export class Catalog implements OnInit {
     this.http.delete(`http://localhost:5000/api/items/${this.selectedItemDetails.item_id}`, { body: payload }).subscribe({
       next: (res) => {
         this.isDeleting = false;
-        alert('Item deleted successfully!');
+        alert('Item deactivated successfully!');
         this.closeDeleteModal();
         this.fetchItems();
       },
       error: (err) => {
         this.isDeleting = false;
-        console.error('Error deleting item', err);
-        this.deleteError = err.error?.error || 'Failed to delete item. Please check your password.';
+        console.error('Error deactivating item', err);
+        this.deleteError = err.error?.error || 'Failed to deactivate item. Please check your password.';
       }
     });
   }
@@ -380,6 +379,8 @@ export class Catalog implements OnInit {
       item_name: item.item_name,
       category_id: item.category_id,
       unit_of_measure: item.unit_of_measure,
+      brand: item.brand,
+      size: item.size,
       description: item.description,
       reorder_level: item.reorder_level
     });
@@ -669,6 +670,8 @@ export class Catalog implements OnInit {
         item_name: existingItem.item_name,
         category_id: existingItem.category_id,
         unit_of_measure: existingItem.unit_of_measure,
+        brand: existingItem.brand,
+        size: existingItem.size,
         description: existingItem.description,
         unit_price: existingItem.unit_price,
         reorder_level: existingItem.reorder_level

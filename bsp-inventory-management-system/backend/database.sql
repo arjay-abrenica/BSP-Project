@@ -31,6 +31,8 @@ CREATE TABLE Items (
     item_code VARCHAR(50), 
     item_name VARCHAR(255) NOT NULL,
     description TEXT,
+    brand VARCHAR(100),
+    size VARCHAR(100),
     unit_of_measure VARCHAR(20), 
     unit_price DECIMAL(10, 2),
     category_id INT,
@@ -38,6 +40,7 @@ CREATE TABLE Items (
     current_stock INT DEFAULT 0,
     reorder_level INT DEFAULT 10,
     image_url TEXT,
+    status VARCHAR(20) DEFAULT 'ACTIVE',
     FOREIGN KEY (category_id) REFERENCES Categories(category_id),
     FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
 );

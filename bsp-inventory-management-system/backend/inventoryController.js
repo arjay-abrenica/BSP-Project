@@ -31,6 +31,7 @@ exports.getAllItems = async (req, res) => {
       FROM Items i
       LEFT JOIN Categories c ON i.category_id = c.category_id
       LEFT JOIN Suppliers s ON i.supplier_id = s.supplier_id
+      WHERE i.status = 'ACTIVE'
       ORDER BY i.item_id ASC
     `;
     const result = await db.query(query);
@@ -81,7 +82,7 @@ exports.createItem = async (req, res) => {
     const createdItems = [];
 
     for (const item of itemsToCreate) {
-      const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number, delivery_receipt, image_url } = item;
+      const { item_code, item_name, description, brand, size, unit_of_measure, unit_price, category_id, supplier_name, reorder_level, quantity, delivery_number, delivery_receipt, image_url } = item;
 
       let final_supplier_id = null;
       if (supplier_name && supplier_name.trim() !== '') {
@@ -112,17 +113,22 @@ exports.createItem = async (req, res) => {
           `UPDATE Items 
            SET item_name = COALESCE($1, item_name), 
                description = COALESCE($2, description), 
-               unit_of_measure = COALESCE($3, unit_of_measure), 
-               unit_price = COALESCE($4, unit_price), 
-               category_id = COALESCE($5, category_id), 
-               supplier_id = COALESCE($6, supplier_id), 
-               reorder_level = COALESCE($7, reorder_level),
-               current_stock = current_stock + $8,
-               image_url = COALESCE($9, image_url)
-           WHERE item_id = $10 RETURNING *`,
+               brand = COALESCE($3, brand),
+               size = COALESCE($4, size),
+               unit_of_measure = COALESCE($5, unit_of_measure), 
+               unit_price = COALESCE($6, unit_price), 
+               category_id = COALESCE($7, category_id), 
+               supplier_id = COALESCE($8, supplier_id), 
+               reorder_level = COALESCE($9, reorder_level),
+               current_stock = current_stock + $10,
+               image_url = COALESCE($11, image_url),
+               status = 'ACTIVE'
+           WHERE item_id = $12 RETURNING *`,
           [
             item_name ? item_name.toUpperCase() : null,
             description ? description.toUpperCase() : null,
+            brand ? brand.toUpperCase() : null,
+            size ? size.toUpperCase() : null,
             unit_of_measure ? unit_of_measure.toUpperCase() : null,
             unit_price,
             category_id || null,
@@ -137,12 +143,14 @@ exports.createItem = async (req, res) => {
       } else {
         // Insert New Item
         const result = await client.query(
-          `INSERT INTO Items (item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock, image_url) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+          `INSERT INTO Items (item_code, item_name, description, brand, size, unit_of_measure, unit_price, category_id, supplier_id, reorder_level, current_stock, image_url, status) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'ACTIVE') RETURNING *`,
           [
             null, // Temporarily null, will be updated to system generated SKU
             item_name ? item_name.toUpperCase() : null,
             description ? description.toUpperCase() : null,
+            brand ? brand.toUpperCase() : null,
+            size ? size.toUpperCase() : null,
             unit_of_measure ? unit_of_measure.toUpperCase() : null,
             unit_price,
             category_id || null,
@@ -205,7 +213,7 @@ exports.createItem = async (req, res) => {
 exports.updateItem = async (req, res) => {
   if (!req.body) return res.status(400).json({ error: "Request body missing or not JSON" });
   const { id } = req.params;
-  const { item_code, item_name, description, unit_of_measure, unit_price, category_id, supplier_id, reorder_level } = req.body;
+  const { item_code, item_name, description, brand, size, unit_of_measure, unit_price, category_id, supplier_id, reorder_level } = req.body;
   
   let image_url = req.body.image_url;
   if (req.file) {
@@ -216,12 +224,14 @@ exports.updateItem = async (req, res) => {
   try {
     const result = await db.query(
       `UPDATE Items 
-       SET item_code = $1, item_name = $2, description = $3, unit_of_measure = $4, unit_price = $5, category_id = $6, supplier_id = $7, reorder_level = $8, image_url = COALESCE($9, image_url)
-       WHERE item_id = $10 RETURNING *`,
+       SET item_code = $1, item_name = $2, description = $3, brand = $4, size = $5, unit_of_measure = $6, unit_price = $7, category_id = $8, supplier_id = $9, reorder_level = $10, image_url = COALESCE($11, image_url), status = 'ACTIVE'
+       WHERE item_id = $12 RETURNING *`,
       [
         item_code ? item_code.toUpperCase() : null,
         item_name ? item_name.toUpperCase() : null,
         description ? description.toUpperCase() : null,
+        brand ? brand.toUpperCase() : null,
+        size ? size.toUpperCase() : null,
         unit_of_measure ? unit_of_measure.toUpperCase() : null,
         unit_price,
         category_id,
@@ -261,7 +271,7 @@ exports.deleteItem = async (req, res) => {
   const { id } = req.params;
   const { user_id, password } = req.body;
   if (!user_id || !password) {
-    return res.status(400).json({ error: 'User ID and password are required for deletion' });
+    return res.status(400).json({ error: 'User ID and password are required for deactivation' });
   }
 
   let client;
@@ -275,7 +285,7 @@ exports.deleteItem = async (req, res) => {
     
     // Check role (SUPERADMIN or ADMIN)
     if (user.role !== 'SUPERADMIN' && user.role !== 'ADMIN' && user.role !== 'SUPPLY_OFFICER') {
-      return res.status(403).json({ error: 'You do not have permission to delete items' });
+      return res.status(403).json({ error: 'You do not have permission to deactivate items' });
     }
     
     // Verify password
@@ -287,25 +297,22 @@ exports.deleteItem = async (req, res) => {
     client = await db.pool.connect();
     await client.query('BEGIN');
 
-    // Remove foreign key dependencies
-    await client.query('DELETE FROM Transaction_Details WHERE item_id = $1', [id]);
-    await client.query('DELETE FROM Request_Details WHERE item_id = $1', [id]);
-
-    const result = await client.query('DELETE FROM Items WHERE item_id = $1 RETURNING *', [id]);
+    // Instead of deleting, we mark as INACTIVE
+    const result = await client.query("UPDATE Items SET status = 'INACTIVE' WHERE item_id = $1 RETURNING *", [id]);
     if (result.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Log the deletion
+    // Log the deactivation
     const item = result.rows[0];
     await client.query(
       `INSERT INTO Audit_Logs (user_id, username, action, entity, entity_id, details) VALUES ($1, $2, $3, $4, $5, $6)`,
-      [user.user_id, user.username, 'DELETE', 'ITEM', id, `Deleted item: ${item.item_name} (${item.item_code || 'No SKU'})`]
+      [user.user_id, user.username, 'DEACTIVATE', 'ITEM', id, `Deactivated item: ${item.item_name} (${item.item_code || 'No SKU'})`]
     );
 
     await client.query('COMMIT');
-    res.status(200).json({ message: 'Item deleted successfully' });
+    res.status(200).json({ message: 'Item deactivated successfully' });
   } catch (err) {
     if (client) await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
@@ -1177,7 +1184,7 @@ exports.getLowStockItems = async (req, res) => {
         c.category_name
       FROM Items i
       LEFT JOIN Categories c ON i.category_id = c.category_id
-      WHERE i.current_stock <= i.reorder_level
+      WHERE i.current_stock <= i.reorder_level AND i.status = 'ACTIVE'
       ORDER BY i.current_stock ASC
     `;
     const result = await db.query(query);
@@ -1219,6 +1226,7 @@ exports.getStockDistribution = async (req, res) => {
         COUNT(i.item_id) as total_items
       FROM Items i
       LEFT JOIN Categories c ON i.category_id = c.category_id
+      WHERE i.status = 'ACTIVE'
       GROUP BY c.category_name
       ORDER BY total_stock DESC
     `;
