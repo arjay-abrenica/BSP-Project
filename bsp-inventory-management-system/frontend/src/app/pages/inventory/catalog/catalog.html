@@ -163,6 +163,14 @@
             <span class="value">{{selectedItemDetails.item_name}}</span>
           </div>
           <div class="info-item">
+            <span class="label">Brand</span>
+            <span class="value">{{selectedItemDetails.brand || 'N/A'}}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Size / Specification</span>
+            <span class="value">{{selectedItemDetails.size || 'N/A'}}</span>
+          </div>
+          <div class="info-item">
             <span class="label">Description</span>
             <span class="value">{{selectedItemDetails.description}}</span>
           </div>
@@ -188,21 +196,21 @@
 </div>
 }
 
-<!-- Delete Confirmation Modal -->
+<!-- Deactivate Confirmation Modal -->
 @if (showDeleteModal) {
 <div class="modal-overlay" (click)="closeDeleteModal()">
   <div class="modal-content add-item-modal" (click)="$event.stopPropagation()" style="max-width: 400px; z-index: 1000;">
     <div class="modal-header" style="background-color: #fee2e2; border-bottom: 1px solid #fca5a5;">
-      <h2 style="color: #b91c1c;">Confirm Deletion</h2>
+      <h2 style="color: #b91c1c;">Confirm Deactivation</h2>
       <button class="btn-close" (click)="closeDeleteModal()">×</button>
     </div>
     
     <div class="modal-body">
       <p style="margin-bottom: 1rem; font-weight: 500;">
-        You are about to delete <strong>{{selectedItemDetails?.item_name}}</strong>.
+        You are about to deactivate <strong>{{selectedItemDetails?.item_name}}</strong>.
       </p>
       <p style="margin-bottom: 1rem; color: #4b5563; font-size: 0.9rem;">
-        This action cannot be undone. To proceed, please confirm your identity by entering your password.
+        Deactivated items will no longer appear in the active inventory list but their historical records will be preserved. To proceed, please confirm your identity by entering your password.
       </p>
       
       <div class="form-group">
@@ -216,8 +224,11 @@
       <div class="form-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 10px;">
         <button type="button" class="btn-secondary-modal" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
         <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="confirmDelete()" [disabled]="isDeleting || !deletePassword">
-          <span *ngIf="isDeleting" class="spinner"></span>
-          Confirm Delete
+          @if (isDeleting) {
+            Deactivating...
+          } @else {
+            Confirm Deactivate
+          }
         </button>
       </div>
     </div>
@@ -294,6 +305,17 @@
                   <option value="roll">Roll (roll)</option>
                   <option value="bot">Bottle (bot)</option>
                 </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Brand</label>
+                <input type="text" formControlName="brand" placeholder="e.g. HP, Armak">
+              </div>
+              <div class="form-group">
+                <label>Size / Specification</label>
+                <input type="text" formControlName="size" placeholder="e.g. A4, 500ml">
               </div>
             </div>
 
@@ -375,8 +397,8 @@
           <div class="left-actions" style="display: flex; gap: 10px;">
             @if (isEditing && canDelete) {
               <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="onDeleteItem()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; display: inline-block; vertical-align: middle;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                Delete Item
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; display: inline-block; vertical-align: middle;"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                Deactivate Item
               </button>
             }
             <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting" *ngIf="!isEditing">Clear</button>
