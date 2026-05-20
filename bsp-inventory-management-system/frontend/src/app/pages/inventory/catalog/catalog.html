@@ -5,51 +5,58 @@
 
   <div class="toolbar">
     <div class="search-wrapper">
-      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" class="search-input" placeholder="Search by SKU, Item Name, Category, etc" (input)="onSearch($event)">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" placeholder="Search by SKU, Item Name, Category, etc"
+        (input)="onSearch($event)">
     </div>
-    
+
     <div class="actions-wrapper">
       <div class="filter-dropdown-container">
         <button class="btn-filter" (click)="toggleFilterDropdown()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
           Filter
         </button>
 
         @if (showFilterDropdown) {
-          <div class="filter-backdrop" (click)="toggleFilterDropdown()"></div>
-          <div class="filter-dropdown">
-            <div class="filter-header">
-              <h3>Filter By</h3>
-              <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
-            </div>
-            
-            <div class="filter-body">
-              <div class="filter-group">
-                <label>Category</label>
-                <select [(ngModel)]="selectedCategory" class="filter-select">
-                  <option value="">All Categories</option>
-                  @for (cat of categories; track cat) {
-                    <option [value]="cat">{{ cat }}</option>
-                  }
-                </select>
-              </div>
+        <div class="filter-backdrop" (click)="toggleFilterDropdown()"></div>
+        <div class="filter-dropdown">
+          <div class="filter-header">
+            <h3>Filter By</h3>
+            <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
+          </div>
 
-              <div class="filter-group">
-                <label>Supplier</label>
-                <select [(ngModel)]="selectedSupplier" class="filter-select">
-                  <option value="">All Suppliers</option>
-                  @for (sup of suppliers; track sup) {
-                    <option [value]="sup">{{ sup }}</option>
-                  }
-                </select>
-              </div>
+          <div class="filter-body">
+            <div class="filter-group">
+              <label>Category</label>
+              <select [(ngModel)]="selectedCategory" class="filter-select">
+                <option value="">All Categories</option>
+                @for (cat of categories; track cat) {
+                <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
             </div>
 
-            <div class="filter-footer">
-              <button class="btn-primary w-full" (click)="applyFilters()">Apply Filter</button>
+            <div class="filter-group">
+              <label>Supplier</label>
+              <select [(ngModel)]="selectedSupplier" class="filter-select">
+                <option value="">All Suppliers</option>
+                @for (sup of suppliers; track sup) {
+                <option [value]="sup">{{ sup }}</option>
+                }
+              </select>
             </div>
           </div>
+
+          <div class="filter-footer">
+            <button class="btn-primary w-full" (click)="applyFilters()">Apply Filter</button>
+          </div>
+        </div>
         }
       </div>
 
@@ -59,72 +66,104 @@
     </div>
   </div>
 
-  <div class="table-responsive-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th class="col-sku">SKU</th>
-          <th class="col-item">Item Name</th>
-          <th class="col-desc">Description</th>
-          <th class="col-qty text-center">Quantity</th>
-          <th class="col-unit">Unit</th>
-          <th class="col-stock">Stock Number</th>
-          <th class="col-status">Stock Status</th>
-          <th class="col-supplier">Supplier</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (isLoading) {
-          @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
-            <tr class="skeleton-row">
-              <td><div class="skeleton-text skeleton-sku"></div></td>
-              <td><div class="skeleton-text skeleton-item"></div></td>
-              <td><div class="skeleton-text skeleton-desc"></div></td>
-              <td class="text-center"><div class="skeleton-text skeleton-qty"></div></td>
-              <td><div class="skeleton-text skeleton-unit"></div></td>
-              <td><div class="skeleton-text skeleton-stock"></div></td>
-              <td><div class="skeleton-text skeleton-status"></div></td>
-              <td><div class="skeleton-text skeleton-supplier"></div></td>
-            </tr>
-          }
-        } @else {
-          @for (item of paginatedItems; track item.item_id) {
-            <tr (click)="openItemDetails(item)" class="clickable-row">
-              <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
-              <td class="col-item font-medium">{{ item.item_name }}</td>
-              <td class="col-desc text-muted">{{ item.description }}</td>
-              <td class="col-qty text-center">{{ item.current_stock }}</td>
-              <td class="col-unit">{{ item.unit_of_measure }}</td>
-              <td class="col-stock">{{ item.item_id + 200000 }}</td>
-              <td class="col-status">
-                <span class="status-badge" [ngClass]="getStockStatusClass(item)">
-                  {{ getStockStatus(item) }}
-                </span>
-              </td>
-              <td class="col-supplier">{{ item.supplier_name || 'N/A' }}</td>
-            </tr>
-          }
-          @if (filteredItems.length === 0) {
-            <tr>
-              <td colspan="8" class="empty-state">No items found matching your search.</td>
-            </tr>
-          }
-        }
-      </tbody>
-    </table>
-  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="col-sku">SKU</th>
+        <th class="col-item">Item Name</th>
+        <th class="col-brand">Brand</th>
+        <th class="col-size">Size</th>
+        <th class="col-desc">Description</th>
+        <th class="col-qty text-center">Quantity</th>
+        <th class="col-unit">Unit</th>
+        <th class="col-stock">Stock Number</th>
+        <th class="col-status">Stock Status</th>
+        <th class="col-supplier">Supplier</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (isLoading) {
+      @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+      <tr class="skeleton-row">
+        <td>
+          <div class="skeleton-text skeleton-sku"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-item"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-item"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-item"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-desc"></div>
+        </td>
+        <td class="text-center">
+          <div class="skeleton-text skeleton-qty"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-unit"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-stock"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-status"></div>
+        </td>
+        <td>
+          <div class="skeleton-text skeleton-supplier"></div>
+        </td>
+      </tr>
+      }
+      } @else {
+      @for (item of paginatedItems; track item.item_id) {
+      <tr (click)="openItemDetails(item)" class="clickable-row">
+        <td class="col-sku">{{ item.item_code || 'N/A' }}</td>
+        <td class="col-item font-medium">{{ item.item_name }}</td>
+        <td class="col-brand">{{ item.brand || '-' }}</td>
+        <td class="col-size">{{ item.size || '-' }}</td>
+        <td class="col-desc text-muted">{{ item.description }}</td>
+        <td class="col-qty text-center">{{ item.current_stock }}</td>
+        <td class="col-unit">{{ item.unit_of_measure }}</td>
+        <td class="col-stock">{{ item.item_id + 200000 }}</td>
+        <td class="col-status">
+          <span class="status-badge" [ngClass]="getStockStatusClass(item)">
+            {{ getStockStatus(item) }}
+          </span>
+        </td>
+        <td class="col-supplier">{{ item.supplier_name || 'N/A' }}</td>
+      </tr>
+      }
+      @if (filteredItems.length === 0) {
+      <tr>
+        <td colspan="8" class="empty-state">No items found matching your search.</td>
+      </tr>
+      }
+      }
+    </tbody>
+  </table>
 
   <div class="pagination-controls">
     <div class="page-info-detailed">
-      Showing {{ filteredItems.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }} entries
+      Showing {{ filteredItems.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage *
+      itemsPerPage, filteredItems.length) }} of {{ filteredItems.length }} entries
     </div>
     <div class="page-buttons">
       <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
       </button>
       <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0"
+        (click)="goToPage(currentPage + 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </button>
     </div>
   </div>
@@ -138,19 +177,22 @@
       <h2>Item Details</h2>
       <button class="btn-close" (click)="closeItemDetails()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <div class="details-main">
         <div class="item-image-container">
           <!-- Display actual item image if it exists, otherwise show placeholder -->
           @if (selectedItemDetails.image_url) {
-            <img [src]="selectedItemDetails.image_url.startsWith('data:') ? selectedItemDetails.image_url : 'http://localhost:5000' + selectedItemDetails.image_url" [alt]="selectedItemDetails.item_name" style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
+          <img
+            [src]="selectedItemDetails.image_url.startsWith('data:') ? selectedItemDetails.image_url : 'http://localhost:5000' + selectedItemDetails.image_url"
+            [alt]="selectedItemDetails.item_name"
+            style="width:100%; height:100%; object-fit: cover; border-radius: 8px;">
           } @else {
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
-              <rect width="200" height="200" fill="#f9fafb"/>
-              <path d="M60 140L90 100L110 120L140 80L160 140H60Z" fill="#d1d5db"/>
-              <circle cx="80" cy="80" r="10" fill="#d1d5db"/>
-            </svg>
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+            <rect width="200" height="200" fill="#f9fafb" />
+            <path d="M60 140L90 100L110 120L140 80L160 140H60Z" fill="#d1d5db" />
+            <circle cx="80" cy="80" r="10" fill="#d1d5db" />
+          </svg>
           }
         </div>
         <div class="info-stacked">
@@ -184,7 +226,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="action-buttons-grid">
         <button class="btn-primary" (click)="onEditItem()">Edit Item</button>
         <button class="btn-primary" (click)="onLogTransaction()">Log Transaction</button>
@@ -204,30 +246,35 @@
       <h2 style="color: #b91c1c;">Confirm Deactivation</h2>
       <button class="btn-close" (click)="closeDeleteModal()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <p style="margin-bottom: 1rem; font-weight: 500;">
         You are about to deactivate <strong>{{selectedItemDetails?.item_name}}</strong>.
       </p>
       <p style="margin-bottom: 1rem; color: #4b5563; font-size: 0.9rem;">
-        Deactivated items will no longer appear in the active inventory list but their historical records will be preserved. To proceed, please confirm your identity by entering your password.
+        Deactivated items will no longer appear in the active inventory list but their historical records will be
+        preserved. To proceed, please confirm your identity by entering your password.
       </p>
-      
+
       <div class="form-group">
         <label>Your Password <span class="required">*</span></label>
-        <input type="password" [(ngModel)]="deletePassword" placeholder="Enter password to confirm" style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px;" />
+        <input type="password" [(ngModel)]="deletePassword" placeholder="Enter password to confirm"
+          style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px;" />
         @if (deleteError) {
-          <span class="error-msg" style="color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: block;">{{deleteError}}</span>
+        <span class="error-msg"
+          style="color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: block;">{{deleteError}}</span>
         }
       </div>
 
       <div class="form-actions" style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-secondary-modal" (click)="closeDeleteModal()" [disabled]="isDeleting">Cancel</button>
-        <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="confirmDelete()" [disabled]="isDeleting || !deletePassword">
+        <button type="button" class="btn-secondary-modal" (click)="closeDeleteModal()"
+          [disabled]="isDeleting">Cancel</button>
+        <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;"
+          (click)="confirmDelete()" [disabled]="isDeleting || !deletePassword">
           @if (isDeleting) {
-            Deactivating...
+          Deactivating...
           } @else {
-            Confirm Deactivate
+          Confirm Deactivate
           }
         </button>
       </div>
@@ -244,35 +291,36 @@
       <h2>{{ isEditing ? 'Edit Item' : 'Add New Item(s)' }}</h2>
       <button class="btn-close" (click)="closeAddItemModal()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <form [formGroup]="addItemForm">
         <div class="form-grid">
-          
+
           <!-- Section: Item Details -->
           <div class="form-section">
             <h3 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+              </svg>
               Item Information
             </h3>
-            
+
             <div class="form-group">
               <label>Stock Keeping Unit (SKU)</label>
-              <input type="text" formControlName="item_code" placeholder="[System Generated]"
-                readonly class="read-only" style="background-color: #e9ecef; cursor: not-allowed;">
+              <input type="text" formControlName="item_code" placeholder="[System Generated]" readonly class="read-only"
+                style="background-color: #e9ecef; cursor: not-allowed;">
             </div>
-            
+
             <div class="form-group">
               <label>Item Name <span class="required">*</span></label>
               <div class="suggestions-container">
                 <input type="text" formControlName="item_name" placeholder="Enter full item name"
-                  (input)="onItemNameInput($event)"
-                  (blur)="hideSuggestions()"
-                  autocomplete="off"
-                  [readonly]="isSkuExisting"
-                  [class.read-only]="isSkuExisting"
+                  (input)="onItemNameInput($event)" (blur)="hideSuggestions()" autocomplete="off"
+                  [readonly]="isSkuExisting" [class.read-only]="isSkuExisting"
                   [class.error]="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">
-                
+
                 <ul class="suggestions-list" *ngIf="showSuggestions && !isSkuExisting">
                   <li *ngFor="let item of filteredSuggestions" (click)="selectSuggestion(item)">
                     <span class="suggestion-name">{{ item.item_name }}</span>
@@ -280,13 +328,16 @@
                   </li>
                 </ul>
               </div>
-              <span class="error-msg" *ngIf="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">Item name is required</span>
+              <span class="error-msg"
+                *ngIf="addItemForm.get('item_name')?.invalid && addItemForm.get('item_name')?.touched">Item name is
+                required</span>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Category <span class="required">*</span></label>
-                <select formControlName="category_id" [class.error]="addItemForm.get('category_id')?.invalid && addItemForm.get('category_id')?.touched">
+                <select formControlName="category_id"
+                  [class.error]="addItemForm.get('category_id')?.invalid && addItemForm.get('category_id')?.touched">
                   <option value="" disabled selected>Select Category</option>
                   <option value="1">Office Supplies</option>
                   <option value="2">Electrical</option>
@@ -297,7 +348,8 @@
 
               <div class="form-group">
                 <label>Unit of Measure <span class="required">*</span></label>
-                <select formControlName="unit_of_measure" [class.error]="addItemForm.get('unit_of_measure')?.invalid && addItemForm.get('unit_of_measure')?.touched">
+                <select formControlName="unit_of_measure"
+                  [class.error]="addItemForm.get('unit_of_measure')?.invalid && addItemForm.get('unit_of_measure')?.touched">
                   <option value="" disabled selected>Select Unit</option>
                   <option value="pcs">Pieces (pcs)</option>
                   <option value="box">Box (box)</option>
@@ -327,26 +379,37 @@
             <div class="form-group">
               <label>Item Image</label>
               <div class="file-upload">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
                 <div class="upload-text">
                   <span class="upload-link">Click to upload image</span>
                 </div>
                 <input type="file" (change)="onFileSelected($event)" accept="image/*">
               </div>
-              <p class="file-hint" *ngIf="addItemForm.get('image')?.value">Selected: {{ addItemForm.get('image')?.value.name }}</p>
+              <p class="file-hint" *ngIf="addItemForm.get('image')?.value">Selected: {{
+                addItemForm.get('image')?.value.name }}</p>
             </div>
           </div>
 
           <!-- Section: Stock & Delivery Details -->
           <div class="form-section">
             <h3 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                </path>
+              </svg>
               Procurement & Stock Details
             </h3>
-            
+
             <div class="form-group">
               <label>Supplier</label>
-              <input type="text" formControlName="supplier_name" placeholder="Enter supplier name" list="modal-supplier-list">
+              <input type="text" formControlName="supplier_name" placeholder="Enter supplier name"
+                list="modal-supplier-list">
               <datalist id="modal-supplier-list">
                 <option value="CHAMPION HARDWARE & CO. Inc."></option>
                 <option value="PS-PhilGEPS"></option>
@@ -373,7 +436,7 @@
                 <label>Reorder Threshold</label>
                 <input type="number" formControlName="reorder_level" placeholder="10" min="0">
               </div>
-              
+
               <div class="form-group" *ngIf="!isEditing">
                 <label>Delivery Number</label>
                 <input type="text" formControlName="delivery_number" placeholder="Enter Delivery No.">
@@ -383,7 +446,11 @@
             <div class="form-group" *ngIf="!isEditing">
               <label>Delivery Receipt</label>
               <div class="file-upload">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
                 <div class="upload-text">
                   <span class="upload-link">Click to upload</span>
                 </div>
@@ -392,23 +459,32 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-actions" style="display: flex; justify-content: space-between;">
           <div class="left-actions" style="display: flex; gap: 10px;">
             @if (isEditing && canDelete) {
-              <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;" (click)="onDeleteItem()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; display: inline-block; vertical-align: middle;"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-                Deactivate Item
-              </button>
+            <button type="button" class="btn-primary" style="background-color: #ef4444; border-color: #ef4444;"
+              (click)="onDeleteItem()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="margin-right: 4px; display: inline-block; vertical-align: middle;">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+              </svg>
+              Deactivate Item
+            </button>
             }
-            <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting" *ngIf="!isEditing">Clear</button>
+            <button type="button" class="btn-clear" (click)="onClear()" [disabled]="isSubmitting"
+              *ngIf="!isEditing">Clear</button>
           </div>
           <div class="right-actions" style="display: flex; gap: 10px;">
-            <button type="button" class="btn-secondary-modal" (click)="closeAddItemModal()" [disabled]="isSubmitting">Cancel</button>
-            <button type="button" class="btn-primary-outline" (click)="addToBatch()" [disabled]="isSubmitting" *ngIf="!isEditing">
+            <button type="button" class="btn-secondary-modal" (click)="closeAddItemModal()"
+              [disabled]="isSubmitting">Cancel</button>
+            <button type="button" class="btn-primary-outline" (click)="addToBatch()" [disabled]="isSubmitting"
+              *ngIf="!isEditing">
               {{ isSkuExisting ? '+ Add Stock' : '+ Add to List' }}
             </button>
-            <button type="button" class="btn-primary" (click)="submitBatch()" [disabled]="isSubmitting || (!isEditing && batchItems.length === 0 && addItemForm.invalid)">
+            <button type="button" class="btn-primary" (click)="submitBatch()"
+              [disabled]="isSubmitting || (!isEditing && batchItems.length === 0 && addItemForm.invalid)">
               <span *ngIf="isSubmitting" class="spinner"></span>
               {{ isEditing ? 'Update Item' : (isSkuExisting ? 'Save Stock' : 'Save Items') }}
             </button>
@@ -460,69 +536,71 @@
       <h2>Transaction History: {{selectedItemDetails?.item_name}}</h2>
       <button class="btn-close" (click)="closeTransactionHistory()">×</button>
     </div>
-    
+
     <div class="modal-body">
       @if (isLoadingHistory) {
-        <div class="loading-state">
-          <span class="spinner green"></span>
-          <p>Loading transaction history...</p>
-        </div>
+      <div class="loading-state">
+        <span class="spinner green"></span>
+        <p>Loading transaction history...</p>
+      </div>
       } @else {
-        <div class="summary-cards">
-          <div class="summary-card in">
-            <span class="card-label">Total Stock In</span>
-            <span class="card-value">+{{ totalIn }}</span>
-          </div>
-          <div class="summary-card out">
-            <span class="card-label">Total Issuances</span>
-            <span class="card-value">-{{ totalOut }}</span>
-          </div>
-          <div class="summary-card balance">
-            <span class="card-label">Current Stock</span>
-            <span class="card-value">{{ selectedItemDetails?.current_stock }}</span>
-          </div>
+      <div class="summary-cards">
+        <div class="summary-card in">
+          <span class="card-label">Total Stock In</span>
+          <span class="card-value">+{{ totalIn }}</span>
         </div>
+        <div class="summary-card out">
+          <span class="card-label">Total Issuances</span>
+          <span class="card-value">-{{ totalOut }}</span>
+        </div>
+        <div class="summary-card balance">
+          <span class="card-label">Current Stock</span>
+          <span class="card-value">{{ selectedItemDetails?.current_stock }}</span>
+        </div>
+      </div>
 
-        <div class="history-table-container">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Reference</th>
-                <th>Office / Supplier</th>
-                <th class="text-center">Qty</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (trans of itemTransactionHistory; track trans.transaction_id) {
-              <tr>
-                <td>{{ trans.date }}</td>
-                <td>
-                  <span class="type-badge" [ngClass]="trans.transaction_type === 'IN' ? 'type-in' : 'type-out'">
-                    {{ trans.transaction_type === 'IN' ? 'STOCK IN' : 'ISSUANCE' }}
-                  </span>
-                </td>
-                <td class="font-medium">{{ trans.ris_no || trans.delivery_number || 'N/A' }}</td>
-                <td>{{ trans.transaction_type === 'IN' ? (trans.supplier_name || 'Warehouse') : (trans.recipient || 'N/A') }}</td>
-                <td class="text-center font-bold" [ngClass]="trans.transaction_type === 'IN' ? 'text-success' : 'text-danger'">
-                  {{ trans.transaction_type === 'IN' ? '+' : '-' }}{{ trans.quantity }}
-                </td>
-                <td class="text-muted small">{{ trans.remarks || '-' }}</td>
-              </tr>
-              }
-              @if (itemTransactionHistory.length === 0) {
-                <tr>
-                  <td colspan="6" class="empty-history">No transactions found for this item.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+      <div class="history-table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Reference</th>
+              <th>Office / Supplier</th>
+              <th class="text-center">Qty</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (trans of itemTransactionHistory; track trans.transaction_id) {
+            <tr>
+              <td>{{ trans.date }}</td>
+              <td>
+                <span class="type-badge" [ngClass]="trans.transaction_type === 'IN' ? 'type-in' : 'type-out'">
+                  {{ trans.transaction_type === 'IN' ? 'STOCK IN' : 'ISSUANCE' }}
+                </span>
+              </td>
+              <td class="font-medium">{{ trans.ris_no || trans.delivery_number || 'N/A' }}</td>
+              <td>{{ trans.transaction_type === 'IN' ? (trans.supplier_name || 'Warehouse') : (trans.recipient || 'N/A')
+                }}</td>
+              <td class="text-center font-bold"
+                [ngClass]="trans.transaction_type === 'IN' ? 'text-success' : 'text-danger'">
+                {{ trans.transaction_type === 'IN' ? '+' : '-' }}{{ trans.quantity }}
+              </td>
+              <td class="text-muted small">{{ trans.remarks || '-' }}</td>
+            </tr>
+            }
+            @if (itemTransactionHistory.length === 0) {
+            <tr>
+              <td colspan="6" class="empty-history">No transactions found for this item.</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
       }
     </div>
-    
+
     <div class="modal-footer">
       <button class="btn-secondary-modal" (click)="closeTransactionHistory()">Close</button>
     </div>
@@ -535,60 +613,60 @@
 <div class="modal-overlay" (click)="closeAllocation()">
   <div class="modal-content transaction-history-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Allocation Per Office: {{selectedItemDetails?.item_name}}</h2>  
-      <button class="btn-close" (click)="closeAllocation()">×</button>   
+      <h2>Allocation Per Office: {{selectedItemDetails?.item_name}}</h2>
+      <button class="btn-close" (click)="closeAllocation()">×</button>
     </div>
 
     <div class="modal-body">
       @if (isLoadingAllocation) {
-        <div class="loading-state">
-          <span class="spinner green"></span>
-          <p>Loading allocation data...</p>
-        </div>
+      <div class="loading-state">
+        <span class="spinner green"></span>
+        <p>Loading allocation data...</p>
+      </div>
       } @else {
-        <div class="summary-cards">
-          <div class="summary-card out">
-            <span class="card-label">Total Allocated</span>
-            <span class="card-value">{{ totalAllocatedQuantity }} {{ selectedItemDetails?.unit_of_measure }}</span>
-          </div>
-          <div class="summary-card balance">
-            <span class="card-label">Unique Offices</span>
-            <span class="card-value">{{ itemAllocation.length }}</span>
-          </div>
+      <div class="summary-cards">
+        <div class="summary-card out">
+          <span class="card-label">Total Allocated</span>
+          <span class="card-value">{{ totalAllocatedQuantity }} {{ selectedItemDetails?.unit_of_measure }}</span>
         </div>
+        <div class="summary-card balance">
+          <span class="card-label">Unique Offices</span>
+          <span class="card-value">{{ itemAllocation.length }}</span>
+        </div>
+      </div>
 
-        <div class="history-table-container">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>Office Name</th>
-                <th>Acronym</th>
-                <th class="text-center">Total Allocated Qty</th>
-                <th class="text-center">Unit</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (alloc of itemAllocation; track alloc.office_name) {
-              <tr>
-                <td class="font-medium">{{ alloc.office_name }}</td>
-                <td>{{ alloc.acronym }}</td>
-                <td class="text-center font-bold text-success">
-                  {{ alloc.total_allocated }}
-                </td>
-                <td class="text-center">{{ selectedItemDetails?.unit_of_measure }}</td>
-              </tr>
-              }
-              @if (itemAllocation.length === 0) {
-                <tr>
-                  <td colspan="4" class="empty-history">No allocations found for this item.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+      <div class="history-table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Office Name</th>
+              <th>Acronym</th>
+              <th class="text-center">Total Allocated Qty</th>
+              <th class="text-center">Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (alloc of itemAllocation; track alloc.office_name) {
+            <tr>
+              <td class="font-medium">{{ alloc.office_name }}</td>
+              <td>{{ alloc.acronym }}</td>
+              <td class="text-center font-bold text-success">
+                {{ alloc.total_allocated }}
+              </td>
+              <td class="text-center">{{ selectedItemDetails?.unit_of_measure }}</td>
+            </tr>
+            }
+            @if (itemAllocation.length === 0) {
+            <tr>
+              <td colspan="4" class="empty-history">No allocations found for this item.</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
       }
     </div>
-    
+
     <div class="modal-footer">
       <button class="btn-secondary-modal" (click)="closeAllocation()">Close</button>
     </div>
@@ -604,7 +682,7 @@
       <h2>Log Transaction: {{selectedItemDetails.item_name}}</h2>
       <button class="btn-close" (click)="closeLogTransaction()">×</button>
     </div>
-    
+
     <div class="modal-body">
       <form [formGroup]="logTransactionForm">
         <div class="form-section">
@@ -620,7 +698,7 @@
             <select formControlName="office_id">
               <option value="" disabled selected>Select Office</option>
               @for (off of offices; track off.office_id) {
-                <option [value]="off.office_id">{{off.office_name}} ({{off.acronym}})</option>
+              <option [value]="off.office_id">{{off.office_name}} ({{off.acronym}})</option>
               }
             </select>
           </div>
@@ -636,7 +714,7 @@
               <input type="number" formControlName="quantity" min="1" [max]="selectedItemDetails.current_stock">
               <span class="small text-muted">Available: {{selectedItemDetails.current_stock}}</span>
             </div>
-            
+
             <div class="form-group">
               <label>Date</label>
               <input type="date" formControlName="transaction_date">
@@ -651,7 +729,8 @@
 
         <div class="form-actions">
           <button type="button" class="btn-secondary-modal" (click)="closeLogTransaction()">Cancel</button>
-          <button type="button" class="btn-primary" (click)="submitLogTransaction()" [disabled]="isSubmitting || logTransactionForm.invalid">
+          <button type="button" class="btn-primary" (click)="submitLogTransaction()"
+            [disabled]="isSubmitting || logTransactionForm.invalid">
             <span *ngIf="isSubmitting" class="spinner"></span>
             Log Transaction
           </button>
@@ -661,4 +740,3 @@
   </div>
 </div>
 }
-
