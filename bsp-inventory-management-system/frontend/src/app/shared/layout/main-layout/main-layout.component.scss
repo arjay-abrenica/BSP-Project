@@ -17,6 +17,7 @@
 .content-area {
     flex: 1;
     /* Tells this container to take up all remaining width */
+    min-width: 0;
     overflow-y: auto;
     /* Allows only the right side to scroll if the dashboard gets long */
     position: relative;

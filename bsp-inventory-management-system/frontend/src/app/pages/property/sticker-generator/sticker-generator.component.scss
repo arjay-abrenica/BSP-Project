@@ -1,0 +1,371 @@
+.designer-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  flex-grow: 1;
+  min-height: 0;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.config-sidebar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin: 1.25rem 0;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--bsp-dark-green);
+    }
+  }
+
+  .bsp-input {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    border: 1px solid rgba(0, 94, 56, 0.2);
+    border-radius: var(--radius-sm);
+  }
+
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-top: 0.2rem;
+  }
+
+  .radio-label, .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--bsp-text-main);
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .print-action-btn {
+    margin-top: 1rem;
+    padding: 0.6rem;
+    width: 100%;
+  }
+}
+
+.preview-area {
+  background-color: #4a4a4a;
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 500px;
+}
+
+.tag-heading-note {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- BSP Premium Property Tag Layout --- */
+.bsp-property-tag {
+  background-color: var(--white);
+  border: 4px double var(--bsp-dark-green);
+  width: 4.5in;
+  height: 2.8in; /* Classic property label size */
+  padding: 0.2rem 0.3rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  color: #000000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.tag-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 2px solid var(--bsp-dark-green);
+  padding-bottom: 0.15rem;
+  flex-shrink: 0;
+
+  .tag-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .tag-header-titles {
+    display: flex;
+    flex-direction: column;
+    
+    h1 {
+      margin: 0;
+      font-size: 0.58rem;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      color: var(--bsp-dark-green);
+    }
+
+    p {
+      margin: 1px 0 0 0;
+      font-size: 0.45rem;
+      font-weight: bold;
+      color: #333;
+    }
+  }
+}
+
+.tag-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.55rem;
+}
+
+.tag-row {
+  display: flex;
+  padding: 0.25rem 0.15rem;
+  align-items: center;
+}
+
+.tag-double-row {
+  display: flex;
+  width: 100%;
+}
+
+.tag-half {
+  flex: 1;
+  display: flex;
+  padding: 0.25rem 0.15rem;
+  align-items: center;
+}
+
+.border-bottom {
+  border-bottom: 1px solid rgba(0, 94, 56, 0.2);
+}
+
+.border-left {
+  border-left: 1px solid rgba(0, 94, 56, 0.2);
+  padding-left: 0.3rem;
+}
+
+.tag-label {
+  font-weight: bold;
+  color: var(--bsp-dark-green);
+  width: 75px;
+  flex-shrink: 0;
+  font-size: 0.5rem;
+}
+
+.tag-half .tag-label {
+  width: 50px;
+}
+
+.tag-value {
+  font-weight: 600;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  code {
+    font-family: Consolas, monospace;
+    font-size: 0.6rem;
+  }
+}
+
+.prop-no-bold {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: var(--bsp-dark-green);
+}
+
+.font-bold {
+  font-weight: 800;
+}
+
+/* Simulated Scannable Barcode styling */
+.tag-barcode-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.simulated-barcode {
+  display: flex;
+  align-items: flex-end;
+  height: 25px;
+  width: 180px;
+  gap: 1.5px;
+  background-color: transparent;
+
+  .bar {
+    background-color: #000000;
+    height: 100%;
+    
+    &.thickness-1 { width: 1px; }
+    &.thickness-2 { width: 2px; }
+    &.thickness-3 { width: 3.5px; }
+    &.thickness-4 { width: 5px; }
+  }
+}
+
+.barcode-number {
+  font-size: 0.45rem;
+  font-family: monospace;
+  margin-top: 1px;
+}
+
+/* Size modifications */
+.size-small {
+  transform: scale(0.85);
+}
+
+.size-large {
+  transform: scale(1.15);
+}
+
+/* --- 3x3 SHEET GRID PREVIEW --- */
+.a4-sheet-mimic {
+  background-color: var(--white);
+  width: 8.27in;
+  height: 11.69in; /* A4 proportions */
+  padding: 0.4in;
+  box-sizing: border-box;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stickers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 0.15in;
+  width: 100%;
+  height: 100%;
+}
+
+.inline-grid-tag {
+  width: 100% !important;
+  height: 100% !important;
+  box-shadow: none !important;
+  border: 2px double var(--bsp-dark-green) !important;
+  padding: 0.15rem !important;
+
+  .tag-header {
+    border-bottom: 1px solid var(--bsp-dark-green);
+    .tag-logo { width: 20px; height: 20px; }
+    .tag-header-titles h1 { font-size: 0.5rem; }
+    .tag-header-titles p { font-size: 0.38rem; }
+  }
+
+  .tag-body { font-size: 0.45rem; }
+  .tag-row { padding: 0.15rem 0.05rem; }
+  .text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    width: 130px;
+  }
+  .prop-no-bold-grid { font-size: 0.5rem; font-weight: 800; color: var(--bsp-dark-green); }
+}
+
+.tag-barcode-wrap-grid {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  padding-top: 0.05rem;
+}
+
+.simulated-barcode-grid {
+  display: flex;
+  align-items: flex-end;
+  height: 12px;
+  width: 90px;
+  gap: 1px;
+
+  .bar {
+    background-color: #000;
+    height: 100%;
+    &.thickness-1 { width: 1px; }
+    &.thickness-2 { width: 1.5px; }
+    &.thickness-3 { width: 2.5px; }
+    &.thickness-4 { width: 3.5px; }
+  }
+}
+
+/* =========================================================================
+   STCIKER PRINT STYLE OVERRIDES
+   ========================================================================= */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #print-area, #print-area * {
+    visibility: visible;
+  }
+
+  #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+  }
+
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .single-tag-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    justify-content: center;
+  }
+
+  .bsp-property-tag {
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  .a4-sheet-mimic {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}

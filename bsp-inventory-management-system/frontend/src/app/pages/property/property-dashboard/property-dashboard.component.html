@@ -1,0 +1,204 @@
+<div class="page-container">
+  <div class="page-title-bar">
+    <h2>Property & Equipment Overview Dashboard</h2>
+  </div>
+
+  <!-- Top Metric Cards -->
+  <div class="metrics-grid">
+    <div class="metric-card shadow-sm">
+      <div class="metric-icon bg-green-light">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#005E38" stroke-width="2">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <h3>Total Asset Valuation</h3>
+        <p class="metric-value text-green">{{ totalAssetValuation }}</p>
+        <span class="metric-sub">Active registry valuation</span>
+      </div>
+    </div>
+
+    <div class="metric-card shadow-sm">
+      <div class="metric-icon bg-blue-light">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#24404C" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <h3>Total Tracked Property</h3>
+        <p class="metric-value text-blue">{{ totalTrackedUnits }} Units</p>
+        <span class="metric-sub">Equipment units cataloged</span>
+      </div>
+    </div>
+
+    <div class="metric-card shadow-sm">
+      <div class="metric-icon bg-gold-light">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#E1AE58" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <h3>PAR Assets (Above 50k)</h3>
+        <p class="metric-value text-gold">{{ parAssetsValuation }}</p>
+        <span class="metric-sub">{{ parAssetsCount }} high-value units (RCPPE)</span>
+      </div>
+    </div>
+
+    <div class="metric-card shadow-sm">
+      <div class="metric-icon bg-teal-light">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#79C3B6" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="metric-info">
+        <h3>ICS Assets (Below 50k)</h3>
+        <p class="metric-value text-teal">{{ icsAssetsValuation }}</p>
+        <span class="metric-sub">{{ icsAssetsCount }} semi-expendable units (RPCSP)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Charts Grid & Stacked Sidebar -->
+  <div class="dashboard-grid">
+    <div class="left-column">
+      <!-- Analytics Charts -->
+      <div class="card analytics-card shadow-sm">
+        <div class="card-header">Equipment Analytics & Statistics</div>
+        <div class="card-content charts-layout">
+          <div class="chart-container-box border-right-sep">
+            <h3>Monthly Registration Trends (IAR vs ICS vs PAR)</h3>
+            <div class="chart-box">
+              <canvas baseChart [data]="barChartData" [options]="barChartOptions" [type]="'bar'">
+              </canvas>
+            </div>
+          </div>
+          <div class="chart-container-box">
+            <h3>Property Distribution By Office / Division (Valuation)</h3>
+            <div class="chart-box">
+              <canvas baseChart [data]="doughnutChartData" [options]="doughnutChartOptions" [type]="'doughnut'">
+              </canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Intake Database -->
+      <div class="card data-table-card shadow-sm" style="margin-top: 1.5rem;">
+        <div class="card-header">Recent IAR Receipts & Equipment Entries</div>
+        <div class="card-content" style="padding: 0;">
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>IAR Report No</th>
+                  <th>Date Encoded</th>
+                  <th>Property Manager</th>
+                  <th>Items & Details</th>
+                  <th>Classification</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let intake of recentPropertyIntakes" class="clickable-row-item" routerLink="/property/registry">
+                  <td><strong>{{ intake.iar_no }}</strong></td>
+                  <td>{{ intake.date | date:'MM/dd/yyyy h:mm a' }}</td>
+                  <td>{{ intake.officer }}</td>
+                  <td>{{ intake.items }}</td>
+                  <td>
+                    <span class="badge" [class.badge-gold]="intake.type === 'PAR'" [class.badge-teal]="intake.type === 'ICS'">
+                      {{ intake.type === 'PAR' ? 'PAR (>50k)' : 'ICS (<50k)' }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge-status badge-active">
+                      {{ intake.status }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column Sidebar -->
+    <div class="right-stacked">
+      <!-- Quick Links Card -->
+      <div class="card quick-links-card shadow-sm">
+        <div class="card-header">Property Operations Panel</div>
+        <div class="card-content">
+          <div class="ops-grid">
+            <a routerLink="/property/iar-encode" class="ops-item" title="Encode New IAR Receipt">
+              <div class="ops-icon bg-green-tint">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#005E38" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </div>
+              <span>Encode IAR</span>
+            </a>
+
+            <a routerLink="/property/registry" class="ops-item" title="Property & Equipment Main Database">
+              <div class="ops-icon bg-blue-tint">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#24404C" stroke-width="2">
+                  <path d="M4 22V4c0-.5.2-1 .6-1.4C5 2.2 5.5 2 6 2h12c.5 0 1 .2 1.4.6.4.4.6.9.6 1.4v18l-8-4-8 4z"></path>
+                </svg>
+              </div>
+              <span>Main Registry</span>
+            </a>
+
+            <a routerLink="/property/reports" class="ops-item" title="Compile Physical Count Reports">
+              <div class="ops-icon bg-gold-tint">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E1AE58" stroke-width="2">
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+              </div>
+              <span>Count Reports</span>
+            </a>
+
+            <a routerLink="/property/stickers" class="ops-item" title="Print Sleek Property Barcode Stickers">
+              <div class="ops-icon bg-teal-tint">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#79C3B6" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="7" y1="7" x2="17" y2="7"></line>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                  <line x1="7" y1="17" x2="12" y2="17"></line>
+                </svg>
+              </div>
+              <span>Print Stickers</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Movements -->
+      <div class="card recent-activity-card shadow-sm">
+        <div class="card-header">Recent Property Movements</div>
+        <div class="card-content scrollable-container">
+          <ul class="movement-list">
+            <li *ngFor="let move of recentMovements" class="movement-row" routerLink="/property/registry">
+              <div class="movement-dot"></div>
+              <div class="movement-details">
+                <p class="movement-desc">{{ move.description }}</p>
+                <span class="movement-date">{{ move.date | date:'MM/dd/yyyy' }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

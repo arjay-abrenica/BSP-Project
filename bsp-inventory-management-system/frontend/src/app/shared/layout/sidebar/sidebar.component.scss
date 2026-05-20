@@ -217,6 +217,8 @@
     /* The active state matching your image */
     &.active {
         background-color: var(--white);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        transform: scale(1.04);
 
         a {
             color: var(--bsp-dark-green);
@@ -225,6 +227,7 @@
 
     &:hover:not(.active) {
         background-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
     }
 }
 
@@ -442,35 +445,36 @@
     margin: 0;
 
     li {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+        padding: 0.55rem 1rem 0.55rem 1.25rem;
+        font-size: 0.88rem;
         display: flex;
         align-items: center;
         cursor: pointer;
         border-radius: var(--radius-sm);
         color: var(--bsp-text-muted);
+        border-left: 3px solid transparent;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
         .dot {
-            width: 6px;
-            height: 6px;
-            background-color: var(--bsp-dark-green);
-            border-radius: 50%;
-            margin-right: 10px;
-            visibility: hidden;
+            display: none; /* Scrub the simple green dot in favor of left border indicator */
         }
 
         &.active-sub {
-            background-color: var(--bsp-light-green-bg);
+            background: linear-gradient(90deg, rgba(0, 94, 56, 0.08) 0%, rgba(0, 94, 56, 0.01) 100%);
             color: var(--bsp-dark-green);
-            font-weight: 500;
-
-            .dot {
-                visibility: visible;
-            }
+            font-weight: 700;
+            border-left: 3.5px solid var(--bsp-dark-green);
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            border-top-right-radius: var(--radius-sm);
+            border-bottom-right-radius: var(--radius-sm);
+            padding-left: calc(1.25rem - 0.5px);
         }
 
         &:hover:not(.active-sub) {
-            background-color: #f5f5f5;
+            background-color: rgba(0, 94, 56, 0.03);
+            color: var(--bsp-dark-green);
+            padding-left: 1.4rem;
         }
     }
 }

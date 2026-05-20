@@ -1,0 +1,104 @@
+<div class="page-container">
+  <div class="page-title-bar">
+    <h2>Physical Count Compilers (RPCPPE / RPCSP)</h2>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="filter-top-bar shadow-sm">
+    <div class="report-type-toggle">
+      <button class="toggle-btn" [class.active]="reportType === 'rpcppe'" (click)="setReportType('rpcppe')">
+        RPCPPE Report (Plant & Equipment / >50k)
+      </button>
+      <button class="toggle-btn" [class.active]="reportType === 'rpcsp'" (click)="setReportType('rpcsp')">
+        RPCSP Report (Semi-Expendable / <50k)
+      </button>
+    </div>
+
+    <div class="filters-input-group">
+      <div class="filter-cell">
+        <label for="empFilter">Accountable Officer:</label>
+        <select id="empFilter" class="bsp-select-field" [(ngModel)]="selectedEmployee" (ngModelChange)="filterReport()">
+          <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
+        </select>
+      </div>
+
+      <div class="filter-cell">
+        <label for="officeFilter">Division:</label>
+        <select id="officeFilter" class="bsp-select-field" [(ngModel)]="selectedOffice" (ngModelChange)="filterReport()">
+          <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="action-buttons-wrap">
+      <button class="bsp-btn" (click)="exportPDF()" style="background-color: var(--bsp-dark-green);">Export PDF</button>
+      <button class="bsp-btn" (click)="exportExcel()" style="background-color: #24404C; margin-left: 0.5rem;">Export Excel</button>
+    </div>
+  </div>
+
+  <!-- Warning Banner -->
+  <div class="alert-banner shadow-sm">
+    <div class="alert-icon bg-gold-tint">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#B38634" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="alert-text">
+      <strong>Data Compliance Note:</strong> 
+      In accordance with **Step 2** of the Inventory of Equipment and Property guidelines, 
+      this report compiles physical count records per employee and office with 
+      <strong>supplier details and Official Receipt (OR) information strictly excluded and scrubbed</strong>.
+    </div>
+  </div>
+
+  <!-- High-fidelity Sheet Compilation Display -->
+  <div class="card shadow-sm" style="margin-top: 1.5rem;">
+    <div class="card-header">
+      {{ reportType === 'rpcppe' ? 'Report on the Physical Count of Property Plant and Equipment (RPCPPE)' : 'Report on the Physical Count of Semi-expendable Property (RPCSP)' }}
+    </div>
+    <div class="card-content" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="count-sheet-table">
+          <thead>
+            <tr>
+              <th style="width: 12%;">Property / Inventory No</th>
+              <th style="width: 10%;">Serial No</th>
+              <th style="width: 30%;">Article / Description</th>
+              <th style="width: 10%;">Date Acquired</th>
+              <th style="width: 10%;">Unit Cost</th>
+              <th style="width: 5%;">Qty</th>
+              <th style="width: 13%;">Accountable Officer</th>
+              <th style="width: 10%;">Condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let rec of filteredRecords">
+              <td><strong>{{ rec.property_no }}</strong></td>
+              <td><code>{{ rec.serial }}</code></td>
+              <td>
+                <div class="item-main-name">{{ rec.name }}</div>
+                <div class="item-desc-details">{{ rec.description }}</div>
+              </td>
+              <td>{{ rec.date }}</td>
+              <td><strong>₱{{ rec.cost | number:'1.2-2' }}</strong></td>
+              <td>1</td>
+              <td>{{ rec.officer }} ({{ rec.office }})</td>
+              <td>
+                <span class="condition-badge" [class.cond-good]="rec.condition === 'GOOD'" [class.cond-maint]="rec.condition === 'UNDER_MAINTENANCE'">
+                  {{ rec.condition === 'GOOD' ? 'Good Condition' : 'Under Maint.' }}
+                </span>
+              </td>
+            </tr>
+            <tr *ngIf="filteredRecords.length === 0">
+              <td colspan="8" style="text-align: center; padding: 3rem; color: var(--bsp-text-muted);">
+                No physical count records compile under the selected parameter combinations.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

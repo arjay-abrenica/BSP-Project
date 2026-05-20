@@ -1,0 +1,192 @@
+<div class="page-container">
+  <div class="page-title-bar no-print">
+    <h2>Property Sticker Visual Designer & Printer</h2>
+  </div>
+
+  <div class="designer-layout">
+    <!-- Left Configuration Sidebar -->
+    <div class="card config-sidebar shadow-sm no-print">
+      <div class="card-header">Sticker Custom Fields</div>
+      <div class="card-content">
+        <form>
+          <!-- Input fields matching sticker details -->
+          <div class="form-group">
+            <label for="propNo">Property Number</label>
+            <input type="text" id="propNo" class="bsp-input" [(ngModel)]="propertyNo" name="propertyNo">
+          </div>
+
+          <div class="form-group">
+            <label for="name">Asset Name</label>
+            <input type="text" id="name" class="bsp-input" [(ngModel)]="itemName" name="itemName">
+          </div>
+
+          <div class="form-group">
+            <label for="sn">Serial Number</label>
+            <input type="text" id="sn" class="bsp-input" [(ngModel)]="serialNo" name="serialNo">
+          </div>
+
+          <div class="form-group">
+            <label for="date">Acquisition Date</label>
+            <input type="date" id="date" class="bsp-input" [(ngModel)]="dateAcquired" name="dateAcquired">
+          </div>
+
+          <div class="form-group" *ngIf="showOfficer">
+            <label for="officer">Accountable Officer</label>
+            <input type="text" id="officer" class="bsp-input" [(ngModel)]="accountableOfficer" name="accountableOfficer">
+          </div>
+
+          <hr class="divider">
+
+          <!-- Styling parameters -->
+          <div class="form-group">
+            <label>Print Layout Mode</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="printMode" [(ngModel)]="printMode" value="single"> Single Tag
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="printMode" [(ngModel)]="printMode" value="grid"> 3x3 Sheet Matrix
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Display Toggles</label>
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="showLogo" name="showLogo"> Show BSP Logo
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="showOfficer" name="showOfficer"> Show Officer Name
+            </label>
+          </div>
+
+          <button type="button" class="bsp-btn print-action-btn" (click)="printStickers()">Print Property Tags</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Live Preview Dashboard -->
+    <div class="preview-area scrollable-content" id="print-area">
+      <!-- ═══ SINGLE TAG PREVIEW ═══ -->
+      <div class="single-tag-container" *ngIf="printMode === 'single'">
+        <div class="tag-heading-note no-print">Live Single Tag Preview (Exact Printable Boundary)</div>
+        
+        <div class="bsp-property-tag" [class.size-small]="fontSize === 'small'" [class.size-large]="fontSize === 'large'">
+          <div class="tag-header">
+            <img src="assets/img/bspLogo.png" alt="BSP Logo" class="tag-logo" *ngIf="showLogo">
+            <div class="tag-header-titles">
+              <h1>BOY SCOUTS OF THE PHILIPPINES</h1>
+              <p>PROPERTY & EQUIPMENT INVENTORY TAG</p>
+            </div>
+          </div>
+          
+          <div class="tag-body">
+            <div class="tag-row border-bottom">
+              <span class="tag-label">PROPERTY NO:</span>
+              <span class="tag-value prop-no-bold">{{ propertyNo }}</span>
+            </div>
+            
+            <div class="tag-row border-bottom">
+              <span class="tag-label">ASSET NAME:</span>
+              <span class="tag-value">{{ itemName }}</span>
+            </div>
+
+            <div class="tag-double-row border-bottom">
+              <div class="tag-half">
+                <span class="tag-label">SERIAL NO:</span>
+                <span class="tag-value"><code>{{ serialNo }}</code></span>
+              </div>
+              <div class="tag-half border-left">
+                <span class="tag-label">DATE ACQUIRED:</span>
+                <span class="tag-value">{{ dateAcquired | date:'MM/dd/yyyy' }}</span>
+              </div>
+            </div>
+
+            <div class="tag-row" *ngIf="showOfficer">
+              <span class="tag-label">ASSIGNED TO:</span>
+              <span class="tag-value font-bold">{{ accountableOfficer }}</span>
+            </div>
+          </div>
+
+          <!-- Simulated Sleek Scannable Barcode -->
+          <div class="tag-barcode-wrap">
+            <div class="simulated-barcode">
+              <!-- Grid of vertical bars resembling barcode -->
+              <span class="bar thickness-2"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-3"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-2"></span>
+              <span class="bar thickness-4"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-3"></span>
+              <span class="bar thickness-2"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-4"></span>
+              <span class="bar thickness-2"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-3"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-2"></span>
+              <span class="bar thickness-4"></span>
+              <span class="bar thickness-1"></span>
+              <span class="bar thickness-3"></span>
+              <span class="bar thickness-2"></span>
+            </div>
+            <span class="barcode-number">{{ propertyNo }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 3x3 SHEET MATRIX PREVIEW ═══ -->
+      <div class="grid-sheet-container" *ngIf="printMode === 'grid'">
+        <div class="tag-heading-note no-print" style="margin-bottom: 1.5rem;">Live 3x3 A4 Sheet Matrix Preview (Batch Printing Grid)</div>
+        
+        <div class="a4-sheet-mimic">
+          <div class="stickers-grid">
+            <div class="bsp-property-tag inline-grid-tag" *ngFor="let copy of [1,2,3,4,5,6,7,8,9]">
+              <div class="tag-header">
+                <img src="assets/img/bspLogo.png" alt="BSP Logo" class="tag-logo" *ngIf="showLogo">
+                <div class="tag-header-titles">
+                  <h1>BSP</h1>
+                  <p>INVENTORY TAG</p>
+                </div>
+              </div>
+              
+              <div class="tag-body">
+                <div class="tag-row border-bottom">
+                  <span class="tag-value prop-no-bold-grid">{{ propertyNo.split('-')[0] }}-{{ propertyNo.split('-')[1] }}-{{ propertyNo.split('-')[2] }}-00{{ copy }}</span>
+                </div>
+                <div class="tag-row border-bottom">
+                  <span class="tag-value text-ellipsis">{{ itemName }}</span>
+                </div>
+                <div class="tag-row border-bottom">
+                  <span class="tag-value">SN: {{ serialNo }}</span>
+                </div>
+                <div class="tag-row" *ngIf="showOfficer">
+                  <span class="tag-value font-bold text-ellipsis">TO: {{ accountableOfficer }}</span>
+                </div>
+              </div>
+
+              <div class="tag-barcode-wrap-grid">
+                <div class="simulated-barcode-grid">
+                  <span class="bar thickness-2"></span>
+                  <span class="bar thickness-1"></span>
+                  <span class="bar thickness-3"></span>
+                  <span class="bar thickness-1"></span>
+                  <span class="bar thickness-2"></span>
+                  <span class="bar thickness-4"></span>
+                  <span class="bar thickness-1"></span>
+                  <span class="bar thickness-3"></span>
+                  <span class="bar thickness-2"></span>
+                  <span class="bar thickness-1"></span>
+                  <span class="bar thickness-4"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -22,8 +22,12 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
-    // If unauthorized, redirect backward/to dashboard
-    this.router.navigate(['/admin/dashboard']);
+    // If unauthorized, redirect based on role to prevent infinite redirect loops
+    if (this.authService.hasRole(['ACTING_PROPERTY_CUSTODIAN'])) {
+      this.router.navigate(['/property/dashboard']);
+    } else {
+      this.router.navigate(['/admin/dashboard']);
+    }
     return false;
   }
 }

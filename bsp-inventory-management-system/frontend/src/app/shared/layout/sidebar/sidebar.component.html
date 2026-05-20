@@ -26,20 +26,20 @@
         </div>
 
         <ul class="nav-icons">
-            <li title="Dashboard" routerLinkActive="active">
-                <a routerLink="/admin/dashboard" (click)="isSecondaryMenuOpen = true">
+            <li title="Dashboard" [class.active]="router.url.includes('dashboard')">
+                <a [routerLink]="hasRole(['ACTING_PROPERTY_CUSTODIAN']) ? '/property/dashboard' : '/admin/dashboard'" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/dashboard-5480.png'); mask-image: url('Icons/dashboard-5480.png');"></span>
                 </a>
             </li>
-            <li title="Inventory" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
+            <li title="Inventory" [class.active]="router.url.includes('inventory')" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
                 <a routerLink="/inventory" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/ready-stock.png'); mask-image: url('Icons/ready-stock.png');"></span>
                 </a>
             </li>
-            <li title="Property" routerLinkActive="active" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])">
-                <a routerLink="/property" (click)="isSecondaryMenuOpen = true">
+            <li title="Property" [class.active]="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports')" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'ACTING_PROPERTY_CUSTODIAN'])">
+                <a [routerLink]="hasRole(['ACTING_PROPERTY_CUSTODIAN']) || hasRole(['SUPERADMIN']) ? '/property/registry' : '/property/overview'" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/home-2503.png'); mask-image: url('Icons/home-2503.png');"></span>
                 </a>
@@ -51,13 +51,13 @@
                         style="-webkit-mask-image: url('Icons/document.png'); mask-image: url('Icons/document.png');"></span>
                 </a>
             </li>
-            <li title="Reports" routerLinkActive="active">
-                <a routerLink="/reports" (click)="isSecondaryMenuOpen = true">
+            <li title="Reports" [class.active]="router.url.includes('reports')">
+                <a [routerLink]="hasRole(['ACTING_PROPERTY_CUSTODIAN']) ? '/property/reports' : '/reports'" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/chart (1).png'); mask-image: url('Icons/chart (1).png');"></span>
                 </a>
             </li>
-            <li title="History" routerLinkActive="active">
+            <li title="History" [class.active]="router.url.includes('history')" *ngIf="!hasRole(['ACTING_PROPERTY_CUSTODIAN'])">
                 <a routerLink="/history" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/history-timer-clock-blue-outline-26312.png'); mask-image: url('Icons/history-timer-clock-blue-outline-26312.png');"></span>
@@ -151,7 +151,7 @@
         <div class="menu-content">
 
             <!-- Dashboard Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('dashboard') || router.url === '/'"
+            <div class="menu-group" *ngIf="(router.url.includes('dashboard') || router.url === '/') && !router.url.includes('property')"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Dashboard</span>
@@ -161,6 +161,21 @@
                 <ul class="sub-menu">
                     <li class="active-sub">
                         <span class="dot"></span> Overview
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Property Dashboard Menu (Custodian) -->
+            <div class="menu-group" *ngIf="router.url.includes('property/dashboard') && hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])"
+                [class.active-group]="true">
+                <div class="group-header">
+                    <span>Property Dashboard</span>
+                    <span class="indicator">-</span>
+                </div>
+
+                <ul class="sub-menu">
+                    <li routerLink="/property/dashboard" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Property Dashboard
                     </li>
                 </ul>
             </div>
@@ -188,16 +203,25 @@
             </div>
 
             <!-- Property Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('property') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER'])"
+            <div class="menu-group" *ngIf="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'ACTING_PROPERTY_CUSTODIAN'])"
                 [class.active-group]="true">
                 <div class="group-header">
-                    <span>Property</span>
+                    <span>Property Operations</span>
                     <span class="indicator">-</span>
                 </div>
 
                 <ul class="sub-menu">
-                    <li routerLink="/property/overview" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                    <li *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER']) && !hasRole(['ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/overview" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Property Overview
+                    </li>
+                    <li *ngIf="hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/iar-encode" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Encode IAR
+                    </li>
+                    <li *ngIf="hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/registry" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Property Registry (PAR/ICS)
+                    </li>
+                    <li *ngIf="hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/stickers" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                        <span class="dot"></span> Sticker Tag Generator
                     </li>
                 </ul>
             </div>
@@ -225,7 +249,7 @@
                 </div>
 
                 <!-- Reports Menu -->
-                <div class="menu-group" *ngIf="router.url.includes('reports')" [class.active-group]="true">
+                <div class="menu-group" *ngIf="router.url.includes('reports') && !router.url.includes('property')" [class.active-group]="true">
                     <div class="group-header">
                         <span>Reports</span>
                         <span class="indicator">-</span>
@@ -239,6 +263,21 @@
                         </li>
                         <li routerLink="/reports/analysis" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                             <span class="dot"></span> Office Supply Analysis
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Property Reports Menu (Custodian) -->
+                <div class="menu-group" *ngIf="router.url.includes('property/reports') && hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])"
+                    [class.active-group]="true">
+                    <div class="group-header">
+                        <span>Property Reports</span>
+                        <span class="indicator">-</span>
+                    </div>
+
+                    <ul class="sub-menu">
+                        <li routerLink="/property/reports" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
+                            <span class="dot"></span> Physical Count Sheets
                         </li>
                     </ul>
                 </div>
