@@ -38,6 +38,8 @@ export class AddItem implements OnInit {
       item_name: ['', Validators.required],
       category_id: ['', Validators.required],
       unit_of_measure: ['', Validators.required],
+      brand: [''],
+      size: [''],
       description: [''],
       supplier_name: [''],
       unit_price: [0, Validators.min(0)],
@@ -116,6 +118,8 @@ export class AddItem implements OnInit {
       item_name: item.item_name,
       category_id: item.category_id,
       unit_of_measure: item.unit_of_measure,
+      brand: item.brand,
+      size: item.size,
       description: item.description,
       reorder_level: item.reorder_level
     });
