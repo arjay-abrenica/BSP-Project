@@ -36,7 +36,11 @@ export class Login {
     
     // Redirect to dashboard if already logged in
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/admin/dashboard']);
+      if (this.authService.hasRole(['ACTING_PROPERTY_CUSTODIAN'])) {
+        this.router.navigate(['/property/dashboard']);
+      } else {
+        this.router.navigate(['/admin/dashboard']);
+      }
     }
   }
 
@@ -52,7 +56,11 @@ export class Login {
     this.authService.login(username, password).subscribe({
       next: () => {
         // Login successful, redirect to dashboard
-        this.router.navigate(['/admin/dashboard']);
+        if (this.authService.hasRole(['ACTING_PROPERTY_CUSTODIAN'])) {
+          this.router.navigate(['/property/dashboard']);
+        } else {
+          this.router.navigate(['/admin/dashboard']);
+        }
       },
       error: (err) => {
         // Handle login error (e.g., wrong password)

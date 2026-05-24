@@ -1,0 +1,229 @@
+.filter-top-bar {
+  background-color: var(--white);
+  border: 1px solid rgba(0, 94, 56, 0.08);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.015);
+
+  @media (max-width: 1650px) {
+    /* Switch to a beautiful two-row layout to prevent spillage on standard screens */
+    flex-wrap: wrap;
+    gap: 1.1rem;
+
+    .report-type-toggle {
+      width: 100%;
+      display: flex;
+      box-sizing: border-box;
+
+      .toggle-btn {
+        flex: 1;
+        text-align: center;
+      }
+    }
+
+    .filters-input-group {
+      width: auto;
+      flex-grow: 1;
+    }
+
+    .action-buttons-wrap {
+      margin-left: auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+    /* Full stacked block layout for touch displays */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+
+    .filters-input-group {
+      flex-direction: column;
+      width: 100%;
+      gap: 0.8rem;
+    }
+
+    .action-buttons-wrap {
+      width: 100%;
+      margin-left: 0;
+      display: flex;
+
+      .bsp-btn {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.report-type-toggle {
+  display: inline-flex;
+  background-color: rgba(0, 94, 56, 0.04);
+  padding: 0.3rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 94, 56, 0.08);
+  flex-shrink: 0;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #618770;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    color: var(--bsp-dark-green);
+    background-color: rgba(0, 94, 56, 0.05);
+  }
+
+  &.active {
+    background-color: var(--bsp-dark-green);
+    color: var(--white);
+    box-shadow: 0 3px 12px rgba(0, 94, 56, 0.18);
+  }
+}
+
+.filters-input-group {
+  display: flex;
+  gap: 1rem;
+  flex-grow: 1;
+
+  @media (max-width: 900px) {
+    width: 100%;
+  }
+}
+
+.filter-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--bsp-dark-green);
+    white-space: nowrap;
+  }
+
+  .bsp-select-field {
+    width: 100%;
+    padding: 0.45rem 1.75rem 0.45rem 0.6rem;
+    border: 1px solid rgba(0, 94, 56, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--bsp-text-main);
+    background-color: var(--white);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 0.85em;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--bsp-dark-green);
+    }
+  }
+}
+
+.action-buttons-wrap {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+/* --- Alert Banner --- */
+.alert-banner {
+  background-color: rgba(225, 174, 88, 0.08);
+  border: 1px solid rgba(225, 174, 88, 0.25);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  box-sizing: border-box;
+
+  .alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .alert-text {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #555;
+
+    strong {
+      color: #b38634;
+    }
+  }
+}
+
+/* --- Count Sheet Table Layout --- */
+.count-sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+
+  th {
+    background-color: rgba(0, 94, 56, 0.04);
+    color: var(--bsp-dark-green);
+    font-weight: 700;
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid rgba(0, 94, 56, 0.1);
+  }
+
+  td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    vertical-align: middle;
+  }
+
+  .item-main-name {
+    font-weight: 700;
+    color: var(--bsp-dark-green);
+    margin-bottom: 0.15rem;
+  }
+
+  .item-desc-details {
+    font-size: 0.75rem;
+    color: var(--bsp-text-muted);
+  }
+}
+
+/* Condition badges */
+.condition-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.cond-good {
+  background-color: rgba(0, 94, 56, 0.08);
+  color: var(--bsp-dark-green);
+}
+
+.cond-maint {
+  background-color: rgba(225, 174, 88, 0.1);
+  color: #B38634;
+}

@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; 
-import { FormsModule } from '@angular/forms'; 
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -16,7 +16,7 @@ export interface ReportItem {
   reportNumber: string;
   type: 'pdf' | 'xls';
   office: string;
-  fileData?: string; 
+  fileData?: string;
   category?: string;
 }
 
@@ -36,20 +36,20 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent implements OnInit {
-  
+export class ReportsComponent implements OnInit, OnDestroy {
+
   constructor(
-    private authService: AuthService, 
+    private authService: AuthService,
     private sanitizer: DomSanitizer,
     private http: HttpClient
-  ) {}
-  
+  ) { }
+
   // Modal Fields
   selectedReportType: 'inventory' | 'rsmi' | 'summary' = 'inventory';
   selectedMonth: string = '';
   selectedYear: string = '';
   selectedFormat: 'pdf' | 'excel' = 'pdf';
-  
+
   reports: ReportItem[] = [];
   metrics: DashboardMetrics = {
     totalRequests: 0,
@@ -63,6 +63,14 @@ export class ReportsComponent implements OnInit {
   isGenerating: boolean = false;
   searchQuery: string = '';
   filterType: string = 'all';
+
+  // Dynamic Blob Preview Properties
+  private currentBlobUrl: string | null = null;
+  safeBlobUrl: SafeResourceUrl | null = null;
+
+  // Pagination Properties
+  currentPage: number = 1;
+  pageSize: number = 6;
 
   public monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -134,17 +142,107 @@ export class ReportsComponent implements OnInit {
     if (!this.searchQuery) {
       return baseList;
     }
-    
+
     const query = this.searchQuery.toLowerCase();
-    return baseList.filter(report => 
+    return baseList.filter(report =>
       report.title.toLowerCase().includes(query) ||
       report.dateGenerated.toLowerCase().includes(query) ||
       report.reportNumber.toLowerCase().includes(query)
     );
   }
 
+  // Pagination Accessors
+  get totalPages(): number {
+    return Math.ceil(this.filteredReports.length / this.pageSize) || 1;
+  }
+
+  get totalPagesArray(): number[] {
+    const total = this.totalPages;
+    const arr = [];
+    for (let i = 1; i <= total; i++) {
+      arr.push(i);
+    }
+    return arr;
+  }
+
+  get paginatedReports(): ReportItem[] {
+    const total = this.totalPages;
+    if (this.currentPage > total) {
+      this.currentPage = 1;
+    }
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.filteredReports.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  setPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
   selectReport(report: ReportItem) {
     this.selectedReport = report;
+    this.safeBlobUrl = null;
+
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
+    }
+
+    if (!report.fileData) {
+      this.http.get<{ fileData: string }>(`http://localhost:5000/api/reports/generated/${report.id}`).subscribe({
+        next: (res) => {
+          report.fileData = res.fileData;
+          if (this.selectedReport?.id === report.id) {
+            this.createSafeBlobUrl(res.fileData);
+          }
+        },
+        error: (err) => console.error('Failed to load report file data', err)
+      });
+    } else {
+      this.createSafeBlobUrl(report.fileData);
+    }
+  }
+
+  private createSafeBlobUrl(dataUri: string) {
+    try {
+      const blob = this.dataURIToBlob(dataUri);
+      this.currentBlobUrl = URL.createObjectURL(blob);
+      this.safeBlobUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.currentBlobUrl);
+    } catch (e) {
+      console.error('Failed to create blob URL', e);
+      this.safeBlobUrl = this.sanitizer.bypassSecurityTrustResourceUrl(dataUri);
+    }
+  }
+
+  private dataURIToBlob(dataURI: string): Blob {
+    const parts = dataURI.split(',');
+    const byteString = atob(parts[1]);
+    const mimeString = parts[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  }
+
+  ngOnDestroy() {
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+    }
   }
 
   deleteReport(report: ReportItem, event: Event) {
@@ -171,7 +269,7 @@ export class ReportsComponent implements OnInit {
   generateReport() {
     this.isGenerating = true;
     const monthNum = this.monthMap[this.selectedMonth];
-    
+
     let endpoint = '';
     if (this.selectedReportType === 'inventory') {
       endpoint = `http://localhost:5000/api/reports/monthly-inventory?month=${monthNum}&year=${this.selectedYear}`;
@@ -208,7 +306,7 @@ export class ReportsComponent implements OnInit {
   private archiveReport(pdfDataUri: string, filename: string, category: string) {
     const reportNum = 'BSP-' + Math.floor(Math.random() * 10000);
     const userOffice = this.authService.currentUserValue?.office || 'HQ';
-    
+
     const payload = {
       title: filename,
       report_number: `Report # ${reportNum}`,
@@ -244,7 +342,7 @@ export class ReportsComponent implements OnInit {
   private generateSummaryReport() {
     const issuanceSummary$ = this.http.get<any[]>('http://localhost:5000/api/reports/issuance-summary');
     const stockDist$ = this.http.get<any[]>('http://localhost:5000/api/reports/stock-distribution');
-    
+
     forkJoin({ issuances: issuanceSummary$, stocks: stockDist$ }).subscribe({
       next: (res) => {
         this.generateSummaryPDF(res.issuances, res.stocks);
@@ -282,7 +380,7 @@ export class ReportsComponent implements OnInit {
   private async generateInventoryPDF(data: any[]) {
     const doc = new jsPDF('landscape', 'pt', 'a4');
     const filename = `Inventory_Report_${this.selectedMonth}_${this.selectedYear}.pdf`;
-    
+
     const monthNum = parseInt(this.monthMap[this.selectedMonth]);
     const yearNum = parseInt(this.selectedYear);
     const curEnd = new Date(yearNum, monthNum, 0);
@@ -290,12 +388,12 @@ export class ReportsComponent implements OnInit {
 
     let logoData = '';
     try {
-        logoData = await this.getLogoBase64();
-    } catch (e) {}
+      logoData = await this.getLogoBase64();
+    } catch (e) { }
 
     const addHeader = (data: any) => {
       if (logoData) {
-          doc.addImage(logoData, 'PNG', 40, 25, 45, 45);
+        doc.addImage(logoData, 'PNG', 40, 25, 45, 45);
       }
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
@@ -306,7 +404,7 @@ export class ReportsComponent implements OnInit {
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.text(`INVENTORY REPORT AS OF ${curEndStr}`, doc.internal.pageSize.width / 2, 73, { align: 'center' });
-      
+
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       doc.text(`Page ${data.pageNumber}`, doc.internal.pageSize.width - 80, 40);
@@ -323,15 +421,15 @@ export class ReportsComponent implements OnInit {
         '', // Size
         item.unit_of_measure || '',
         item.beginning_qty || 0,
-        (item.beginning_qty * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+        (item.beginning_qty * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         '', // New Date
         item.total_in || 0,
-        (item.total_in * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
-        price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+        (item.total_in * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         item.total_out || 0,
-        (item.total_out * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+        (item.total_out * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
         item.ending_qty || 0,
-        (item.ending_qty * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
+        (item.ending_qty * price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       ];
     });
 
@@ -357,17 +455,17 @@ export class ReportsComponent implements OnInit {
       ],
       body: tableData,
       theme: 'grid',
-      styles: { 
-        fontSize: 6.5, 
-        cellPadding: 3, 
-        overflow: 'linebreak', 
-        lineColor: [0, 0, 0], 
+      styles: {
+        fontSize: 6.5,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        lineColor: [0, 0, 0],
         lineWidth: 0.5,
         textColor: [0, 0, 0],
         valign: 'middle'
       },
-      headStyles: { 
-        fillColor: [250, 245, 245], 
+      headStyles: {
+        fillColor: [250, 245, 245],
         fontStyle: 'bold',
         halign: 'center'
       },
@@ -390,7 +488,7 @@ export class ReportsComponent implements OnInit {
         15: { cellWidth: 32, halign: 'center' }, // END QTY
         16: { cellWidth: 48, halign: 'right' }  // END AMT
       },
-      didDrawPage: (data) => {
+      didDrawPage: (data: any) => {
         addHeader(data);
       },
       margin: { top: 95, bottom: 60, left: 20, right: 20 }
@@ -398,7 +496,7 @@ export class ReportsComponent implements OnInit {
 
     const finalY = (doc as any).lastAutoTable.finalY || 100;
     if (finalY > doc.internal.pageSize.height - 100) { doc.addPage(); }
-    
+
     const footerY = doc.internal.pageSize.height - 60;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
@@ -426,7 +524,7 @@ export class ReportsComponent implements OnInit {
   private async generateRSMIPDF(data: any[]) {
     const doc = new jsPDF('landscape', 'pt', 'a4');
     const filename = `RSMI_Report_${this.selectedMonth}_${this.selectedYear}.pdf`;
-    
+
     const monthNum = parseInt(this.monthMap[this.selectedMonth]);
     const yearNum = parseInt(this.selectedYear);
     const curEnd = new Date(yearNum, monthNum, 0);
@@ -434,8 +532,8 @@ export class ReportsComponent implements OnInit {
 
     let logoData = '';
     try {
-        logoData = await this.getLogoBase64();
-    } catch (e) {}
+      logoData = await this.getLogoBase64();
+    } catch (e) { }
 
     let grandTotal = 0;
     const tableData = data.map(item => {
@@ -447,8 +545,8 @@ export class ReportsComponent implements OnInit {
         item.item_name || '',
         item.unit_of_measure || '',
         item.quantity || 0,
-        parseFloat(item.unit_cost).toLocaleString(undefined, {minimumFractionDigits: 2}),
-        parseFloat(item.total_cost).toLocaleString(undefined, {minimumFractionDigits: 2})
+        parseFloat(item.unit_cost).toLocaleString(undefined, { minimumFractionDigits: 2 }),
+        parseFloat(item.total_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })
       ];
     });
 
@@ -463,14 +561,14 @@ export class ReportsComponent implements OnInit {
       ],
       body: [
         ...tableData,
-        [{ content: 'GRAND TOTAL', colSpan: 7, styles: { halign: 'right', fontStyle: 'bold' } }, { content: grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}), styles: { fontStyle: 'bold' } }]
+        [{ content: 'GRAND TOTAL', colSpan: 7, styles: { halign: 'right', fontStyle: 'bold' } }, { content: grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 }), styles: { fontStyle: 'bold' } }]
       ],
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 4, lineColor: [0, 0, 0], lineWidth: 0.2 },
       headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-      didDrawPage: (data) => {
+      didDrawPage: (data: any) => {
         if (logoData) {
-            doc.addImage(logoData, 'PNG', 40, 30, 50, 50);
+          doc.addImage(logoData, 'PNG', 40, 30, 50, 50);
         }
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
@@ -497,11 +595,11 @@ export class ReportsComponent implements OnInit {
 
     let logoData = '';
     try {
-        logoData = await this.getLogoBase64();
-    } catch (e) {}
+      logoData = await this.getLogoBase64();
+    } catch (e) { }
 
     if (logoData) {
-        doc.addImage(logoData, 'PNG', 40, 30, 50, 50);
+      doc.addImage(logoData, 'PNG', 40, 30, 50, 50);
     }
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');

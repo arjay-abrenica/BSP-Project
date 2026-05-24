@@ -57,7 +57,7 @@ export const routes: Routes = [
             // Property Redirect
             {
                 path: 'property',
-                redirectTo: 'property/overview',
+                redirectTo: 'property/dashboard',
                 pathMatch: 'full'
             },
             
@@ -68,6 +68,51 @@ export const routes: Routes = [
                 data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
                 loadComponent: () =>
                     import('./pages/property/property-overview/property-overview').then(c => c.PropertyOverview)
+            },
+
+            // Property > Dashboard (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/dashboard',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/property-dashboard/property-dashboard.component').then(c => c.PropertyDashboardComponent)
+            },
+
+            // Property > Encode IAR (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/iar-encode',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/iar-encode/iar-encode.component').then(c => c.IarEncodeComponent)
+            },
+
+            // Property > Registry (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/registry',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/property-registry/property-registry.component').then(c => c.PropertyRegistryComponent)
+            },
+
+            // Property > Physical Count Reports (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/reports',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/physical-count-reports/physical-count-reports.component').then(c => c.PhysicalCountReportsComponent)
+            },
+
+            // Property > Sticker Generator (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/stickers',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/sticker-generator/sticker-generator.component').then(c => c.StickerGeneratorComponent)
             },
             // Focal Person Module
             {

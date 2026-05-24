@@ -1,0 +1,298 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bsp-dark-green);
+  }
+}
+
+.bsp-input {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(0, 94, 56, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--bsp-text-main);
+  background-color: var(--white);
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--bsp-dark-green);
+    box-shadow: 0 0 0 3px rgba(0, 94, 56, 0.1);
+  }
+
+  &[readonly] {
+    background-color: #f5f5f5;
+    color: var(--bsp-text-muted);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 1.5rem 0;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--bsp-dark-green);
+  }
+
+  .btn-secondary {
+    background-color: rgba(0, 94, 56, 0.08);
+    color: var(--bsp-dark-green);
+    border: 1px solid rgba(0, 94, 56, 0.15);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--bsp-dark-green);
+      color: var(--white);
+    }
+  }
+}
+
+/* --- Table Container & Inputs --- */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+}
+
+.item-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  text-align: left;
+
+  th {
+    background-color: rgba(0, 94, 56, 0.04);
+    color: var(--bsp-dark-green);
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 94, 56, 0.1);
+  }
+
+  td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    vertical-align: middle;
+  }
+}
+
+.bsp-table-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  color: var(--bsp-text-main);
+  background-color: var(--white);
+
+  &:focus {
+    outline: none;
+    border-color: var(--bsp-dark-green);
+  }
+}
+
+.cost-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .currency {
+    position: absolute;
+    left: 0.5rem;
+    color: var(--bsp-text-muted);
+    font-weight: bold;
+  }
+
+  .cost-input {
+    padding-left: 1.25rem;
+  }
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(220, 53, 69, 0.08);
+  }
+}
+
+/* --- Routing Panel --- */
+.routing-panel {
+  background: linear-gradient(135deg, rgba(0, 94, 56, 0.04) 0%, rgba(0, 94, 56, 0.01) 100%);
+  border: 1px solid rgba(0, 94, 56, 0.12);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.routing-heading {
+  font-weight: 800;
+  color: var(--bsp-dark-green);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.1px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.routing-item {
+  display: grid;
+  grid-template-columns: 80px 1.2fr 1fr 1.5fr;
+  gap: 1.25rem;
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px dashed rgba(0, 94, 56, 0.1);
+  align-items: center;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 94, 56, 0.02);
+  }
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .item-index {
+    color: var(--bsp-text-muted);
+    font-weight: 700;
+  }
+
+  .item-summary-text {
+    font-weight: 700;
+    color: var(--bsp-dark-green);
+  }
+
+  .badge-tag {
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+    display: inline-block;
+  }
+
+  .badge-gold {
+    background-color: rgba(225, 174, 88, 0.12);
+    color: #A37524;
+    border: 1px solid rgba(225, 174, 88, 0.25);
+  }
+
+  .badge-teal {
+    background-color: rgba(121, 195, 182, 0.12);
+    color: #357368;
+    border: 1px solid rgba(121, 195, 182, 0.25);
+  }
+
+  .or-fields {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #A37524;
+      flex-shrink: 0;
+    }
+
+    .bsp-small-input {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid rgba(225, 174, 88, 0.35);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      width: 160px;
+      background-color: var(--white);
+      color: var(--bsp-text-main);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+      transition: all 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: #B38634;
+        box-shadow: 0 0 0 3px rgba(225, 174, 88, 0.15);
+      }
+    }
+  }
+}
+
+/* --- Form Actions --- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-cancel-main {
+  background-color: transparent;
+  color: var(--bsp-text-muted);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+    color: var(--bsp-text-main);
+  }
+}
+
+.btn-submit-main {
+  padding: 0.5rem 2rem;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,313 @@
+<div class="page-container">
+  <div class="page-title-bar">
+    <h2>Property Operations</h2>
+  </div>
+
+  <!-- Table Container Card styled exactly like supplies catalog -->
+  <div class="table-container">
+    <div class="catalog-header">
+      <h2 class="catalog-title">Property Registry (PAR/ICS)</h2>
+    </div>
+
+    <!-- Toolbar styled exactly like supplies catalog -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="search-input" placeholder="Search by Property No, Name, Serial or Officer..."
+          [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()">
+      </div>
+
+      <div class="actions-wrapper">
+        <div class="filter-dropdown-container">
+          <button class="btn-filter" (click)="toggleFilterDropdown()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Filter
+          </button>
+
+          <div class="filter-backdrop" *ngIf="showFilterDropdown" (click)="toggleFilterDropdown()"></div>
+          <div class="filter-dropdown" *ngIf="showFilterDropdown">
+            <div class="filter-header">
+              <h3>Filter By</h3>
+              <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
+            </div>
+
+            <div class="filter-body">
+              <div class="filter-group">
+                <label>Division</label>
+                <select [(ngModel)]="selectedOffice" class="filter-select" (ngModelChange)="applyFilters()">
+                  <option *ngFor="let off of offices" [value]="off">{{ off === 'ALL' ? 'All Divisions' : off }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="filter-footer">
+              <button class="btn-primary w-full" (click)="toggleFilterDropdown()">Apply Filter</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" routerLink="/property/iar-encode">
+          + Encode IAR
+        </button>
+      </div>
+    </div>
+
+    <!-- Segmented Tabs Inside Card Container -->
+    <div class="database-tabs-container">
+      <div class="database-tabs">
+        <span class="db-tab" [class.active]="activeTab === 'all'" (click)="setTab('all')">
+          All Tracked Assets
+        </span>
+        <span class="db-tab" [class.active]="activeTab === 'par'" (click)="setTab('par')">
+          Property, Plant & Equipment Database (PAR / >50k)
+        </span>
+        <span class="db-tab" [class.active]="activeTab === 'ics'" (click)="setTab('ics')">
+          Semi-Expendable Property Database (ICS / <50k)
+        </span>
+      </div>
+    </div>
+
+    <!-- Registry Data Table styled exactly like catalog table -->
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-prop-no">Property No</th>
+            <th class="col-asset-name">Asset Name</th>
+            <th class="col-desc">Description</th>
+            <th class="col-cost">Unit Cost</th>
+            <th class="col-serial">Serial Number</th>
+            <th class="col-office">Office</th>
+            <th class="col-officer">Accountable Officer</th>
+            <th class="col-class">Classification</th>
+            <th class="col-actions" style="text-align: right;">Form Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let prop of paginatedProperties" class="clickable-row">
+            <td class="col-prop-no font-medium"><strong>{{ prop.id }}</strong></td>
+            <td class="col-asset-name font-medium">{{ prop.name }}</td>
+            <td class="col-desc text-muted">{{ prop.description }}</td>
+            <td class="col-cost"><strong>₱{{ prop.cost | number:'1.2-2' }}</strong></td>
+            <td class="col-serial"><code>{{ prop.serial }}</code></td>
+            <td class="col-office">{{ prop.office }}</td>
+            <td class="col-officer font-medium">{{ prop.officer }}</td>
+            <td class="col-class">
+              <span class="status-badge" [class.status-par]="prop.type === 'PAR'" [class.status-ics]="prop.type === 'ICS'">
+                {{ prop.type === 'PAR' ? 'PAR (>50k)' : 'ICS (<50k)' }}
+              </span>
+            </td>
+            <td class="col-actions" style="text-align: right;">
+              <button class="btn-action-icon" title="View Document/Form" (click)="viewForm(prop)">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#005E38" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </button>
+              <button class="btn-action-icon" title="Print Property Sticker" routerLink="/property/stickers" style="margin-left: 0.5rem;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#E1AE58" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="7" y1="7" x2="17" y2="7"></line>
+                  <line x1="7" y1="12" x2="17" y2="12"></line>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredProperties.length === 0">
+            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--bsp-text-muted);">
+              No property registry items found matching the selected filters.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls matching supplies catalog -->
+    <div class="pagination-controls">
+      <div class="page-info-detailed">
+        Showing {{ filteredProperties.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, filteredProperties.length) }} of {{ filteredProperties.length }} entries
+      </div>
+      <div class="page-buttons">
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button class="btn-page" [disabled]="currentPage === totalPages || totalPages === 0" (click)="goToPage(currentPage + 1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     HIGH-FIDELITY OFFICIAL DOCUMENT MODAL PREVIEW
+     ========================================================================= -->
+<div class="modal-overlay" *ngIf="isFormModalOpen" (click)="closeFormModal()">
+  <div class="modal-content-document" (click)="$event.stopPropagation()">
+    <div class="document-modal-header no-print">
+      <h3>Official Form Document Print Preview</h3>
+      <div class="header-actions">
+        <button class="bsp-btn" (click)="printForm()">Print/Save to PDF</button>
+        <button class="btn-close-doc" (click)="closeFormModal()">✕</button>
+      </div>
+    </div>
+
+    <!-- Scrollable Printed Page Base -->
+    <div class="document-body scrollable-content" id="print-area">
+      <!-- ═══ PAR FORM PREVIEW (Above 50k) ═══ -->
+      <div class="paper-page" *ngIf="selectedPropForForm?.type === 'PAR'">
+        <div class="doc-header">
+          <div class="bsp-doc-logo-title">
+            <img src="assets/img/bspLogo.png" alt="BSP Logo" class="doc-logo-img">
+            <div class="doc-title-text">
+              <h2>BOY SCOUTS OF THE PHILIPPINES</h2>
+              <p>National Office, Manila</p>
+            </div>
+          </div>
+          <div class="form-title-block">
+            <h3>PROPERTY ACKNOWLEDGEMENT REPORT (PAR)</h3>
+            <p class="form-no">Report No: <strong>PAR-2026-{{ selectedPropForForm.id.split('-')[2] }}</strong></p>
+          </div>
+        </div>
+
+        <div class="doc-meta-info-grid">
+          <div class="meta-cell"><strong>Office/Division:</strong> {{ selectedPropForForm.office }}</div>
+          <div class="meta-cell"><strong>Date Acquired:</strong> {{ selectedPropForForm.date }}</div>
+          <div class="meta-cell"><strong>Supplier Name:</strong> {{ selectedPropForForm.supplier }}</div>
+          <div class="meta-cell"><strong>Official Receipt (OR):</strong> {{ selectedPropForForm.or_no }}</div>
+        </div>
+
+        <table class="doc-item-details-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Property No</th>
+              <th style="width: 15%;">Serial No</th>
+              <th style="width: 45%;">Description / Specifications</th>
+              <th style="width: 10%;">Qty</th>
+              <th style="width: 15%;">Unit Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>{{ selectedPropForForm.id }}</strong></td>
+              <td><code>{{ selectedPropForForm.serial }}</code></td>
+              <td><strong>{{ selectedPropForForm.name }}</strong> - {{ selectedPropForForm.description }}</td>
+              <td>1 Unit</td>
+              <td><strong>₱{{ selectedPropForForm.cost | number:'1.2-2' }}</strong></td>
+            </tr>
+            <!-- Fillers for paper look -->
+            <tr *ngFor="let dummy of [1,2,3,4]">
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td class="text-muted-print">--- Nothing Follows ---</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Signature blocks -->
+        <div class="signature-section">
+          <div class="sig-block">
+            <p>Received by:</p>
+            <div class="sig-line"></div>
+            <p class="sig-name">{{ selectedPropForForm.officer }}</p>
+            <p class="sig-title">Accountable Officer</p>
+            <p class="sig-date">Date: ______________</p>
+          </div>
+          <div class="sig-block">
+            <p>Issued by:</p>
+            <div class="sig-line"></div>
+            <p class="sig-name">JERRY PROPERTY</p>
+            <p class="sig-title">Property Manager</p>
+            <p class="sig-date">Date: ______________</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ ICS FORM PREVIEW (Below 50k - Strictly Excluding Supplier & OR) ═══ -->
+      <div class="paper-page" *ngIf="selectedPropForForm?.type === 'ICS'">
+        <div class="doc-header">
+          <div class="bsp-doc-logo-title">
+            <img src="assets/img/bspLogo.png" alt="BSP Logo" class="doc-logo-img">
+            <div class="doc-title-text">
+              <h2>BOY SCOUTS OF THE PHILIPPINES</h2>
+              <p>National Office, Manila</p>
+            </div>
+          </div>
+          <div class="form-title-block">
+            <h3>INVENTORY CUSTODIAN SLIP (ICS)</h3>
+            <p class="form-no">Slip No: <strong>ICS-2026-{{ selectedPropForForm.id.split('-')[2] }}</strong></p>
+          </div>
+        </div>
+
+        <!-- Note Supplier info is EXCLUDED here in meta info -->
+        <div class="doc-meta-info-grid">
+          <div class="meta-cell"><strong>Office/Division:</strong> {{ selectedPropForForm.office }}</div>
+          <div class="meta-cell"><strong>Date Acquired:</strong> {{ selectedPropForForm.date }}</div>
+          <div class="meta-cell" style="grid-column: span 2; background-color: rgba(0,0,0,0.02);">
+            <em class="text-gold">* Semi-Expendable Property (Below 50k threshold)</em>
+          </div>
+        </div>
+
+        <table class="doc-item-details-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Inventory No</th>
+              <th style="width: 15%;">Serial No</th>
+              <th style="width: 55%;">Description</th>
+              <th style="width: 15%;">Unit Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>{{ selectedPropForForm.id }}</strong></td>
+              <td><code>{{ selectedPropForForm.serial }}</code></td>
+              <td><strong>{{ selectedPropForForm.name }}</strong> - {{ selectedPropForForm.description }}</td>
+              <td><strong>₱{{ selectedPropForForm.cost | number:'1.2-2' }}</strong></td>
+            </tr>
+            <!-- Fillers for paper look -->
+            <tr *ngFor="let dummy of [1,2,3,4]">
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td class="text-muted-print">--- Nothing Follows ---</td>
+              <td>&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Signature blocks -->
+        <div class="signature-section">
+          <div class="sig-block">
+            <p>Received by:</p>
+            <div class="sig-line"></div>
+            <p class="sig-name">{{ selectedPropForForm.officer }}</p>
+            <p class="sig-title">Accountable Officer</p>
+            <p class="sig-date">Date: ______________</p>
+          </div>
+          <div class="sig-block">
+            <p>Issued by:</p>
+            <div class="sig-line"></div>
+            <p class="sig-name">JERRY PROPERTY</p>
+            <p class="sig-title">Property Manager</p>
+            <p class="sig-date">Date: ______________</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

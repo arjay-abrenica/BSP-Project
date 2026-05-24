@@ -1,0 +1,127 @@
+<div class="page-container">
+  <div class="page-title-bar">
+    <h2>Encode New Inspection & Acceptance Report (IAR)</h2>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header">General Report Details</div>
+    <div class="card-content">
+      <form (submit)="onSubmit()">
+        <!-- Report Header Grid -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="iarNo">IAR Report Number</label>
+            <input type="text" id="iarNo" class="bsp-input" [(ngModel)]="iarNo" name="iarNo" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="supplierName">Supplier Name</label>
+            <input type="text" id="supplierName" class="bsp-input" [(ngModel)]="supplierName" name="supplierName" placeholder="Enter supplier name...">
+          </div>
+
+          <div class="form-group">
+            <label for="invoiceNo">Invoice Number</label>
+            <input type="text" id="invoiceNo" class="bsp-input" [(ngModel)]="invoiceNo" name="invoiceNo" placeholder="Enter invoice number...">
+          </div>
+
+          <div class="form-group">
+            <label for="invoiceDate">Invoice Date</label>
+            <input type="date" id="invoiceDate" class="bsp-input" [(ngModel)]="invoiceDate" name="invoiceDate">
+          </div>
+
+          <div class="form-group">
+            <label for="receivedDate">Date Received</label>
+            <input type="date" id="receivedDate" class="bsp-input" [(ngModel)]="receivedDate" name="receivedDate">
+          </div>
+
+          <div class="form-group">
+            <label for="inspectionDate">Date Inspected</label>
+            <input type="date" id="inspectionDate" class="bsp-input" [(ngModel)]="inspectionDate" name="inspectionDate">
+          </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Encoded Items Section -->
+        <div class="section-title">
+          <h3>Received Items & Equipment Units</h3>
+          <button type="button" class="btn-secondary" (click)="addItemRow()">+ Add Item Row</button>
+        </div>
+
+        <div class="table-container">
+          <table class="item-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Item Name</th>
+                <th style="width: 25%;">Description</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 10%;">Unit</th>
+                <th style="width: 15%;">Unit Cost</th>
+                <th style="width: 15%;">Serial Number</th>
+                <th style="width: 5%;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items; let idx = index" class="item-row">
+                <td>
+                  <input type="text" class="bsp-table-input" [(ngModel)]="item.name" [name]="'name_' + idx" placeholder="e.g. Laptop..." required>
+                </td>
+                <td>
+                  <input type="text" class="bsp-table-input" [(ngModel)]="item.description" [name]="'desc_' + idx" placeholder="e.g. Intel i7, 16GB...">
+                </td>
+                <td>
+                  <input type="number" class="bsp-table-input" [(ngModel)]="item.quantity" [name]="'qty_' + idx" min="1" required>
+                </td>
+                <td>
+                  <input type="text" class="bsp-table-input" [(ngModel)]="item.unit" [name]="'unit_' + idx" placeholder="e.g. Unit...">
+                </td>
+                <td>
+                  <div class="cost-input-wrapper">
+                    <span class="currency">₱</span>
+                    <input type="number" class="bsp-table-input cost-input" [(ngModel)]="item.unit_cost" [name]="'cost_' + idx" min="0" required>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" class="bsp-table-input" [(ngModel)]="item.serial_no" [name]="'serial_' + idx" placeholder="SN-12345...">
+                </td>
+                <td>
+                  <button type="button" class="btn-remove" (click)="removeItemRow(idx)" *ngIf="items.length > 1">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc3545" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Costs routing details panel -->
+        <div class="routing-panel" *ngIf="items.length > 0">
+          <div class="routing-heading">Classification & Routing Rules Summary</div>
+          <div *ngFor="let item of items; let idx = index" class="routing-item">
+            <span class="item-index">Item #{{ idx + 1 }}</span>
+            <span class="item-summary-text" *ngIf="item.name">{{ item.name }} (₱{{ item.unit_cost | number:'1.2-2' }})</span>
+            <span class="item-summary-text" *ngIf="!item.name">Unnamed Item (₱{{ item.unit_cost | number:'1.2-2' }})</span>
+
+            <div class="badge-tag" [class.badge-gold]="item.unit_cost >= 50000" [class.badge-teal]="item.unit_cost < 50000">
+              {{ item.unit_cost >= 50000 ? 'PAR Form Generated (>50k)' : 'ICS Form Generated (<50k)' }}
+            </div>
+
+            <!-- Required OR details if above 50k -->
+            <div class="or-fields" *ngIf="item.unit_cost >= 50000">
+              <label [for]="'or_' + idx">Official Receipt (OR) Number from Supplier:</label>
+              <input type="text" [id]="'or_' + idx" class="bsp-small-input" [(ngModel)]="item.or_number" [name]="'or_' + idx" placeholder="Enter OR Number..." required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel-main" routerLink="/property/dashboard">Cancel</button>
+          <button type="submit" class="bsp-btn btn-submit-main">Submit & Generate Forms</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

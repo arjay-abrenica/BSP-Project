@@ -58,7 +58,7 @@
                     <div class="empty-list" *ngIf="filteredReports.length === 0">
                         No reports found matching your criteria.
                     </div>
-                    <div class="report-item" *ngFor="let report of filteredReports" [class.selected]="selectedReport === report" (click)="selectReport(report)">
+                    <div class="report-item" *ngFor="let report of paginatedReports" [class.selected]="selectedReport === report" (click)="selectReport(report)">
                         <div class="report-icon" [ngClass]="report.type">
                             <span class="icon-text">{{report.type.toUpperCase()}}</span>
                         </div>
@@ -74,6 +74,26 @@
                             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     </div>
+                </div>
+
+                <!-- Premium Pagination Controls -->
+                <div class="pagination-container" *ngIf="totalPages > 1">
+                    <button class="pag-btn" (click)="prevPage()" [disabled]="currentPage === 1" title="Previous Page">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    
+                    <div class="pag-pages">
+                        <button *ngFor="let page of totalPagesArray" 
+                                class="page-num-btn" 
+                                [class.active]="currentPage === page" 
+                                (click)="setPage(page)">
+                            {{page}}
+                        </button>
+                    </div>
+                    
+                    <button class="pag-btn" (click)="nextPage()" [disabled]="currentPage === totalPages" title="Next Page">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -94,14 +114,19 @@
                             <h3>{{selectedReport.title}}</h3>
                             <span>{{selectedReport.reportNumber}} | Generated on {{selectedReport.dateGenerated}}</span>
                        </div>
-                       <a [href]="getSafeUrl(selectedReport.fileData)" [download]="selectedReport.title" class="download-btn">
+                       <button *ngIf="selectedReport.fileData" (click)="downloadReport(selectedReport)" class="download-btn">
                             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
-                       </a>
+                       </button>
                    </div>
                    
-                   <iframe *ngIf="selectedReport.fileData" 
-                       [src]="getSafeUrl(selectedReport.fileData)" 
+                   <div class="loading-report" *ngIf="!selectedReport.fileData">
+                        <div class="spinner"></div>
+                        <p>Loading document from database...</p>
+                   </div>
+
+                   <iframe *ngIf="safeBlobUrl" 
+                       [src]="safeBlobUrl" 
                        class="viewer-iframe">
                    </iframe>
                 </div>
