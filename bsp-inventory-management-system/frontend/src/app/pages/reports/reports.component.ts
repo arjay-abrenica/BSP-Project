@@ -18,6 +18,7 @@ export interface ReportItem {
   office: string;
   fileData?: string;
   category?: string;
+  status?: string;
 }
 
 export interface DashboardMetrics {
@@ -63,6 +64,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
   isGenerating: boolean = false;
   searchQuery: string = '';
   filterType: string = 'all';
+  selectedCategoryFilter: string = 'all';
+  
+  // Custom Confirmation Modal properties (Dynamic Archive / Restore)
+  isConfirmModalOpen: boolean = false;
+  confirmModalAction: 'archive' | 'restore' = 'archive';
+  reportTarget: ReportItem | null = null;
+  showArchived: boolean = false;
 
   // Dynamic Blob Preview Properties
   private currentBlobUrl: string | null = null;
@@ -139,6 +147,13 @@ export class ReportsComponent implements OnInit, OnDestroy {
       baseList = baseList.filter(r => r.type === this.filterType);
     }
 
+    const targetStatus = this.showArchived ? 'ARCHIVED' : 'ACTIVE';
+    baseList = baseList.filter(r => (r.status || 'ACTIVE').toUpperCase() === targetStatus);
+
+    if (this.selectedCategoryFilter !== 'all') {
+      baseList = baseList.filter(r => r.category?.toUpperCase() === this.selectedCategoryFilter.toUpperCase());
+    }
+
     if (!this.searchQuery) {
       return baseList;
     }
@@ -178,6 +193,11 @@ export class ReportsComponent implements OnInit, OnDestroy {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
     }
+  }
+
+  setCategoryFilter(category: string) {
+    this.selectedCategoryFilter = category;
+    this.currentPage = 1;
   }
 
   nextPage() {
@@ -245,15 +265,69 @@ export class ReportsComponent implements OnInit, OnDestroy {
     }
   }
 
-  deleteReport(report: ReportItem, event: Event) {
+  toggleArchiveView(archived: boolean) {
+    this.showArchived = archived;
+    this.currentPage = 1;
+    this.selectedReport = null;
+    this.safeBlobUrl = null;
+  }
+
+  triggerArchive(report: ReportItem, event: Event) {
     event.stopPropagation();
-    if (confirm('Are you sure you want to delete this report permanently?')) {
+    this.reportTarget = report;
+    this.confirmModalAction = 'archive';
+    this.isConfirmModalOpen = true;
+  }
+
+  triggerRestore(report: ReportItem, event: Event) {
+    event.stopPropagation();
+    this.reportTarget = report;
+    this.confirmModalAction = 'restore';
+    this.isConfirmModalOpen = true;
+  }
+
+  cancelConfirm() {
+    this.isConfirmModalOpen = false;
+    this.reportTarget = null;
+  }
+
+  executeConfirm() {
+    if (!this.reportTarget) return;
+
+    const report = this.reportTarget;
+    if (this.confirmModalAction === 'archive') {
       this.http.delete(`http://localhost:5000/api/reports/generated/${report.id}`).subscribe({
         next: () => {
-          this.reports = this.reports.filter(r => r.id !== report.id);
-          if (this.selectedReport?.id === report.id) this.selectedReport = null;
+          report.status = 'ARCHIVED';
+          this.reports = [...this.reports];
+          if (this.selectedReport?.id === report.id) {
+            this.selectedReport = null;
+            this.safeBlobUrl = null;
+          }
+          this.cancelConfirm();
         },
-        error: (err) => alert('Failed to delete report from server.')
+        error: (err) => {
+          console.error(err);
+          alert('Failed to archive report.');
+          this.cancelConfirm();
+        }
+      });
+    } else {
+      this.http.put(`http://localhost:5000/api/reports/generated/${report.id}/restore`, {}).subscribe({
+        next: () => {
+          report.status = 'ACTIVE';
+          this.reports = [...this.reports];
+          if (this.selectedReport?.id === report.id) {
+            this.selectedReport = null;
+            this.safeBlobUrl = null;
+          }
+          this.cancelConfirm();
+        },
+        error: (err) => {
+          console.error(err);
+          alert('Failed to restore report.');
+          this.cancelConfirm();
+        }
       });
     }
   }

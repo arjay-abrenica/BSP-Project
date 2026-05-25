@@ -79,15 +79,12 @@
 
     <!-- Right Panel -->
     <div class="panel details-panel">
-      <div class="page-title-bar" *ngIf="activeTab !== 'direct'">
-        <h2>Outflow / Issuance</h2>
+      <div class="panel-header">
+        <h3>Outflow / Issuance</h3>
       </div>
       
       <!-- PENDING TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'pending'">
-        <div class="panel-header" style="border-top-left-radius: 0; border-top-right-radius: 0;">
-          <h3>Request Details</h3>
-        </div>
         
         <div class="details-content" *ngIf="selectedRequest">
           <div class="details-info-grid">
@@ -140,10 +137,8 @@
           </table>
           <div class="table-footer-text">x x x Nothing Follows x x x</div>
 
-          <div class="issue-request-box">
-            <div class="panel-header inner-header">
-              <h3>Issue Request</h3>
-            </div>
+          <div class="issue-request-box" style="margin-top: 20px;">
+            <h4 class="table-title" style="margin-bottom: 12px;">Issue Request Form</h4>
             
             <form [formGroup]="issueForm" class="issue-form" (ngSubmit)="approveRequest()">
               <div class="form-inputs">
@@ -202,9 +197,6 @@
 
       <!-- APPROVED TAB RIGHT PANEL -->
       <ng-container *ngIf="activeTab === 'approved'">
-        <div class="panel-header">
-          <h3>Issuance History by Office</h3>
-        </div>
         
         <div class="details-content" *ngIf="selectedApprovedOfficeId !== -1">
           <div class="office-header-summary">

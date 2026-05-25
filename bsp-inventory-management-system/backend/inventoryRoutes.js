@@ -18,6 +18,9 @@ const upload = multer({
   }
 });
 
+// --- Public Item Image Stream (No authentication required for standard <img> tags) ---
+router.get('/items/:id/image', inventoryController.getItemImage);
+
 // --- Middleware: Apply authentication to all inventory routes ---
 router.use(authenticateToken);
 
@@ -70,8 +73,10 @@ router.get('/reports/monthly-rsmi', inventoryController.getMonthlyRSMIReport);
 
 // --- Generated Reports Storage ---
 router.get('/reports/generated', inventoryController.getGeneratedReports);
+router.get('/reports/generated/:id', inventoryController.getSingleGeneratedReport);
 router.post('/reports/generated', inventoryController.saveGeneratedReport);
 router.delete('/reports/generated/:id', inventoryController.deleteGeneratedReport);
+router.put('/reports/generated/:id/restore', inventoryController.restoreGeneratedReport);
 
 // --- Notifications ---
 router.get('/notifications', inventoryController.getNotifications);

@@ -191,4 +191,5 @@ INSERT INTO Users (username, password, email, office, role, status) VALUES
 ('focal_finance', 'BSPLagingHanda', 'finance.focal@scouts.gov.ph', 'FINANCE', 'FOCAL_OFFICER', 'Active'),
 ('focal_nss', 'BSPLagingHanda', 'nss.focal@scouts.gov.ph', 'NSS', 'FOCAL_OFFICER', 'Active'),
 ('focal_iao', 'BSPLagingHanda', 'iao.focal@scouts.gov.ph', 'IAO', 'FOCAL_OFFICER', 'Active'),
-('focal_pmdd', 'BSPLagingHanda', 'pmdd.focal@scouts.gov.ph', 'PMDD', 'FOCAL_OFFICER', 'Active');
+('focal_pmdd', 'BSPLagingHanda', 'pmdd.focal@scouts.gov.ph', 'PMDD', 'FOCAL_OFFICER', 'Active'),
+('sir_jerry', 'BSPLagingHanda', 'jerry.property@scouts.gov.ph', 'PMDD', 'ACTING_PROPERTY_CUSTODIAN', 'Active');

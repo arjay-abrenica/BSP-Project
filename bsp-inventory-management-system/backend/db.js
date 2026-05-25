@@ -14,6 +14,11 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+// Auto-migration: Ensure status column exists in Generated_Reports
+pool.query("ALTER TABLE Generated_Reports ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'ACTIVE'")
+  .then(() => console.log("Database Generated_Reports status column verified successfully."))
+  .catch(err => console.error("Database migration error for Generated_Reports status column:", err));
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool, // Exported for transaction management (client.connect)

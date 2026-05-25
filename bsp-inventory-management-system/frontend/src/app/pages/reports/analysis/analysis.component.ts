@@ -43,6 +43,7 @@ export interface ItemBreakdownRow {
 export class AnalysisComponent implements OnInit {
 
   activeAnalysisTab: 'detailed' | 'trend' | 'distribution' | 'category' | 'efficiency' = 'detailed';
+  currentYear: number = new Date().getFullYear();
 
   /* ── Tab A: Detailed ── */
   detailedData: DetailedAnalysisRow[] = [];
