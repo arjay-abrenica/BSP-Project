@@ -27,7 +27,12 @@ exports.getAllOffices = async (req, res) => {
 exports.getAllItems = async (req, res) => {
   try {
     const query = `
-      SELECT i.*, c.category_name, s.supplier_name 
+      SELECT 
+        i.item_id, i.item_code, i.item_name, i.description, i.brand, i.size, 
+        i.unit_of_measure, i.unit_price, i.category_id, i.supplier_id, 
+        i.current_stock, i.reorder_level, i.status,
+        CASE WHEN i.image_url IS NOT NULL THEN '/api/items/' || i.item_id || '/image' ELSE NULL END AS image_url,
+        c.category_name, s.supplier_name 
       FROM Items i
       LEFT JOIN Categories c ON i.category_id = c.category_id
       LEFT JOIN Suppliers s ON i.supplier_id = s.supplier_id
@@ -670,7 +675,16 @@ exports.issueItems = async (req, res) => {
 exports.getItemByCode = async (req, res) => {
   const { code } = req.params;
   try {
-    const result = await db.query('SELECT * FROM Items WHERE item_code = $1', [code]);
+    const query = `
+      SELECT 
+        item_id, item_code, item_name, description, brand, size, 
+        unit_of_measure, unit_price, category_id, supplier_id, 
+        current_stock, reorder_level, status,
+        CASE WHEN image_url IS NOT NULL THEN '/api/items/' || item_id || '/image' ELSE NULL END AS image_url
+      FROM Items 
+      WHERE item_code = $1
+    `;
+    const result = await db.query(query, [code]);
     if (result.rows.length === 0) return res.status(404).json({ message: 'Item not found' });
     res.status(200).json(result.rows[0]);
   } catch (err) {
@@ -1472,7 +1486,7 @@ exports.getGeneratedReports = async (req, res) => {
   try {
     const query = `
       SELECT 
-        report_id as id, title, report_number as "reportNumber", category, type, office, file_data as "fileData",
+        report_id as id, title, report_number as "reportNumber", category, type, office,
         TO_CHAR(created_at, 'Mon DD, YYYY') as "dateGenerated"
       FROM Generated_Reports
       ORDER BY created_at DESC
@@ -1489,6 +1503,54 @@ exports.deleteGeneratedReport = async (req, res) => {
   try {
     await db.query('DELETE FROM Generated_Reports WHERE report_id = $1', [id]);
     res.status(200).json({ message: 'Report deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getSingleGeneratedReport = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query(
+      'SELECT file_data as "fileData" FROM Generated_Reports WHERE report_id = $1',
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ message: 'Report not found' });
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getItemImage = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await db.query('SELECT image_url FROM Items WHERE item_id = $1', [id]);
+    if (result.rows.length === 0 || !result.rows[0].image_url) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    const imageUrl = result.rows[0].image_url;
+
+    // Check if it is a Data URI (base64)
+    if (imageUrl.startsWith('data:')) {
+      const matches = imageUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-+.]+);base64,(.*)$/);
+      if (matches && matches.length === 3) {
+        const contentType = matches[1];
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        res.writeHead(200, {
+          'Content-Type': contentType,
+          'Content-Length': buffer.length,
+          'Cache-Control': 'public, max-age=86400' // Cache image for 1 day
+        });
+        return res.end(buffer);
+      }
+    }
+
+    // If it is stored as a direct relative path (legacy/fallback)
+    return res.redirect(imageUrl);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
