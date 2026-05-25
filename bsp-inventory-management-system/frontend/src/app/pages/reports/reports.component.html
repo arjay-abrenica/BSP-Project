@@ -44,13 +44,25 @@
     <div class="reports-layout">
         <!-- Left Column: List -->
         <div class="bsp-panel list-panel">
-            <div class="panel-header">Recent Reports Archive</div>
+            <div class="panel-header">
+                <span>Recent Reports</span>
+                <div class="status-tabs">
+                    <button class="status-tab" [class.active]="!showArchived" (click)="toggleArchiveView(false)">Active</button>
+                    <button class="status-tab" [class.active]="showArchived" (click)="toggleArchiveView(true)">Archived</button>
+                </div>
+            </div>
             
             <div class="panel-body">
                 <div class="search-bar">
                     <div class="search-input-wrapper">
                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" placeholder="Search archive..." [(ngModel)]="searchQuery">
+                        <input type="text" placeholder="Search Report..." [(ngModel)]="searchQuery">
+                    </div>
+                    <div class="filter-pills-container">
+                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'all'" (click)="setCategoryFilter('all')">All</button>
+                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'INVENTORY'" (click)="setCategoryFilter('INVENTORY')">Inventory</button>
+                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'RSMI'" (click)="setCategoryFilter('RSMI')">RSMI</button>
+                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'SUMMARY'" (click)="setCategoryFilter('SUMMARY')">Summary</button>
                     </div>
                 </div>
                 
@@ -70,8 +82,11 @@
                             <div class="report-title">{{report.title}}</div>
                             <div class="report-date">{{report.dateGenerated}}</div>
                         </div>
-                        <button class="delete-action" (click)="deleteReport(report, $event)">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <button *ngIf="!showArchived" class="archive-action" (click)="triggerArchive(report, $event)" title="Archive Report">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                        </button>
+                        <button *ngIf="showArchived" class="restore-action" (click)="triggerRestore(report, $event)" title="Restore Report">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
                         </button>
                     </div>
                 </div>
@@ -192,6 +207,27 @@
             <button class="bsp-btn cancel-btn" (click)="closeGenerateModal()">Cancel</button>
             <button class="bsp-btn submit-btn" (click)="generateReport()">
                 Compile PDF
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Dynamic Confirmation Modal -->
+<div class="modal-overlay archive-modal-overlay" *ngIf="isConfirmModalOpen" (click)="cancelConfirm()">
+    <div class="modal-content confirmation-modal" (click)="$event.stopPropagation()">
+        <div class="modal-body confirm-body">
+            <div class="warn-icon-wrapper" [class.restore-icon]="confirmModalAction === 'restore'">
+                <svg *ngIf="confirmModalAction === 'archive'" viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                <svg *ngIf="confirmModalAction === 'restore'" viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+            </div>
+            <h3>{{confirmModalAction === 'archive' ? 'Archive Report?' : 'Restore Report?'}}</h3>
+            <p>Are you sure you want to {{confirmModalAction === 'archive' ? 'archive' : 'restore'}} <strong>{{reportTarget?.title}}</strong>? 
+               This will {{confirmModalAction === 'archive' ? 'remove it from the active list' : 'move it back to the active list'}}.</p>
+        </div>
+        <div class="modal-footer confirm-footer">
+            <button class="bsp-btn cancel-btn" (click)="cancelConfirm()">Cancel</button>
+            <button class="bsp-btn archive-confirm-btn" [class.restore-confirm-btn]="confirmModalAction === 'restore'" (click)="executeConfirm()">
+                {{confirmModalAction === 'archive' ? 'Yes, Archive' : 'Yes, Restore'}}
             </button>
         </div>
     </div>

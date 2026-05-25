@@ -1486,7 +1486,7 @@ exports.getGeneratedReports = async (req, res) => {
   try {
     const query = `
       SELECT 
-        report_id as id, title, report_number as "reportNumber", category, type, office,
+        report_id as id, title, report_number as "reportNumber", category, type, office, status,
         TO_CHAR(created_at, 'Mon DD, YYYY') as "dateGenerated"
       FROM Generated_Reports
       ORDER BY created_at DESC
@@ -1501,8 +1501,18 @@ exports.getGeneratedReports = async (req, res) => {
 exports.deleteGeneratedReport = async (req, res) => {
   const { id } = req.params;
   try {
-    await db.query('DELETE FROM Generated_Reports WHERE report_id = $1', [id]);
-    res.status(200).json({ message: 'Report deleted' });
+    await db.query("UPDATE Generated_Reports SET status = 'ARCHIVED' WHERE report_id = $1", [id]);
+    res.status(200).json({ message: 'Report archived' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.restoreGeneratedReport = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await db.query("UPDATE Generated_Reports SET status = 'ACTIVE' WHERE report_id = $1", [id]);
+    res.status(200).json({ message: 'Report restored' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

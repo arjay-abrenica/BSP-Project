@@ -242,6 +242,10 @@
   vertical-align: middle;
 }
 
+.data-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
 .data-table tbody tr:hover {
   background-color: rgba(0, 94, 56, 0.05);
 }

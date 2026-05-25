@@ -28,7 +28,7 @@
             <ng-container *ngIf="activeAnalysisTab === 'detailed'">
                 <div class="detailed-header-section">
                     <div class="title-block">
-                        <span class="year">2025</span>
+                        <span class="year">{{currentYear}}</span>
                         <span class="divider"></span>
                         <span class="quarter">Quarter 1</span>
                     </div>
@@ -47,9 +47,9 @@
                             <div class="form-group">
                                 <label>Year</label>
                                 <select class="bsp-select">
-                                    <option>2025</option>
-                                    <option>2024</option>
-                                    <option>2023</option>
+                                    <option>{{currentYear}}</option>
+                                    <option>{{currentYear - 1}}</option>
+                                    <option>{{currentYear - 2}}</option>
                                 </select>
                             </div>
                         </div>
@@ -81,7 +81,7 @@
                 <div class="chart-tab-layout">
                     <div class="chart-area">
                         <div class="chart-title-block">
-                            <div class="year-big">2025</div>
+                            <div class="year-big">{{currentYear}}</div>
                         </div>
                         <div class="chart-wrapper">
                             <canvas baseChart [data]="trendChartData" type="bar" [options]="trendChartOptions"></canvas>
@@ -121,7 +121,9 @@
                                 <div class="form-group">
                                     <label>Year</label>
                                     <select class="bsp-select">
-                                        <option>2025</option>
+                                        <option>{{currentYear}}</option>
+                                        <option>{{currentYear - 1}}</option>
+                                        <option>{{currentYear - 2}}</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -179,7 +181,7 @@
                 <div class="chart-tab-layout">
                     <div class="chart-area">
                         <div class="chart-title-block">
-                            <div class="year-big">2025</div>
+                            <div class="year-big">{{currentYear}}</div>
                             <div class="quarter-sub">Quarter 1</div>
                         </div>
                         <div class="chart-wrapper">
@@ -209,7 +211,9 @@
                                 <div class="form-group">
                                     <label>Year</label>
                                     <select class="bsp-select">
-                                        <option>2025</option>
+                                        <option>{{currentYear}}</option>
+                                        <option>{{currentYear - 1}}</option>
+                                        <option>{{currentYear - 2}}</option>
                                     </select>
                                 </div>
                             </div>
@@ -242,7 +246,7 @@
                 <div class="chart-tab-layout">
                     <div class="chart-area">
                         <div class="chart-title-block">
-                            <div class="year-big">2025</div>
+                            <div class="year-big">{{currentYear}}</div>
                             <div class="quarter-sub">Quarter 1</div>
                         </div>
                         <div class="chart-wrapper">
@@ -272,7 +276,9 @@
                                 <div class="form-group">
                                     <label>Year</label>
                                     <select class="bsp-select">
-                                        <option>2025</option>
+                                        <option>{{currentYear}}</option>
+                                        <option>{{currentYear - 1}}</option>
+                                        <option>{{currentYear - 2}}</option>
                                     </select>
                                 </div>
                             </div>
@@ -301,7 +307,7 @@
                 <div class="chart-tab-layout">
                     <div class="chart-area">
                         <div class="chart-title-block">
-                            <div class="year-big">2025</div>
+                            <div class="year-big">{{currentYear}}</div>
                             <div class="quarter-sub">Quarter 1</div>
                         </div>
                         <div class="chart-wrapper">
@@ -322,7 +328,9 @@
                                 <div class="form-group">
                                     <label>Year</label>
                                     <select class="bsp-select">
-                                        <option>2025</option>
+                                        <option>{{currentYear}}</option>
+                                        <option>{{currentYear - 1}}</option>
+                                        <option>{{currentYear - 2}}</option>
                                     </select>
                                 </div>
                             </div>

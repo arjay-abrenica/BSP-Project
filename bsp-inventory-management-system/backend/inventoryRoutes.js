@@ -76,6 +76,7 @@ router.get('/reports/generated', inventoryController.getGeneratedReports);
 router.get('/reports/generated/:id', inventoryController.getSingleGeneratedReport);
 router.post('/reports/generated', inventoryController.saveGeneratedReport);
 router.delete('/reports/generated/:id', inventoryController.deleteGeneratedReport);
+router.put('/reports/generated/:id/restore', inventoryController.restoreGeneratedReport);
 
 // --- Notifications ---
 router.get('/notifications', inventoryController.getNotifications);
