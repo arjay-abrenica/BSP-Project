@@ -61,14 +61,7 @@ export const routes: Routes = [
                 pathMatch: 'full'
             },
             
-            // Property > Property Overview
-            {
-                path: 'property/overview',
-                canActivate: [AuthGuard, RoleGuard],
-                data: { roles: ['SUPERADMIN', 'SUPPLY_OFFICER'] },
-                loadComponent: () =>
-                    import('./pages/property/property-overview/property-overview').then(c => c.PropertyOverview)
-            },
+
 
             // Property > Dashboard (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
             {

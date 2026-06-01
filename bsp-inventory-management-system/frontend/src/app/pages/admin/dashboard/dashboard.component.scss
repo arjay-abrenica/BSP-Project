@@ -22,12 +22,12 @@
 
 .supply-section {
     flex: 1;
-    border-left: 2px solid var(--bsp-dark-green);
+    border-left: 2px solid var(--bsp-border-green);
     padding-left: 1rem;
 
     @media (max-width: 1024px) {
         border-left: none;
-        border-top: 2px solid var(--bsp-dark-green);
+        border-top: 2px solid var(--bsp-border-green);
         padding-left: 0;
         padding-top: 0.5rem;
     }
@@ -40,12 +40,12 @@
     gap: 1rem;
 
     .stat-block {
-        border-left: 2px solid var(--bsp-dark-green);
+        border-left: 2px solid var(--bsp-border-green);
         padding-left: 1rem;
 
         @media (max-width: 1024px) {
             border-left: none;
-            border-top: 2px solid var(--bsp-dark-green);
+            border-top: 2px solid var(--bsp-border-green);
             padding-left: 0;
             padding-top: 0.5rem;
         }
@@ -162,7 +162,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    border-left: 2px solid var(--bsp-dark-green);
+    border-left: 2px solid var(--bsp-border-green);
     padding-left: 1rem;
     width: 100%;
     min-width: 0;
@@ -171,7 +171,7 @@
 
     @media (max-width: 1024px) {
         border-left: none;
-        border-top: 2px solid var(--bsp-dark-green);
+        border-top: 2px solid var(--bsp-border-green);
         padding-left: 0;
         padding-top: 1rem;
         min-height: 300px;
@@ -563,21 +563,21 @@
 /* Scrollable Content for Cards */
 .scrollable-content {
     overflow-y: auto !important;
-    
+
     /* Custom Scrollbar for a clean look */
     &::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     &::-webkit-scrollbar-track {
         background: transparent;
     }
-    
+
     &::-webkit-scrollbar-thumb {
         background-color: rgba(0, 94, 56, 0.2);
         border-radius: 3px;
     }
-    
+
     &::-webkit-scrollbar-thumb:hover {
         background-color: rgba(0, 94, 56, 0.4);
     }
@@ -735,7 +735,7 @@
 
     .chart-container {
         border-left: none;
-        border-top: 2px solid var(--bsp-dark-green);
+        border-top: 2px solid var(--bsp-border-green);
         padding-left: 0;
         padding-top: 1rem;
         min-height: 250px;

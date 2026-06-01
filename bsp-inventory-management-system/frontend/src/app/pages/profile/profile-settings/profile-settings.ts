@@ -20,6 +20,11 @@ export class ProfileSettings implements OnInit {
     userOffice = '';
     userStatus = '';
 
+    // Custom Toast Notification State
+    showToast = false;
+    toastMessage = '';
+    toastType: 'success' | 'error' | 'warning' = 'success';
+
     constructor(private authService: AuthService, private http: HttpClient) {}
 
     ngOnInit() {
@@ -31,15 +36,25 @@ export class ProfileSettings implements OnInit {
         this.userStatus = user?.status || 'Active';
     }
 
+    displayToast(message: string, type: 'success' | 'error' | 'warning' = 'success') {
+        this.toastMessage = message;
+        this.toastType = type;
+        this.showToast = true;
+
+        setTimeout(() => {
+            this.showToast = false;
+        }, 3500);
+    }
+
     savePassword() {
         if (!this.oldPassword || !this.newPassword) {
-            alert('Please fill in both old and new passwords.');
+            this.displayToast('Please fill in both old and new passwords.', 'warning');
             return;
         }
 
         const userId = this.authService.currentUserValue?.id;
         if (!userId) {
-            alert('User ID not found.');
+            this.displayToast('User ID not found.', 'error');
             return;
         }
 
@@ -50,13 +65,13 @@ export class ProfileSettings implements OnInit {
 
         this.http.put(`http://localhost:5000/api/users/${userId}/change-password`, payload).subscribe({
             next: (res: any) => {
-                alert(res.message || 'Password updated successfully!');
+                this.displayToast(res.message || 'Password updated successfully!', 'success');
                 this.oldPassword = '';
                 this.newPassword = '';
             },
             error: (err) => {
                 console.error("Failed to update password", err);
-                alert(err.error?.message || 'Failed to update password.');
+                this.displayToast(err.error?.message || 'Failed to update password.', 'error');
             }
         });
     }

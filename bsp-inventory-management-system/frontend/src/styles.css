@@ -24,6 +24,7 @@
 
     --radius-sm: 6px;
     --radius-md: 10px;
+    --bsp-border-green: #82a88e;
 }
 
 body {
@@ -54,12 +55,11 @@ body {
 
 /* Page Title Bar */
 .page-title-bar {
-    background: linear-gradient(135deg, rgba(0, 94, 56, 0.08) 0%, rgba(0, 94, 56, 0.02) 100%);
-    border: 1px solid rgba(0, 94, 56, 0.12);
+    background-color: var(--bsp-light-green-solid);
+    border: 1.5px solid var(--bsp-border-green);
     border-radius: var(--radius-md);
     padding: 0.8rem 1.25rem;
     margin-bottom: 1.25rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .page-title-bar h2 {
@@ -90,7 +90,7 @@ body {
 /* Standard Card Styling */
 .card {
     background-color: var(--white);
-    border: 1px solid rgba(0, 94, 56, 0.1);
+    border: 1.5px solid var(--bsp-border-green);
     border-radius: var(--radius-md);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
     overflow: hidden;
@@ -106,12 +106,12 @@ body {
 }
 
 .card-header {
-    background: linear-gradient(90deg, rgba(0, 94, 56, 0.05) 0%, rgba(0, 94, 56, 0.01) 100%);
+    background-color: var(--bsp-light-green-solid);
     color: var(--bsp-dark-green);
     font-weight: 700;
     padding: 0.75rem 1.25rem;
     font-size: 0.95rem;
-    border-bottom: 1px solid rgba(0, 94, 56, 0.08);
+    border-bottom: 1.5px solid var(--bsp-border-green);
 }
 
 .card-content {

@@ -42,6 +42,11 @@ export class AccountManagement implements OnInit {
 
     accounts: AccountRow[] = [];
 
+    // Custom Reset Confirmation Modal State
+    showResetConfirmModal = false;
+    isResetting = false;
+    resetSuccess = false;
+
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
@@ -145,6 +150,39 @@ export class AccountManagement implements OnInit {
             error: (err) => {
                 console.error("Failed to update user", err);
                 alert('Failed to update user.');
+            }
+        });
+    }
+
+    resetPasswordToDefault() {
+        this.showResetConfirmModal = true;
+        this.isResetting = false;
+        this.resetSuccess = false;
+    }
+
+    closeResetConfirm() {
+        this.showResetConfirmModal = false;
+    }
+
+    executePasswordReset() {
+        this.isResetting = true;
+        
+        this.http.put<any>(`http://localhost:5000/api/users/${this.editAccountId}/reset-password`, {}).subscribe({
+            next: (res) => {
+                this.isResetting = false;
+                this.resetSuccess = true;
+                
+                // Show success screen for 1.5 seconds, then close all modals
+                setTimeout(() => {
+                    this.showResetConfirmModal = false;
+                    this.showEditModal = false;
+                    this.resetSuccess = false;
+                }, 1800);
+            },
+            error: (err) => {
+                this.isResetting = false;
+                console.error("Failed to reset password", err);
+                alert(err.error?.message || 'Failed to reset password.');
             }
         });
     }
