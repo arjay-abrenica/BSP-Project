@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChartConfiguration, ChartOptions, Chart } from 'chart.js';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { RouterModule } from '@angular/router';
+import { PropertyService } from '../../../core/services/property.service';
 
 @Component({
   selector: 'app-property-dashboard',
@@ -12,47 +13,36 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./property-dashboard.component.scss']
 })
 export class PropertyDashboardComponent implements OnInit {
-  totalAssetValuation: string = '₱4,825,600.00';
-  totalTrackedUnits: number = 184;
-  parAssetsCount: number = 42;
-  parAssetsValuation: string = '₱3,950,000.00';
-  icsAssetsCount: number = 142;
-  icsAssetsValuation: string = '₱875,600.00';
+  totalAssetValuation: string = '₱0.00';
+  totalTrackedUnits: number = 0;
+  parAssetsCount: number = 0;
+  parAssetsValuation: string = '₱0.00';
+  icsAssetsCount: number = 0;
+  icsAssetsValuation: string = '₱0.00';
 
-  recentPropertyIntakes = [
-    { iar_no: 'BSP-IAR-2026-0089', date: new Date('2026-05-18T10:30:00'), officer: 'Sir Jerry', items: '10 Units - HP EliteBook 840 (Above 50k)', type: 'PAR', status: 'ACTIVE' },
-    { iar_no: 'BSP-IAR-2026-0088', date: new Date('2026-05-15T14:15:00'), officer: 'Sir Jerry', items: '25 Units - Ergonomic Office Chairs (Below 50k)', type: 'ICS', status: 'ACTIVE' },
-    { iar_no: 'BSP-IAR-2026-0087', date: new Date('2026-05-10T09:00:00'), officer: 'Sir Jerry', items: '2 Units - Canon Heavy Duty Copier (Above 50k)', type: 'PAR', status: 'ACTIVE' },
-    { iar_no: 'BSP-IAR-2026-0086', date: new Date('2026-05-08T11:45:00'), officer: 'Sir Jerry', items: '5 Units - Epson Projectors (Below 50k)', type: 'ICS', status: 'ACTIVE' },
-    { iar_no: 'BSP-IAR-2026-0085', date: new Date('2026-05-02T16:00:00'), officer: 'Sir Jerry', items: '15 Units - Steel Filing Cabinets (Below 50k)', type: 'ICS', status: 'ACTIVE' }
-  ];
-
-  recentMovements = [
-    { description: 'MacBook Pro M3 issued to OSG (PAR)', date: new Date('2026-05-19') },
-    { description: '10 Ergonomic Chairs distributed to FOD (ICS)', date: new Date('2026-05-18') },
-    { description: 'EPSON L3250 Printer sent to Finance (ICS)', date: new Date('2026-05-15') },
-    { description: 'Executive Desk registered for National President (PAR)', date: new Date('2026-05-12') }
-  ];
+  recentPropertyIntakes: any[] = [];
+  recentMovements: any[] = [];
+  isLoading: boolean = true;
 
   // Double Bar Chart for ICS vs IAR monthly statistics
   public barChartData: ChartConfiguration<'bar'>['data'] = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+    labels: [],
     datasets: [
       {
         label: 'IAR Registered Count',
-        data: [12, 19, 15, 24, 30],
-        backgroundColor: '#005E38',
+        data: [],
+        backgroundColor: '#2a523b',
         borderRadius: 4
       },
       {
         label: 'PAR Issued (Above 50k)',
-        data: [3, 5, 4, 8, 10],
+        data: [],
         backgroundColor: '#E1AE58',
         borderRadius: 4
       },
       {
         label: 'ICS Issued (Below 50k)',
-        data: [9, 14, 11, 16, 20],
+        data: [],
         backgroundColor: '#79C3B6',
         borderRadius: 4
       }
@@ -77,10 +67,10 @@ export class PropertyDashboardComponent implements OnInit {
 
   // Doughnut Chart for Property Allocation by Division
   public doughnutChartData: ChartConfiguration<'doughnut'>['data'] = {
-    labels: ['OSG', 'FOD', 'ADMIN', 'FINANCE', 'PMDD', 'OBS'],
+    labels: [],
     datasets: [{
-      data: [1250000, 850000, 1150000, 620000, 480600, 475000],
-      backgroundColor: ['#24404C', '#F3A160', '#005E38', '#E1AE58', '#79C3B6', '#E96446'],
+      data: [],
+      backgroundColor: ['#24404C', '#F3A160', '#2a523b', '#E1AE58', '#79C3B6', '#E96446', '#4A6984', '#F4B27B', '#43805c'],
       borderWidth: 0
     }]
   };
@@ -100,7 +90,74 @@ export class PropertyDashboardComponent implements OnInit {
     }
   };
 
-  constructor() { }
+  constructor(private propertyService: PropertyService) { }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {
+    this.loadAnalytics();
+  }
+
+  loadAnalytics(): void {
+    this.isLoading = true;
+    this.propertyService.getPropertyAnalytics().subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res) {
+          // Bind KPIs
+          const kpis = res.kpis || {};
+          this.totalAssetValuation = this.formatCurrency(kpis.total_valuation);
+          this.totalTrackedUnits = parseInt(kpis.total_units, 10) || 0;
+          this.parAssetsCount = parseInt(kpis.par_count, 10) || 0;
+          this.parAssetsValuation = this.formatCurrency(kpis.par_valuation);
+          this.icsAssetsCount = parseInt(kpis.ics_count, 10) || 0;
+          this.icsAssetsValuation = this.formatCurrency(kpis.ics_valuation);
+
+          // Bind Bar Chart
+          if (res.monthlyTrends && Array.isArray(res.monthlyTrends)) {
+            const labels = res.monthlyTrends.map((t: any) => t.label);
+            const iarCounts = res.monthlyTrends.map((t: any) => parseInt(t.iar_count, 10) || 0);
+            const parCounts = res.monthlyTrends.map((t: any) => parseInt(t.par_count, 10) || 0);
+            const icsCounts = res.monthlyTrends.map((t: any) => parseInt(t.ics_count, 10) || 0);
+
+            this.barChartData = {
+              labels: labels,
+              datasets: [
+                { ...this.barChartData.datasets[0], data: iarCounts },
+                { ...this.barChartData.datasets[1], data: parCounts },
+                { ...this.barChartData.datasets[2], data: icsCounts }
+              ]
+            };
+          }
+
+          // Bind Doughnut Chart
+          if (res.officeDistribution && Array.isArray(res.officeDistribution)) {
+            const officeLabels = res.officeDistribution.map((o: any) => o.label);
+            const officeValues = res.officeDistribution.map((o: any) => parseFloat(o.value) || 0);
+            const colors = ['#24404C', '#F3A160', '#2a523b', '#E1AE58', '#79C3B6', '#E96446', '#4A6984', '#F4B27B', '#43805c'];
+
+            this.doughnutChartData = {
+              labels: officeLabels,
+              datasets: [{
+                data: officeValues,
+                backgroundColor: colors.slice(0, officeLabels.length),
+                borderWidth: 0
+              }]
+            };
+          }
+
+          // Bind Recent Intakes & Movements
+          this.recentPropertyIntakes = res.recentIars || [];
+          this.recentMovements = res.recentMovements || [];
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Failed to load property dashboard analytics:', err);
+      }
+    });
+  }
+
+  private formatCurrency(value: any): string {
+    const num = parseFloat(value) || 0;
+    return '₱' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 }

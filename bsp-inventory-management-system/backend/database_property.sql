@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS IAR_Records (
     accepted_by VARCHAR(255),
     accepted_by_designation VARCHAR(255),
     acceptance_status VARCHAR(50) DEFAULT 'Complete',
+    accepted_by_division VARCHAR(255),
     
     created_at TIMESTAMP DEFAULT CURRENT_DATE
 );
@@ -39,7 +40,10 @@ CREATE TABLE IF NOT EXISTS IAR_Line_Items (
     total_amount DECIMAL(15, 2) NOT NULL,
     rco VARCHAR(255), -- Responsibility Center Office
     accountable_officer VARCHAR(255),
-    delivery_date DATE
+    delivery_date DATE,
+    srp DECIMAL(15, 2) DEFAULT 0.00,
+    discount DECIMAL(15, 2) DEFAULT 0.00,
+    net_amount DECIMAL(15, 2) DEFAULT 0.00
 );
 
 -- 3. Property_Items (The Main Database / Main storage for PAR and ICS)

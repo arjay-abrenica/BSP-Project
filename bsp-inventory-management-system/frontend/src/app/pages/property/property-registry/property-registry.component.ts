@@ -200,4 +200,8 @@ export class PropertyRegistryComponent implements OnInit {
     this.selectedOffice = 'ALL';
     this.applyFilters();
   }
+
+  getCountByType(type: 'PAR' | 'ICS'): number {
+    return this.allProperties.filter(p => p.type === type).length;
+  }
 }

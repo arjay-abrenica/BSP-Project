@@ -1,73 +1,136 @@
 <div class="page-container no-print">
+  <!-- Modern unified page title bar -->
   <div class="page-title-bar">
-    <h2>Property Sticker Generator</h2>
+    <div class="title-meta">
+      <div class="breadcrumbs">Property Operations &nbsp;/&nbsp; <span class="active-crumb">Sticker Generator</span></div>
+      <h2>Property Sticker Generator</h2>
+      <p class="subtitle-text">Generate, preview, and print standardized inventory property tags for physical accountable officer property counts.</p>
+    </div>
   </div>
 
   <div class="grid-layout">
-    <!-- Selection Panel -->
+    <!-- Selection Panel Card -->
     <div class="card selection-panel">
-      <div class="card-header">Select Units to Tag</div>
+      <div class="card-header">
+        <svg class="card-header-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <h3>Select Units to Tag</h3>
+      </div>
+      
       <div class="card-content">
-        <div class="search-bar mb-3">
-          <input type="text" class="bsp-input" [(ngModel)]="searchQuery" placeholder="Search by Property No or Name...">
+        <!-- Search bar with SVG magnifier -->
+        <div class="search-bar-wrapper mb-3">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" class="search-input-custom" [(ngModel)]="searchQuery" placeholder="Search property no or asset name...">
         </div>
 
-        <div class="list-container">
+        <!-- Selectable Property list -->
+        <div class="list-container scroll-styled">
           <div *ngFor="let prop of filteredProperties" class="prop-selectable-item" [class.selected]="isSelected(prop)" (click)="toggleSelection(prop)">
              <div class="prop-info">
                 <span class="prop-no">{{ prop.property_no }}</span>
                 <span class="prop-name">{{ prop.item_name }}</span>
+                <span class="prop-officer-lbl">Officer: {{ prop.accountable_officer }}</span>
              </div>
              <div class="selection-indicator">
-                <svg *ngIf="isSelected(prop)" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3">
+                <svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
                    <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
              </div>
+          </div>
+          
+          <div *ngIf="filteredProperties.length === 0" class="no-selection-records">
+             <svg class="no-selection-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4" />
+             </svg>
+             <p>No matching assets found</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Preview/Print Panel -->
+    <!-- Preview/Print Panel Card -->
     <div class="card preview-panel">
-      <div class="card-header">
-         Sticker Preview ({{ selectedProperties.length }} Selected)
+      <div class="card-header flex-header">
+         <div class="card-header-left">
+           <svg class="card-header-icon text-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+           </svg>
+           <h3>Sticker Preview <span class="badge-count" *ngIf="selectedProperties.length > 0">{{ selectedProperties.length }} Selected</span></h3>
+         </div>
+         
          <div class="header-actions">
-            <button class="bsp-btn" [disabled]="selectedProperties.length === 0" (click)="printStickers()">Print Stickers</button>
-            <button class="btn-text" (click)="clearSelection()">Clear</button>
+            <button class="bsp-btn-print" [disabled]="selectedProperties.length === 0" (click)="printStickers()">
+              <svg class="btn-print-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>Print Stickers</span>
+            </button>
+            <button class="btn-clear-selection" [disabled]="selectedProperties.length === 0" (click)="clearSelection()">Clear All</button>
          </div>
       </div>
-      <div class="card-content preview-scroll">
-         <div class="sticker-grid-preview">
-            <div *ngFor="let item of selectedProperties" class="property-sticker">
+      
+      <div class="card-content preview-scroll bg-canvas-styled">
+         <div class="sticker-grid-preview" *ngIf="selectedProperties.length > 0">
+            <div *ngFor="let item of selectedProperties" class="property-sticker animate-pop">
                <div class="sticker-header">
                   <img src="assets/img/bspLogo.png" class="sticker-logo">
-                  <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
+                  <div class="sticker-org-container">
+                     <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
+                     <div class="sticker-sub">National Headquarters, Manila</div>
+                  </div>
                </div>
                <div class="sticker-body">
                   <div class="sticker-prop-no">{{ item.property_no }}</div>
                   <div class="sticker-item-name">{{ item.item_name }}</div>
                   <div class="sticker-officer">Officer: {{ item.accountable_officer }}</div>
+                  
+                  <!-- Premium visual barcode placeholder for ui dashboard wow factor -->
+                  <div class="sticker-barcode-placeholder">
+                     <div class="barcode-lines"></div>
+                     <div class="barcode-text">BSP PROPERTY TAG</div>
+                  </div>
                </div>
             </div>
+         </div>
+         
+         <!-- Empty State for Preview Pane -->
+         <div *ngIf="selectedProperties.length === 0" class="empty-preview-wrapper">
+            <svg class="empty-preview-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="empty-preview-title">No Stickers Selected for Preview</p>
+            <p class="empty-preview-desc">Select one or more assets from the left panel to generate printable property tags.</p>
          </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Print-only Sticker Layout (Step 4) -->
+<!-- Print-only Sticker Layout (for actual paper layout) -->
 <div class="print-only">
    <div class="sticker-print-grid">
       <div *ngFor="let item of selectedProperties" class="property-sticker print-version">
           <div class="sticker-header">
              <img src="assets/img/bspLogo.png" class="sticker-logo">
-             <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
+             <div class="sticker-org-container">
+                <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
+                <div class="sticker-sub">National Headquarters, Manila</div>
+             </div>
           </div>
           <div class="sticker-body">
              <div class="sticker-prop-no">{{ item.property_no }}</div>
              <div class="sticker-item-name">{{ item.item_name }}</div>
              <div class="sticker-officer">Officer: {{ item.accountable_officer }}</div>
+             
+             <div class="sticker-barcode-placeholder">
+                <div class="barcode-lines print-barcode"></div>
+                <div class="barcode-text">BSP PROPERTY TAG</div>
+             </div>
           </div>
       </div>
    </div>

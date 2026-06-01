@@ -1,7 +1,7 @@
 const db = require('../db');
 
 const createIar = async (req, res) => {
-  const { fundCluster, supplierName, poPrNo, poPrDate, requisitioningOffice, responsibilityCenterCode, iarDate, invoiceDrNo, invoiceDate, inspectionDate, inspectedBy, inspectedByDesignation, inspectionStatus, receivedDate, acceptedBy, acceptedByDesignation, acceptanceStatus, items } = req.body;
+  const { fundCluster, supplierName, poPrNo, poPrDate, requisitioningOffice, responsibilityCenterCode, iarDate, invoiceDrNo, invoiceDate, inspectionDate, inspectedBy, inspectedByDesignation, inspectionStatus, receivedDate, acceptedBy, acceptedByDesignation, acceptanceStatus, acceptedByDivision, items } = req.body;
   if (!supplierName || !items || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Supplier name and at least one item are required.' });
   const client = await db.pool.connect();
   try {
@@ -10,7 +10,7 @@ const createIar = async (req, res) => {
     const iarNoRes = await client.query(`SELECT iar_no FROM IAR_Records WHERE iar_no LIKE $1 ORDER BY iar_id DESC LIMIT 1`, [`${prefix}-%`]);
     let n = 1; if (iarNoRes.rows.length > 0) { const last = iarNoRes.rows[0].iar_no; n = parseInt(last.split('-')[last.split('-').length - 1], 10) + 1; }
     const finalIarNo = `${prefix}-${String(n).padStart(3, '0')}`;
-    const iarResult = await client.query(`INSERT INTO IAR_Records (iar_no, entity_name, fund_cluster, supplier_name, po_pr_no, po_pr_date, requisitioning_office, responsibility_center_code, iar_date, invoice_dr_no, invoice_date, inspection_date, inspected_by, inspected_by_designation, inspection_status, received_date, accepted_by, accepted_by_designation, acceptance_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING iar_id`, [finalIarNo, 'Boy Scouts of the Philippines', fundCluster || null, supplierName, poPrNo || null, poPrDate || null, requisitioningOffice || null, responsibilityCenterCode || null, iarDate || null, invoiceDrNo || null, invoiceDate || null, inspectionDate || null, inspectedBy || null, inspectedByDesignation || null, inspectionStatus || 'Found in order as to quantity and specifications', receivedDate || null, acceptedBy || null, acceptedByDesignation || null, acceptanceStatus || 'Complete']);
+    const iarResult = await client.query(`INSERT INTO IAR_Records (iar_no, entity_name, fund_cluster, supplier_name, po_pr_no, po_pr_date, requisitioning_office, responsibility_center_code, iar_date, invoice_dr_no, invoice_date, inspection_date, inspected_by, inspected_by_designation, inspection_status, received_date, accepted_by, accepted_by_designation, acceptance_status, accepted_by_division) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING iar_id`, [finalIarNo, 'Boy Scouts of the Philippines', fundCluster || null, supplierName, poPrNo || null, poPrDate || null, requisitioningOffice || null, responsibilityCenterCode || null, iarDate || null, invoiceDrNo || null, invoiceDate || null, inspectionDate || null, inspectedBy || null, inspectedByDesignation || null, inspectionStatus || 'Found in order as to quantity and specifications', receivedDate || null, acceptedBy || null, acceptedByDesignation || null, acceptanceStatus || 'Complete', acceptedByDivision || null]);
     const iarId = iarResult.rows[0].iar_id;
     let officeId = null; if (requisitioningOffice) { const offRes = await client.query("SELECT office_id FROM Offices WHERE acronym = $1 LIMIT 1", [requisitioningOffice.toUpperCase()]); if (offRes.rows.length > 0) officeId = offRes.rows[0].office_id; }
     if (!officeId) { const offRes = await client.query("SELECT office_id FROM Offices WHERE acronym = 'PMDD' LIMIT 1"); officeId = offRes.rows.length > 0 ? offRes.rows[0].office_id : null; }
@@ -18,7 +18,10 @@ const createIar = async (req, res) => {
     let runId = cRes.rows.length > 0 ? cRes.rows[0].property_id : 0;
     for (const item of items) {
       const quantity = parseInt(item.quantity, 10) || 1; const unitCost = parseFloat(item.unit_cost) || 0;
-      const lResult = await client.query(`INSERT INTO IAR_Line_Items (iar_id, item_description, unit, quantity, unit_cost, total_amount, rco, accountable_officer, delivery_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING iar_line_id`, [iarId, item.name, item.unit || 'Unit', quantity, unitCost, quantity * unitCost, item.rco || 'National Office', item.accountable_officer || acceptedBy || 'Sir Jerry', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0]]);
+      const srp = parseFloat(item.srp) || 0.00;
+      const discount = parseFloat(item.discount) || 0.00;
+      const netAmount = parseFloat(item.net_amount) || (quantity * unitCost - discount);
+      const lResult = await client.query(`INSERT INTO IAR_Line_Items (iar_id, item_description, unit, quantity, unit_cost, total_amount, rco, accountable_officer, delivery_date, srp, discount, net_amount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING iar_line_id`, [iarId, item.name, item.unit || 'Unit', quantity, unitCost, quantity * unitCost, item.rco || 'National Office', item.accountable_officer || acceptedBy || 'Sir Jerry', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0], srp, discount, netAmount]);
       const iarLineId = lResult.rows[0].iar_line_id; const type = unitCost >= 50000.00 ? 'PAR' : 'ICS';
       for (let q = 0; q < quantity; q++) { runId += 1; const pNo = `BSP-PROP-${String(runId).padStart(4, '0')}`; const sNo = quantity > 1 ? `${item.serial_no || 'SN'}-${q + 1}` : (item.serial_no || null); await client.query(`INSERT INTO Property_Items (property_no, iar_id, iar_line_id, item_name, description, serial_no, unit_cost, or_no, type, accountable_officer, rco, office_id, status, condition, delivery_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`, [pNo, iarId, iarLineId, item.name, item.description || null, sNo, unitCost, type === 'PAR' ? (item.or_number || null) : null, type, item.accountable_officer || acceptedBy || 'Sir Jerry', item.rco || 'National Office', officeId, 'ACTIVE', 'GOOD', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0]]); }
     }
@@ -71,16 +74,155 @@ const createPropertyReturn = async (req, res) => {
 };
 
 const getPropertyReportsCount = async (req, res) => {
-  const { type, rco } = req.query;
+  const { type, reportType, rco, employee } = req.query;
+  const targetType = type || (reportType === 'RPCPPE' ? 'PAR' : reportType === 'RPCSP' ? 'ICS' : null);
+  const targetEmployee = rco || employee;
+
   let q = `SELECT p.property_no, p.item_name, p.description, p.serial_no, p.unit_cost, p.type, p.accountable_officer, p.rco, p.delivery_date, p.status, p.condition, o.acronym as office_acronym FROM Property_Items p LEFT JOIN Offices o ON p.office_id = o.office_id WHERE 1=1`;
-  const params = []; if (type) { params.push(type.toUpperCase()); q += ` AND p.type = $${params.length}`; }
-  if (rco && rco !== 'ALL') { params.push(rco); q += ` AND p.rco = $${params.length}`; }
+  const params = [];
+  
+  if (targetType && targetType !== 'all') {
+    params.push(targetType.toUpperCase());
+    q += ` AND p.type = $${params.length}`;
+  }
+  
+  if (targetEmployee && targetEmployee !== 'ALL') {
+    params.push(targetEmployee);
+    q += ` AND (p.accountable_officer = $${params.length} OR p.rco = $${params.length})`;
+  }
+  
   q += ' ORDER BY p.property_no ASC';
-  try { const result = await db.query(q, params); res.json(result.rows); } catch (error) { res.status(500).json({ error: 'Failed.' }); }
+  try {
+    const result = await db.query(q, params);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching property reports count:', error);
+    res.status(500).json({ error: 'Failed.' });
+  }
 };
 
 const getPropertyAnalytics = async (req, res) => {
-  try { const kpiRes = await db.query(`SELECT COALESCE(SUM(unit_cost), 0) as total_valuation, COUNT(property_id) as total_units, COUNT(CASE WHEN type = 'PAR' THEN 1 END) as par_count, COALESCE(SUM(CASE WHEN type = 'PAR' THEN unit_cost END), 0) as par_valuation, COUNT(CASE WHEN type = 'ICS' THEN 1 END) as ics_count, COALESCE(SUM(CASE WHEN type = 'ICS' THEN unit_cost END), 0) as ics_valuation FROM Property_Items WHERE status != 'RETURNED'`); res.json({ kpis: kpiRes.rows[0] }); } catch (error) { res.status(500).json({ error: 'Failed.' }); }
+  try {
+    const [kpiRes, trendsRes, distributionRes, recentIarsRes, movementsRes] = await Promise.all([
+      // 1. KPIs
+      db.query(`
+        SELECT 
+          COALESCE(SUM(unit_cost), 0) as total_valuation, 
+          COUNT(property_id) as total_units, 
+          COUNT(CASE WHEN type = 'PAR' THEN 1 END) as par_count, 
+          COALESCE(SUM(CASE WHEN type = 'PAR' THEN unit_cost END), 0) as par_valuation, 
+          COUNT(CASE WHEN type = 'ICS' THEN 1 END) as ics_count, 
+          COALESCE(SUM(CASE WHEN type = 'ICS' THEN unit_cost END), 0) as ics_valuation 
+        FROM Property_Items 
+        WHERE status != 'RETURNED'
+      `),
+      
+      // 2. Double Bar Chart: Monthly trends for current year
+      db.query(`
+        WITH months AS (
+          SELECT generate_series(
+            date_trunc('year', CURRENT_DATE), 
+            date_trunc('year', CURRENT_DATE) + interval '11 months', 
+            interval '1 month'
+          )::date as month_date
+        ),
+        iar_stats AS (
+          SELECT date_trunc('month', iar_date)::date as m, COUNT(*) as iar_count
+          FROM IAR_Records
+          GROUP BY m
+        ),
+        prop_stats AS (
+          SELECT date_trunc('month', delivery_date)::date as m,
+                 COUNT(CASE WHEN type = 'PAR' THEN 1 END) as par_count,
+                 COUNT(CASE WHEN type = 'ICS' THEN 1 END) as ics_count
+          FROM Property_Items
+          GROUP BY m
+        )
+        SELECT 
+          TO_CHAR(months.month_date, 'Mon') as label,
+          COALESCE(iar_stats.iar_count, 0) as iar_count,
+          COALESCE(prop_stats.par_count, 0) as par_count,
+          COALESCE(prop_stats.ics_count, 0) as ics_count
+        FROM months
+        LEFT JOIN iar_stats ON date_trunc('month', months.month_date)::date = iar_stats.m
+        LEFT JOIN prop_stats ON date_trunc('month', months.month_date)::date = prop_stats.m
+        ORDER BY months.month_date ASC
+        LIMIT 6
+      `),
+
+      // 3. Doughnut Chart: Distribution by Office (Valuation)
+      db.query(`
+        SELECT 
+          COALESCE(o.acronym, p.rco, 'Others') as label, 
+          SUM(p.unit_cost) as value
+        FROM Property_Items p
+        LEFT JOIN Offices o ON p.office_id = o.office_id
+        WHERE p.status != 'RETURNED'
+        GROUP BY COALESCE(o.acronym, p.rco, 'Others')
+        ORDER BY value DESC
+      `),
+
+      // 4. Recent IAR Receipts & Equipment Entries
+      db.query(`
+        SELECT 
+          i.iar_id,
+          i.iar_no,
+          i.iar_date as date,
+          i.accepted_by as officer,
+          (
+            SELECT string_agg(quantity || ' Units - ' || item_description, ', ')
+            FROM IAR_Line_Items
+            WHERE iar_id = i.iar_id
+          ) as items,
+          (
+            SELECT CASE WHEN unit_cost >= 50000 THEN 'PAR' ELSE 'ICS' END
+            FROM IAR_Line_Items
+            WHERE iar_id = i.iar_id
+            LIMIT 1
+          ) as type,
+          i.acceptance_status as status
+        FROM IAR_Records i
+        ORDER BY i.iar_id DESC
+        LIMIT 5
+      `),
+
+      // 5. Recent Property Movements
+      db.query(`
+        SELECT description, date FROM (
+          SELECT 
+            'Registered ' || p.item_name || ' under ' || p.accountable_officer || ' (' || p.type || ')' as description,
+            p.created_at as date
+          FROM Property_Items p
+          UNION ALL
+          SELECT 
+            'Transferred ' || p.item_name || ' to ' || COALESCE(o.acronym, t.to_officer) || ' (PTR)' as description,
+            t.transfer_date as date
+          FROM Property_Transfers t
+          JOIN Property_Items p ON t.property_id = p.property_id
+          LEFT JOIN Offices o ON t.to_office_id = o.office_id
+          UNION ALL
+          SELECT 
+            'Returned ' || p.item_name || ' to stock (PRS)' as description,
+            r.return_date as date
+          FROM Property_Returns r
+          JOIN Property_Items p ON r.property_id = p.property_id
+        ) combined
+        ORDER BY date DESC
+        LIMIT 5
+      `)
+    ]);
+
+    res.json({
+      kpis: kpiRes.rows[0],
+      monthlyTrends: trendsRes.rows,
+      officeDistribution: distributionRes.rows,
+      recentIars: recentIarsRes.rows,
+      recentMovements: movementsRes.rows
+    });
+  } catch (error) {
+    console.error('Failed to fetch property analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch property analytics.' });
+  }
 };
 
 const getAllIars = async (req, res) => { try { const result = await db.query('SELECT * FROM IAR_Records ORDER BY iar_id DESC'); res.json(result.rows); } catch (error) { res.status(500).json({ error: 'Failed.' }); } };
@@ -93,7 +235,7 @@ const getIarDetails = async (req, res) => {
     const linesRes = await db.query('SELECT * FROM IAR_Line_Items WHERE iar_id = $1', [id]);
     const propsRes = await db.query('SELECT * FROM Property_Items WHERE iar_id = $1', [id]);
     const propMap = {}; propsRes.rows.forEach(p => { if (p.iar_line_id) { if (!propMap[p.iar_line_id]) propMap[p.iar_line_id] = { p: [], s: [] }; if (p.property_no) propMap[p.iar_line_id].p.push(p.property_no); if (p.serial_no) propMap[p.iar_line_id].s.push(p.serial_no); } });
-    res.json({ ...iarRes.rows[0], items: linesRes.rows.map(line => { const m = propMap[line.iar_line_id] || { p: [], s: [] }; return { item_name: line.item_description, property_no: m.p.join(', '), serial_no: m.s.join(', '), unit: line.unit, quantity: line.quantity, unit_cost: parseFloat(line.unit_cost), total_amount: parseFloat(line.total_amount), rco: line.rco, accountable_officer: line.accountable_officer, delivery_date: line.delivery_date }; }) });
+    res.json({ ...iarRes.rows[0], items: linesRes.rows.map(line => { const m = propMap[line.iar_line_id] || { p: [], s: [] }; return { item_name: line.item_description, property_no: m.p.join(', '), serial_no: m.s.join(', '), unit: line.unit, quantity: line.quantity, unit_cost: parseFloat(line.unit_cost), total_amount: parseFloat(line.total_amount), rco: line.rco, accountable_officer: line.accountable_officer, delivery_date: line.delivery_date, srp: parseFloat(line.srp || 0), discount: parseFloat(line.discount || 0), net_amount: parseFloat(line.net_amount || 0) }; }) });
   } catch (error) { res.status(500).json({ error: 'Failed.' }); }
 };
 
@@ -117,38 +259,56 @@ const buildExcelReport = async (iarData, res) => {
 
     const expandedItems = [];
     (iarData.items || []).forEach((item) => {
-      const q = parseInt(item.quantity, 10) || 1;
-      const pArr = (item.property_no || "").split(",").map(x => x.trim());
-      const sArr = (item.serial_no || "").split(",").map(x => x.trim());
-      for (let i = 0; i < q; i++) { expandedItems.push({ p: pArr[i] || pArr[0] || "Pending", n: item.name || item.item_name || "", d: item.description || "", s: sArr[i] || (q > 1 ? item.serial_no + "-" + (i+1) : item.serial_no), u: item.unit || "Unit" }); }
+      expandedItems.push({
+        p: item.property_no || "Pending",
+        n: item.name || item.item_name || "",
+        d: item.description || "",
+        s: item.serial_no || "",
+        u: item.unit || "Unit",
+        q: parseInt(item.quantity, 10) || 1,
+        cost: parseFloat(item.unit_cost) || 0,
+        date: item.delivery_date || iarData.receivedDate || iarData.received_date || "",
+        rco: item.rco || "National Office",
+        officer: item.accountable_officer || "",
+        srp: parseFloat(item.srp) || 0,
+        discount: parseFloat(item.discount) || 0,
+        net: parseFloat(item.net_amount) || 0
+      });
     });
 
     const templateRowsCount = 9; const requiredRowsCount = expandedItems.length;
     const templateRow = worksheet.getRow(18); const styles = [];
-    for (let c = 2; c <= 10; c++) { const cell = templateRow.getCell(c); styles[c] = { font: cell.font, fill: cell.fill, border: cell.border, alignment: cell.alignment, numFmt: cell.numFmt }; }
+    for (let c = 2; c <= 23; c++) { const cell = templateRow.getCell(c); styles[c] = { font: cell.font, fill: cell.fill, border: cell.border, alignment: cell.alignment, numFmt: cell.numFmt }; }
 
     let shift = 0;
     if (requiredRowsCount > templateRowsCount) {
       shift = requiredRowsCount - templateRowsCount;
       worksheet.insertRows(27, new Array(shift).fill([]), "o");
-      for (let r = 27; r < 27 + shift; r++) { const row = worksheet.getRow(r); row.height = templateRow.height; for (let c = 2; c <= 10; c++) { const cell = row.getCell(c); const s = styles[c]; if (s.font) cell.font = s.font; if (s.fill) cell.fill = s.fill; if (s.border) cell.border = s.border; if (s.alignment) cell.alignment = s.alignment; if (s.numFmt) cell.numFmt = s.numFmt; } }
+      for (let r = 27; r < 27 + shift; r++) { const row = worksheet.getRow(r); row.height = templateRow.height; for (let c = 2; c <= 23; c++) { const cell = row.getCell(c); const s = styles[c]; if (s && s.font) cell.font = s.font; if (s && s.fill) cell.fill = s.fill; if (s && s.border) cell.border = s.border; if (s && s.alignment) cell.alignment = s.alignment; if (s && s.numFmt) cell.numFmt = s.numFmt; } }
     }
 
-    // MASSIVE CLEARANCE OF SCRATCH DATA BEYOND COLUMN J (11 to 100)
-    // We completely delete the columns to remove all phantom data, borders, and formulas.
-    worksheet.spliceColumns(11, 50);
-
-    // Also clear the actual item row area values for A-J (except row base formatting)
+    // Also clear the actual item row area values for columns B to W (columns 2 to 23)
     for (let r = 18; r <= 27 + shift; r++) {
       const row = worksheet.getRow(r);
-      if(row) { for (let c = 2; c <= 10; c++) row.getCell(c).value = null; }
+      if(row) { for (let c = 2; c <= 23; c++) row.getCell(c).value = null; }
     }
 
     expandedItems.forEach((u, idx) => {
       const rNum = 18 + idx; const row = worksheet.getRow(rNum);
       row.getCell("B").value = u.p;
       let desc = u.n; if (u.d) desc += " (" + u.d + ")"; if (u.s && u.s !== "N/A") desc += " SN: " + u.s;
-      row.getCell("C").value = desc; row.getCell("G").value = u.u; row.getCell("J").value = 1;
+      row.getCell("C").value = desc; 
+      row.getCell("G").value = u.u; 
+      row.getCell("J").value = u.q;
+      row.getCell("L").value = u.cost;
+      row.getCell("M").value = formatDate(u.date);
+      row.getCell("N").value = u.q * u.cost;
+      row.getCell("P").value = u.rco;
+      row.getCell("Q").value = u.officer;
+      row.getCell("T").value = u.srp;
+      row.getCell("U").value = u.discount;
+      row.getCell("V").value = u.net || (u.q * u.cost - u.discount);
+
       try { worksheet.unmergeCells(`C${rNum}:F${rNum}`); } catch(e) {} try { worksheet.mergeCells(`C${rNum}:F${rNum}`); } catch(e) {}
       try { worksheet.unmergeCells(`G${rNum}:I${rNum}`); } catch(e) {} try { worksheet.mergeCells(`G${rNum}:I${rNum}`); } catch(e) {}
     });
@@ -166,33 +326,35 @@ const buildExcelReport = async (iarData, res) => {
        c.value = (isChecked ? "☑ " : "☐ ") + originalText.substring(2);
        c.font = { name: "Arial", size: 12, color: { argb: "FF000000" } };
        c.alignment = { horizontal: "left", vertical: "middle", wrapText: true };
-    };
+     };
 
-    // Ensure left cells (margins) are completely empty
-    worksheet.getCell("A" + (31 + shift)).value = null;
-    worksheet.getCell("E" + (31 + shift)).value = null;
-    worksheet.getCell("E" + (33 + shift)).value = null;
+     // Ensure left cells (margins) are completely empty
+     worksheet.getCell("A" + (31 + shift)).value = null;
+     worksheet.getCell("E" + (31 + shift)).value = null;
+     worksheet.getCell("E" + (33 + shift)).value = null;
 
-    setInlineCheck("B" + (31 + shift), true, "           Inspected, verified and found in order as ");
+     const inspStatus = (iarData.inspectionStatus || iarData.inspection_status || "").toLowerCase();
+     const isInspectedOrder = inspStatus.includes("inspected") || inspStatus === "" || inspStatus.includes("order");
+     setInlineCheck("B" + (31 + shift), isInspectedOrder, "           Inspected, verified and found in order as ");
 
-    const status = (iarData.acceptance_status || iarData.acceptanceStatus || "").toLowerCase();
-    const isComplete = status === "complete" || status === "accepted" || status === "";
-    const isPartial = status === "partial";
-    
-    setInlineCheck("F" + (31 + shift), isComplete, "           Complete ");
-    setInlineCheck("F" + (33 + shift), isPartial, "            Partial (pls. specify quantity)");
+     const status = (iarData.acceptance_status || iarData.acceptanceStatus || "").toLowerCase();
+     const isComplete = status === "complete" || status === "accepted" || status === "";
+     const isPartial = status === "partial";
+     
+     setInlineCheck("F" + (31 + shift), isComplete, "           Complete ");
+     setInlineCheck("F" + (33 + shift), isPartial, "            Partial (pls. specify quantity)");
 
-    const inspBy = iarData.inspected_by || "JERRY B. RUBRICO";
-    const inspDes = iarData.inspected_by_designation || "Administrative Officer II (Acting Property Custodian)";
-    const accBy = iarData.accepted_by || "ARVINA S. VINUYA";
-    const accDes = iarData.accepted_by_designation || "Administrative Officer III";
-    const accDiv = iarData.accepted_by_division || "Office of the Secretary General";
+     const inspBy = iarData.inspected_by || "JERRY B. RUBRICO";
+     const inspDes = iarData.inspected_by_designation || "Administrative Officer II (Acting Property Custodian)";
+     const accBy = iarData.accepted_by || "ARVINA S. VINUYA";
+     const accDes = iarData.accepted_by_designation || "Administrative Officer III";
+     const accDiv = iarData.acceptedByDivision || iarData.accepted_by_division || "Office of the Secretary General";
 
-    worksheet.getCell("B" + (37 + shift)).value = inspBy.toUpperCase();
-    worksheet.getCell("B" + (38 + shift)).value = inspDes;
-    worksheet.getCell("F" + (37 + shift)).value = accBy.toUpperCase();
-    worksheet.getCell("F" + (38 + shift)).value = accDes;
-    worksheet.getCell("F" + (39 + shift)).value = accDiv;
+     worksheet.getCell("B" + (37 + shift)).value = inspBy.toUpperCase();
+     worksheet.getCell("B" + (38 + shift)).value = inspDes;
+     worksheet.getCell("F" + (37 + shift)).value = accBy.toUpperCase();
+     worksheet.getCell("F" + (38 + shift)).value = accDes;
+     worksheet.getCell("F" + (39 + shift)).value = accDiv;
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=IAR_Report_" + (iarData.iar_no || "export") + ".xlsx");
