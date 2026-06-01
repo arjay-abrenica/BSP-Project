@@ -38,8 +38,8 @@
                         style="-webkit-mask-image: url('Icons/ready-stock.png'); mask-image: url('Icons/ready-stock.png');"></span>
                 </a>
             </li>
-            <li title="Property" [class.active]="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports')" *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'ACTING_PROPERTY_CUSTODIAN'])">
-                <a [routerLink]="hasRole(['ACTING_PROPERTY_CUSTODIAN']) || hasRole(['SUPERADMIN']) ? '/property/registry' : '/property/overview'" (click)="isSecondaryMenuOpen = true">
+            <li title="Property" [class.active]="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports')" *ngIf="hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])">
+                <a routerLink="/property/registry" (click)="isSecondaryMenuOpen = true">
                     <span class="nav-icon-mask"
                         style="-webkit-mask-image: url('Icons/home-2503.png'); mask-image: url('Icons/home-2503.png');"></span>
                 </a>
@@ -203,7 +203,7 @@
             </div>
 
             <!-- Property Menu -->
-            <div class="menu-group" *ngIf="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports') && hasRole(['SUPERADMIN', 'SUPPLY_OFFICER', 'ACTING_PROPERTY_CUSTODIAN'])"
+            <div class="menu-group" *ngIf="router.url.includes('property') && !router.url.includes('property/dashboard') && !router.url.includes('property/reports') && hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])"
                 [class.active-group]="true">
                 <div class="group-header">
                     <span>Property Operations</span>
@@ -211,9 +211,6 @@
                 </div>
 
                 <ul class="sub-menu">
-                    <li *ngIf="hasRole(['SUPERADMIN', 'SUPPLY_OFFICER']) && !hasRole(['ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/overview" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
-                        <span class="dot"></span> Property Overview
-                    </li>
                     <li *ngIf="hasRole(['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'])" routerLink="/property/iar-encode" routerLinkActive="active-sub" (click)="closeMenuOnMobile()">
                         <span class="dot"></span> Encode IAR
                     </li>

@@ -146,3 +146,69 @@
         &:hover { background-color: #1a7a3e; }
     }
 }
+
+/* --- Custom Toast Notification Banner --- */
+.toast-notification-banner {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 0.85rem 1.75rem;
+    max-width: 420px;
+    width: 90%;
+    cursor: pointer;
+    animation: toastSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    justify-content: center;
+
+    .toast-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        
+        svg {
+            flex-shrink: 0;
+        }
+
+        .toast-message-text {
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+    }
+
+    /* Success Theme */
+    &.success {
+        background-color: #d1e2d8;
+        border: 1px solid #c7d4cc;
+        color: #0d4a22;
+    }
+
+    /* Error Theme */
+    &.error {
+        background-color: #fde8e8;
+        border: 1px solid #fbd5d5;
+        color: #c9302c;
+    }
+
+    /* Warning Theme */
+    &.warning {
+        background-color: #fef3c7;
+        border: 1px solid #fde68a;
+        color: #92400e;
+    }
+}
+
+@keyframes toastSlideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}

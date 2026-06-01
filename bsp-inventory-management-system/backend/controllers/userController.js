@@ -113,3 +113,22 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ message: 'Server error while changing password' });
   }
 };
+
+exports.resetPassword = async (req, res) => {
+  const { id } = req.params;
+  const defaultPassword = 'BSPLagingHanda';
+
+  try {
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const result = await db.query('UPDATE Users SET password = $1 WHERE user_id = $2 RETURNING user_id, username', [hashedPassword, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({ message: `Password reset successfully to the default password: ${defaultPassword}` });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Server error while resetting password' });
+  }
+};
