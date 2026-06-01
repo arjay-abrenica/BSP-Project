@@ -1,95 +1,119 @@
-<div class="page-container">
+<div class="page-container no-print">
   <div class="page-title-bar">
     <h2>Encode New Inspection & Acceptance Report (IAR)</h2>
   </div>
 
   <div class="card shadow-sm">
-    <div class="card-header">General Report Details</div>
+    <div class="card-header">1. General Information (Header Section)</div>
     <div class="card-content">
       <form (submit)="onSubmit()">
-        <!-- Report Header Grid -->
+        <!-- Header Grid -->
         <div class="form-grid">
           <div class="form-group">
-            <label for="iarNo">IAR Report Number</label>
-            <input type="text" id="iarNo" class="bsp-input" [(ngModel)]="iarNo" name="iarNo" readonly>
+            <label>Entity Name</label>
+            <input type="text" class="bsp-input" [(ngModel)]="entityName" name="entityName" placeholder="Boy Scouts of the Philippines">
           </div>
-
           <div class="form-group">
-            <label for="supplierName">Supplier Name</label>
-            <input type="text" id="supplierName" class="bsp-input" [(ngModel)]="supplierName" name="supplierName" placeholder="Enter supplier name...">
+            <label>Fund Cluster</label>
+            <input type="text" class="bsp-input" [(ngModel)]="fundCluster" name="fundCluster" placeholder="Enter fund code...">
           </div>
-
           <div class="form-group">
-            <label for="invoiceNo">Invoice Number</label>
-            <input type="text" id="invoiceNo" class="bsp-input" [(ngModel)]="invoiceNo" name="invoiceNo" placeholder="Enter invoice number...">
+            <label>Supplier</label>
+            <input type="text" class="bsp-input" [(ngModel)]="supplierName" name="supplierName" placeholder="Enter supplier name...">
           </div>
-
           <div class="form-group">
-            <label for="invoiceDate">Invoice Date</label>
-            <input type="date" id="invoiceDate" class="bsp-input" [(ngModel)]="invoiceDate" name="invoiceDate">
+            <label>IAR No.</label>
+            <input type="text" class="bsp-input" [(ngModel)]="iarNo" name="iarNo" readonly>
           </div>
-
           <div class="form-group">
-            <label for="receivedDate">Date Received</label>
-            <input type="date" id="receivedDate" class="bsp-input" [(ngModel)]="receivedDate" name="receivedDate">
+            <label>IAR Date</label>
+            <input type="date" class="bsp-input" [(ngModel)]="iarDate" name="iarDate">
           </div>
-
           <div class="form-group">
-            <label for="inspectionDate">Date Inspected</label>
-            <input type="date" id="inspectionDate" class="bsp-input" [(ngModel)]="inspectionDate" name="inspectionDate">
+            <label>Purchase Order (P.O.) / P.R. No.</label>
+            <input type="text" class="bsp-input" [(ngModel)]="poPrNo" name="poPrNo" placeholder="Enter reference...">
+          </div>
+          <div class="form-group">
+            <label>P.O. / P.R. Date</label>
+            <input type="date" class="bsp-input" [(ngModel)]="poPrDate" name="poPrDate">
+          </div>
+          <div class="form-group">
+            <label>Requisitioning Office/Dept.</label>
+            <select class="bsp-input" [(ngModel)]="requisitioningOffice" name="requisitioningOffice">
+              <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Invoice / DR No.</label>
+            <input type="text" class="bsp-input" [(ngModel)]="invoiceDrNo" name="invoiceDrNo" placeholder="Enter reference...">
+          </div>
+          <div class="form-group">
+            <label>Invoice Date</label>
+            <input type="date" class="bsp-input" [(ngModel)]="invoiceDate" name="invoiceDate">
+          </div>
+          <div class="form-group">
+            <label>Responsibility Center Code</label>
+            <input type="text" class="bsp-input" [(ngModel)]="responsibilityCenterCode" name="responsibilityCenterCode" placeholder="Enter code...">
           </div>
         </div>
 
         <hr class="section-divider">
 
-        <!-- Encoded Items Section -->
+        <!-- Line Items Section -->
         <div class="section-title">
-          <h3>Received Items & Equipment Units</h3>
+          <h3>2. Property & Equipment Details (Line Items)</h3>
           <button type="button" class="btn-secondary" (click)="addItemRow()">+ Add Item Row</button>
         </div>
 
         <div class="table-container">
-          <table class="item-table">
+          <table class="item-table sticky-header">
             <thead>
               <tr>
-                <th style="width: 25%;">Item Name</th>
-                <th style="width: 25%;">Description</th>
-                <th style="width: 10%;">Qty</th>
-                <th style="width: 10%;">Unit</th>
-                <th style="width: 15%;">Unit Cost</th>
-                <th style="width: 15%;">Serial Number</th>
-                <th style="width: 5%;"></th>
+                <th style="width: 10%;">Prop No.</th>
+                <th style="width: 15%;">Description</th>
+                <th style="width: 10%;">Serial / OR</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 5%;">Qty</th>
+                <th style="width: 10%;">Unit Cost</th>
+                <th style="width: 10%;">SRP/Disc</th>
+                <th style="width: 10%;">Net Amt</th>
+                <th style="width: 10%;">RCO</th>
+                <th style="width: 12%;">Officer</th>
+                <th style="width: 2%;"></th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let item of items; let idx = index" class="item-row">
+                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.property_no" [name]="'pno_' + idx" placeholder="P-001..."></td>
+                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.name" [name]="'name_' + idx" placeholder="Name/Desc..." required></td>
                 <td>
-                  <input type="text" class="bsp-table-input" [(ngModel)]="item.name" [name]="'name_' + idx" placeholder="e.g. Laptop..." required>
+                  <input type="text" class="bsp-table-input mb-1" [(ngModel)]="item.serial_no" [name]="'sn_' + idx" placeholder="Serial No...">
+                  <input *ngIf="item.unit_cost >= 50000" type="text" class="bsp-table-input" [(ngModel)]="item.or_number" [name]="'or_' + idx" placeholder="OR No...">
                 </td>
                 <td>
-                  <input type="text" class="bsp-table-input" [(ngModel)]="item.description" [name]="'desc_' + idx" placeholder="e.g. Intel i7, 16GB...">
+                  <select class="bsp-table-input" [(ngModel)]="item.unit" [name]="'unit_' + idx">
+                    <option *ngFor="let u of units" [value]="u">{{ u }}</option>
+                  </select>
+                </td>
+                <td><input type="number" class="bsp-table-input" [(ngModel)]="item.quantity" [name]="'qty_' + idx" (ngModelChange)="calculateAmounts(item)" min="1"></td>
+                <td><input type="number" class="bsp-table-input" [(ngModel)]="item.unit_cost" [name]="'cost_' + idx" (ngModelChange)="calculateAmounts(item)" min="0"></td>
+                <td>
+                   <input type="number" class="bsp-table-input mb-1" [(ngModel)]="item.srp" [name]="'srp_' + idx" placeholder="SRP">
+                   <input type="number" class="bsp-table-input" [(ngModel)]="item.discount" [name]="'disc_' + idx" (ngModelChange)="calculateAmounts(item)" placeholder="Disc">
+                </td>
+                <td class="calculated-cell text-success">
+                  <strong>₱{{ item.net_amount | number:'1.2-2' }}</strong>
+                  <div class="text-xs text-muted mt-1">Total: ₱{{ item.total_amount | number:'1.2-2' }}</div>
                 </td>
                 <td>
-                  <input type="number" class="bsp-table-input" [(ngModel)]="item.quantity" [name]="'qty_' + idx" min="1" required>
+                  <select class="bsp-table-input" [(ngModel)]="item.rco" [name]="'rco_' + idx">
+                    <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
+                  </select>
                 </td>
-                <td>
-                  <input type="text" class="bsp-table-input" [(ngModel)]="item.unit" [name]="'unit_' + idx" placeholder="e.g. Unit...">
-                </td>
-                <td>
-                  <div class="cost-input-wrapper">
-                    <span class="currency">₱</span>
-                    <input type="number" class="bsp-table-input cost-input" [(ngModel)]="item.unit_cost" [name]="'cost_' + idx" min="0" required>
-                  </div>
-                </td>
-                <td>
-                  <input type="text" class="bsp-table-input" [(ngModel)]="item.serial_no" [name]="'serial_' + idx" placeholder="SN-12345...">
-                </td>
+                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.accountable_officer" [name]="'off_' + idx" placeholder="Officer..."></td>
                 <td>
                   <button type="button" class="btn-remove" (click)="removeItemRow(idx)" *ngIf="items.length > 1">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc3545" stroke-width="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc3545" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </td>
               </tr>
@@ -97,31 +121,148 @@
           </table>
         </div>
 
-        <!-- Costs routing details panel -->
-        <div class="routing-panel" *ngIf="items.length > 0">
-          <div class="routing-heading">Classification & Routing Rules Summary</div>
-          <div *ngFor="let item of items; let idx = index" class="routing-item">
-            <span class="item-index">Item #{{ idx + 1 }}</span>
-            <span class="item-summary-text" *ngIf="item.name">{{ item.name }} (₱{{ item.unit_cost | number:'1.2-2' }})</span>
-            <span class="item-summary-text" *ngIf="!item.name">Unnamed Item (₱{{ item.unit_cost | number:'1.2-2' }})</span>
+        <hr class="section-divider">
 
-            <div class="badge-tag" [class.badge-gold]="item.unit_cost >= 50000" [class.badge-teal]="item.unit_cost < 50000">
-              {{ item.unit_cost >= 50000 ? 'PAR Form Generated (>50k)' : 'ICS Form Generated (<50k)' }}
-            </div>
+        <!-- Footer Section -->
+        <div class="card-header mt-4">3. Inspection & Acceptance (Footer Section)</div>
+        <div class="form-grid mt-3">
+          <!-- Inspection -->
+          <div class="form-group">
+            <label>Date Inspected</label>
+            <input type="date" class="bsp-input" [(ngModel)]="inspectionDate" name="inspectionDate">
+          </div>
+          <div class="form-group">
+            <label>Inspection Status</label>
+            <select class="bsp-input" [(ngModel)]="inspectionStatus" name="inspectionStatus">
+              <option value="Inspected, verified and found in order">Inspected, verified and found in order</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Inspected By</label>
+            <input type="text" class="bsp-input" [(ngModel)]="inspectedBy" name="inspectedBy">
+          </div>
+          <div class="form-group">
+            <label>Inspector Designation</label>
+            <input type="text" class="bsp-input" [(ngModel)]="inspectedByDesignation" name="inspectedByDesignation">
+          </div>
 
-            <!-- Required OR details if above 50k -->
-            <div class="or-fields" *ngIf="item.unit_cost >= 50000">
-              <label [for]="'or_' + idx">Official Receipt (OR) Number from Supplier:</label>
-              <input type="text" [id]="'or_' + idx" class="bsp-small-input" [(ngModel)]="item.or_number" [name]="'or_' + idx" placeholder="Enter OR Number..." required>
-            </div>
+          <!-- Acceptance -->
+          <div class="form-group">
+            <label>Date Received</label>
+            <input type="date" class="bsp-input" [(ngModel)]="receivedDate" name="receivedDate">
+          </div>
+          <div class="form-group">
+            <label>Acceptance Type</label>
+            <select class="bsp-input" [(ngModel)]="acceptanceType" name="acceptanceType">
+              <option value="Complete">Complete</option>
+              <option value="Partial">Partial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Received By</label>
+            <input type="text" class="bsp-input" [(ngModel)]="receivedBy" name="receivedBy">
+          </div>
+          <div class="form-group">
+            <label>Receiver Designation</label>
+            <input type="text" class="bsp-input" [(ngModel)]="receivedByDesignation" name="receivedByDesignation">
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-cancel-main" routerLink="/property/dashboard">Cancel</button>
-          <button type="submit" class="bsp-btn btn-submit-main">Submit & Generate Forms</button>
+        <div class="form-actions mt-4">
+          <button type="button" class="btn-cancel-main" routerLink="/property/registry">Cancel</button>
+          <div class="action-buttons">
+            <button type="button" class="bsp-btn bg-secondary" (click)="isPreviewModalOpen = true">Print Preview</button>
+            <button type="button" class="bsp-btn bg-success" (click)="exportIarToExcel()">Export to Excel</button>
+            <button type="submit" class="bsp-btn btn-submit-main" [disabled]="isSubmitting">Submit & Generate Forms</button>
+          </div>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for IAR Print Preview -->
+<div class="modal-overlay" *ngIf="isPreviewModalOpen">
+  <div class="modal-container print-modal-container">
+    <div class="modal-header no-print">
+      <h3>IAR Print Preview (2026 Layout)</h3>
+      <div class="action-buttons">
+         <button class="bsp-btn bg-success" (click)="exportIarToExcel()">Export to Excel</button>
+         <button class="bsp-btn" (click)="printPreview()">Print PDF</button>
+         <button class="btn-icon" (click)="isPreviewModalOpen = false">×</button>
+      </div>
+    </div>
+    <div class="modal-body scrollable-content">
+       <div class="paper-page">
+          <!-- Final Precision Document Layout (Step 4) -->
+          <div class="doc-header">
+             <p class="text-center text-sm">Republic of the Philippines</p>
+             <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
+             <p class="text-center text-xs">National Office, Manila</p>
+             <h2 class="text-center mt-4">INSPECTION AND ACCEPTANCE REPORT (IAR)</h2>
+          </div>
+
+          <table class="iar-meta-table mt-4">
+             <tr>
+                <td style="width: 60%;"><strong>Entity Name:</strong> {{ entityName }}</td>
+                <td style="width: 40%;"><strong>Fund Cluster:</strong> {{ fundCluster }}</td>
+             </tr>
+             <tr>
+                <td><strong>Supplier:</strong> {{ supplierName }}</td>
+                <td><strong>IAR No:</strong> {{ iarNo }}</td>
+             </tr>
+             <tr>
+                <td><strong>PO/PR No:</strong> {{ poPrNo }}</td>
+                <td><strong>Date:</strong> {{ iarDate | date:'longDate' }}</td>
+             </tr>
+          </table>
+
+          <table class="doc-item-details-table mt-4">
+             <thead>
+                <tr>
+                   <th>Stock / Property No.</th>
+                   <th>Description</th>
+                   <th>Unit</th>
+                   <th>Quantity</th>
+                </tr>
+             </thead>
+             <tbody>
+                <tr *ngFor="let item of items">
+                   <td>{{ item.property_no || '(Pending)' }}</td>
+                   <td>{{ item.name }}</td>
+                   <td>{{ item.unit }}</td>
+                   <td>{{ item.quantity }}</td>
+                </tr>
+                <tr>
+                   <td>&nbsp;</td>
+                   <td colspan="3" class="text-muted-print">x   x   x   x   x   Nothing Follows   x   x   x   x   x</td>
+                </tr>
+             </tbody>
+          </table>
+
+          <!-- Footer signatures matching 2026 reference staggered layout -->
+          <div class="iar-signature-container mt-4">
+             <div class="iar-sig-left">
+                <div class="sig-header">INSPECTION</div>
+                <p>Date Inspected: {{ (inspectionDate | date:'longDate') || '___________' }}</p>
+                <div class="sig-sign mt-4">
+                   <div class="sig-line"></div>
+                   <p class="sig-name">{{ inspectedBy }}</p>
+                   <p class="sig-title">{{ inspectedByDesignation }}</p>
+                </div>
+             </div>
+             <div class="iar-sig-right">
+                <div class="sig-header">ACCEPTANCE</div>
+                <p>Date Received: {{ (receivedDate | date:'longDate') || '___________' }}</p>
+                <div class="sig-sign mt-4">
+                   <div class="sig-line"></div>
+                   <p class="sig-name">{{ receivedBy }}</p>
+                   <p class="sig-title">{{ receivedByDesignation }}</p>
+                </div>
+             </div>
+          </div>
+       </div>
     </div>
   </div>
 </div>

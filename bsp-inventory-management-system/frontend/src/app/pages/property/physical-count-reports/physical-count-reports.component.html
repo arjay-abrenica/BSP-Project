@@ -1,104 +1,101 @@
-<div class="page-container">
+<div class="page-container no-print">
   <div class="page-title-bar">
-    <h2>Physical Count Compilers (RPCPPE / RPCSP)</h2>
+    <h2>Physical Count Reports (RPCPPE / RPCSP)</h2>
   </div>
 
-  <!-- Filters Panel -->
+  <!-- Report Selection and Filters -->
   <div class="filter-top-bar shadow-sm">
     <div class="report-type-toggle">
-      <button class="toggle-btn" [class.active]="reportType === 'rpcppe'" (click)="setReportType('rpcppe')">
-        RPCPPE Report (Plant & Equipment / >50k)
-      </button>
-      <button class="toggle-btn" [class.active]="reportType === 'rpcsp'" (click)="setReportType('rpcsp')">
-        RPCSP Report (Semi-Expendable / <50k)
-      </button>
+       <button class="toggle-btn" [class.active]="reportType === 'RPCPPE'" (click)="reportType = 'RPCPPE'; onFilterChange()">RPCPPE (PAR > 50k)</button>
+       <button class="toggle-btn" [class.active]="reportType === 'RPCSP'" (click)="reportType = 'RPCSP'; onFilterChange()">RPCSP (ICS < 50k)</button>
     </div>
 
-    <div class="filters-input-group">
-      <div class="filter-cell">
-        <label for="empFilter">Accountable Officer:</label>
-        <select id="empFilter" class="bsp-select-field" [(ngModel)]="selectedEmployee" (ngModelChange)="filterReport()">
-          <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
-        </select>
-      </div>
-
-      <div class="filter-cell">
-        <label for="officeFilter">Division:</label>
-        <select id="officeFilter" class="bsp-select-field" [(ngModel)]="selectedOffice" (ngModelChange)="filterReport()">
-          <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
-        </select>
-      </div>
+    <div class="filter-group">
+      <label for="employeeSelect">Employee / Accountable Officer:</label>
+      <select id="employeeSelect" class="bsp-input" [(ngModel)]="selectedEmployee" (change)="onFilterChange()">
+        <option value="ALL">All Employees</option>
+        <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
+      </select>
     </div>
 
-    <div class="action-buttons-wrap">
-      <button class="bsp-btn" (click)="exportPDF()" style="background-color: var(--bsp-dark-green);">Export PDF</button>
-      <button class="bsp-btn" (click)="exportExcel()" style="background-color: #24404C; margin-left: 0.5rem;">Export Excel</button>
+    <div class="action-buttons">
+      <button class="bsp-btn" (click)="printReport()">Print to PDF</button>
+      <button class="bsp-btn bg-success" (click)="exportToExcel()">Export to Excel</button>
     </div>
   </div>
 
-  <!-- Warning Banner -->
-  <div class="alert-banner shadow-sm">
-    <div class="alert-icon bg-gold-tint">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#B38634" stroke-width="2">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="8" x2="12" y2="12"></line>
-        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-      </svg>
-    </div>
-    <div class="alert-text">
-      <strong>Data Compliance Note:</strong> 
-      In accordance with **Step 2** of the Inventory of Equipment and Property guidelines, 
-      this report compiles physical count records per employee and office with 
-      <strong>supplier details and Official Receipt (OR) information strictly excluded and scrubbed</strong>.
-    </div>
-  </div>
-
-  <!-- High-fidelity Sheet Compilation Display -->
-  <div class="card shadow-sm" style="margin-top: 1.5rem;">
+  <div class="card shadow-sm mt-4">
     <div class="card-header">
-      {{ reportType === 'rpcppe' ? 'Report on the Physical Count of Property Plant and Equipment (RPCPPE)' : 'Report on the Physical Count of Semi-expendable Property (RPCSP)' }}
+       {{ reportType }} - {{ selectedEmployee === 'ALL' ? 'Main Database (All Units)' : 'Inventory for ' + selectedEmployee }}
     </div>
-    <div class="card-content" style="padding: 0;">
+    <div class="card-content">
       <div class="table-responsive">
-        <table class="count-sheet-table">
+        <table class="simple-table">
           <thead>
             <tr>
-              <th style="width: 12%;">Property / Inventory No</th>
-              <th style="width: 10%;">Serial No</th>
-              <th style="width: 30%;">Article / Description</th>
-              <th style="width: 10%;">Date Acquired</th>
-              <th style="width: 10%;">Unit Cost</th>
-              <th style="width: 5%;">Qty</th>
-              <th style="width: 13%;">Accountable Officer</th>
-              <th style="width: 10%;">Condition</th>
+              <th>Property No.</th>
+              <th>Item Name</th>
+              <th>Serial No.</th>
+              <th>Unit Cost</th>
+              <th>Acquisition Date</th>
+              <th>Accountable Officer</th>
+              <th>Condition</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let rec of filteredRecords">
-              <td><strong>{{ rec.property_no }}</strong></td>
-              <td><code>{{ rec.serial }}</code></td>
+            <tr *ngFor="let item of reportData">
+              <td><strong>{{ item.property_no }}</strong></td>
               <td>
-                <div class="item-main-name">{{ rec.name }}</div>
-                <div class="item-desc-details">{{ rec.description }}</div>
+                 {{ item.item_name }}
+                 <div class="text-xs text-muted">{{ item.description }}</div>
               </td>
-              <td>{{ rec.date }}</td>
-              <td><strong>₱{{ rec.cost | number:'1.2-2' }}</strong></td>
-              <td>1</td>
-              <td>{{ rec.officer }} ({{ rec.office }})</td>
+              <td>{{ item.serial_no || 'N/A' }}</td>
+              <td>₱{{ item.unit_cost | number:'1.2-2' }}</td>
+              <td>{{ item.delivery_date | date:'shortDate' }}</td>
+              <td>{{ item.accountable_officer }}</td>
               <td>
-                <span class="condition-badge" [class.cond-good]="rec.condition === 'GOOD'" [class.cond-maint]="rec.condition === 'UNDER_MAINTENANCE'">
-                  {{ rec.condition === 'GOOD' ? 'Good Condition' : 'Under Maint.' }}
-                </span>
+                 <span class="badge-condition" [class.badge-success]="item.condition === 'GOOD'">{{ item.condition }}</span>
               </td>
+              <td>{{ item.status }}</td>
             </tr>
-            <tr *ngIf="filteredRecords.length === 0">
-              <td colspan="8" style="text-align: center; padding: 3rem; color: var(--bsp-text-muted);">
-                No physical count records compile under the selected parameter combinations.
-              </td>
+            <tr *ngIf="reportData.length === 0 && !isLoading">
+               <td colspan="8" class="text-center py-4 text-muted">No records found in the {{ reportType }} database for the selected employee.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
+</div>
+
+<!-- Print-only Report Layout (Step 4) -->
+<div class="print-only">
+   <div class="paper-page-report">
+       <h2 class="text-center">{{ reportType === 'RPCPPE' ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY' }}</h2>
+       <p class="text-center">As of {{ today | date:'longDate' }}</p>
+
+       <table class="report-table-print mt-4">
+          <thead>
+             <tr>
+                <th>Property No.</th>
+                <th>Description</th>
+                <th>Serial No.</th>
+                <th>Unit Cost</th>
+                <th>Date Acquired</th>
+                <th>Accountable Officer</th>
+             </tr>
+          </thead>
+          <tbody>
+             <tr *ngFor="let item of reportData">
+                <td>{{ item.property_no }}</td>
+                <td>{{ item.item_name }} {{ item.description ? '(' + item.description + ')' : '' }}</td>
+                <td>{{ item.serial_no }}</td>
+                <td>{{ item.unit_cost | number:'1.2-2' }}</td>
+                <td>{{ item.delivery_date | date:'shortDate' }}</td>
+                <td>{{ item.accountable_officer }}</td>
+             </tr>
+          </tbody>
+       </table>
+   </div>
 </div>
