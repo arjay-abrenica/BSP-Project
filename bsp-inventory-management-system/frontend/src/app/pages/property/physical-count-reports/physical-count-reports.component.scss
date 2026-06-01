@@ -1,136 +1,441 @@
-.page-container {
-  padding: 2rem;
-  background-color: #f8fafc;
-  min-height: 100vh;
+// =========================================================================
+// SAGE-GREEN EYES-FRIENDLY SYSTEM VARIABLES
+// =========================================================================
+$primary-green: #2a523b;       // Calm, low-saturation dark forest green for titles & primary action
+$primary-green-light: #f2f6f3;  // Soft, warm sage-gray off-white for panels and backgrounds
+$accent-green: #43805c;        // Calming, gentle sage green for active selector borders
+$bg-canvas: #eaeae7;           // Calm neutral off-white canvas with slight warm reflection
+$border-color: #cbd5cf;        // Soft, muted green-gray borders (eliminates harsh high contrast)
+$text-dark: #2a382e;           // Relaxing charcoal green-gray for primary text
+$text-muted: #5e6f65;          // Calming soft olive-slate for labels and subtitles
+$bg-label: #f4f6f4;            // Soft off-white backdrop for table headers and label cells
+$shadow-soft: 0 10px 30px rgba(42, 82, 59, 0.05);
+
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background-color: #f7f9f7;
+  padding: 1.5rem 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: $text-dark;
+  box-sizing: border-box;
 }
 
-.page-title-bar {
+/* --- Premium Excel Header Bar --- */
+.excel-header-bar {
+  background-color: white;
+  border: 1.5px solid $border-color;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
 
-  h2 {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #005E38;
-    letter-spacing: -0.025em;
+  .excel-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .excel-header-icon {
+    font-size: 2.2rem;
+    filter: drop-shadow(0 2px 4px rgba(42, 82, 59, 0.1));
+  }
+
+  .excel-header-texts {
+    h2 {
+      margin: 0;
+      color: $primary-green;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      margin: 0.15rem 0 0 0;
+      font-size: 0.8rem;
+      color: $text-muted;
+      font-weight: 600;
+    }
+  }
+
+  .excel-header-actions {
+    .btn-refresh {
+      background: white;
+      border: 1.5px solid $border-color;
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: $text-dark;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+
+      &:hover {
+        background-color: $primary-green-light;
+        border-color: $accent-green;
+        color: $primary-green;
+      }
+
+      .btn-icon {
+        display: inline-block;
+        transition: transform 0.2s ease;
+        &.spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
   }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Filter & Segmented Toolbar --- */
 .filter-top-bar {
   background: white;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 2rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  gap: 1.5rem;
+  flex-wrap: wrap;
+
+  &.border-excel {
+    border: 1.5px solid $border-color;
+  }
 }
 
 .report-type-toggle {
   display: flex;
-  background: #f1f5f9;
-  padding: 0.35rem;
-  border-radius: 12px;
-  gap: 0.25rem;
-}
+  background-color: #cbd5cf;
+  padding: 0.2rem;
+  border-radius: 8px;
+  gap: 0.15rem;
 
-.toggle-btn {
-  padding: 0.6rem 1.5rem;
-  border-radius: 10px;
-  border: none;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #64748b;
-  background: transparent;
-}
+  .toggle-btn {
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: $text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-.toggle-btn.active {
-  background: white;
-  color: #005E38;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    .tab-icon {
+      font-size: 0.95rem;
+    }
+
+    &:hover {
+      color: $primary-green;
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    &.active {
+      background-color: white;
+      color: $primary-green;
+      font-weight: 800;
+      box-shadow: 0 2px 6px rgba(42, 82, 59, 0.05);
+    }
+  }
 }
 
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 
   label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #64748b;
-    white-space: nowrap;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: $text-muted;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
-  }
-}
-
-.card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.card-header {
-  padding: 1.25rem 1.5rem;
-  background-color: #fcfcfc;
-  border-bottom: 1px solid #e2e8f0;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.simple-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th {
-    text-align: left;
-    padding: 1rem;
-    background-color: #f8fafc;
-    color: #64748b;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid #e2e8f0;
+    letter-spacing: 0.6px;
+    user-select: none;
   }
 
-  td {
-    padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 0.9rem;
-    color: #1e293b;
-    vertical-align: middle;
+  .select-wrapper {
+    position: relative;
+    border: 1.5px solid $border-color;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 220px;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-color: $accent-green;
+    }
+
+    .grid-cell-select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 0.45rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: $text-dark;
+      outline: none;
+      cursor: pointer;
+    }
   }
-
-  tr:hover td {
-    background-color: #fcfcfc;
-  }
-}
-
-.badge-condition {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.badge-success {
-  background-color: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
 }
 
 .action-buttons {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.65rem;
+
+  .ribbon-btn {
+    padding: 0.55rem 1.15rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    border: 1.5px solid $border-color;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &.preview-btn {
+      background-color: #475569;
+      color: white;
+      border-color: #475569;
+
+      &:hover {
+        background-color: #334155;
+        border-color: #334155;
+      }
+    }
+
+    &.excel-btn {
+      background: linear-gradient(135deg, $primary-green 0%, #1c3b28 100%);
+      color: white;
+      border-color: #1c3b28;
+
+      &:hover {
+        background: linear-gradient(135deg, $accent-green 0%, $primary-green 100%);
+        border-color: $primary-green;
+      }
+    }
+  }
+}
+
+/* --- Report Listing Table Card --- */
+.card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &.border-excel {
+    border: 1.5px solid $border-color;
+  }
+
+  .card-header {
+    background: linear-gradient(90deg, #e8eee9 0%, #fbfcfb 100%);
+    color: $primary-green;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: -0.15px;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    &.border-excel-header {
+      border-bottom: 1.5px solid $border-color;
+    }
+
+    .header-divider {
+      color: $border-color;
+      font-weight: 300;
+    }
+
+    .accountability-text {
+      color: $text-muted;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  }
+}
+
+/* --- Premium Table Grid Styling --- */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.premium-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+
+  th {
+    background-color: $bg-label;
+    color: $text-dark;
+    font-weight: 800;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 2px solid $border-color;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid $border-color;
+    vertical-align: middle;
+    color: $text-dark;
+    font-weight: 500;
+  }
+}
+
+.clickable-row-item {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f2f7f4;
+  }
+}
+
+.prop-no-link {
+  color: $primary-green;
+  font-weight: 800;
+}
+
+.item-name-text {
+  font-weight: 700;
+  color: $text-dark;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.badge-status {
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-block;
+  text-align: center;
+  min-width: 65px;
+}
+
+.badge {
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 850;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+/* Color codes */
+.badge-active {
+  background-color: #e8eee9;
+  color: $primary-green;
+  border: 1px solid rgba(42, 82, 59, 0.15);
+}
+
+.badge-warning {
+  background-color: #fff9eb;
+  color: #b2862d;
+  border: 1px solid rgba(178, 134, 45, 0.15);
+}
+
+.badge-danger {
+  background-color: #fee9eb;
+  color: #a82c3c;
+  border: 1px solid rgba(168, 44, 60, 0.15);
+}
+
+.badge-active-status {
+  background-color: rgba(67, 128, 92, 0.1);
+  color: $accent-green;
+  border: 1px solid rgba(67, 128, 92, 0.2);
+}
+
+.badge-transferred-status {
+  background-color: rgba(36, 64, 76, 0.1);
+  color: #24404C;
+  border: 1px solid rgba(36, 64, 76, 0.2);
+}
+
+.badge-returned-status {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* --- Pulse Skeletons --- */
+.skeleton-row td {
+  padding: 1.1rem 1.25rem;
+}
+
+.skeleton-cell {
+  height: 12px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+
+  &.short { width: 45%; }
+  &.medium { width: 65%; }
+  &.long { width: 85%; }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { background-color: #f1f3f1; }
+  50% { background-color: #e2e6e2; }
+  100% { background-color: #f1f3f1; }
+}
+
+/* Shadow utilities */
+.shadow-sm {
+  box-shadow: 0 4px 15px rgba(42, 82, 59, 0.03);
+}
+
+.print-only {
+  display: none !important;
+}
+
+/* --- PDF Print Layout System (Preserved Precision) --- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
 }

@@ -1,182 +1,560 @@
 <div class="page-container no-print">
-  <div class="page-title-bar">
-    <h2>Encode New Inspection & Acceptance Report (IAR)</h2>
-  </div>
 
-  <div class="card shadow-sm">
-    <div class="card-header">1. General Information (Header Section)</div>
-    <div class="card-content">
+  <!-- Excel Window frame -->
+  <div class="excel-window">
+
+    <!-- Excel Title Bar -->
+    <div class="excel-title-bar">
+      <div class="excel-title-left">
+        <span class="excel-title-icon">📗</span>
+        <span class="excel-doc-title">Inspection & Acceptance Report(IAR) Workbook </span>
+      </div>
+      <div class="excel-title-actions">
+        <span class="win-btn minimise">─</span>
+        <span class="win-btn maximise">❑</span>
+        <span class="win-btn close" routerLink="/property/registry">✕</span>
+      </div>
+    </div>
+
+    <!-- Excel Ribbon Toolbar -->
+    <div class="excel-ribbon">
+      <!-- Ribbon Tabs -->
+      <div class="ribbon-tabs">
+        <span class="ribbon-tab active">File / Workbook</span>
+        <span class="ribbon-tab" (click)="scrollToSection('sheet-general')">General Info</span>
+        <span class="ribbon-tab" (click)="scrollToSection('sheet-items')">Property Details</span>
+        <span class="ribbon-tab" (click)="scrollToSection('sheet-signatures')">Acceptance Signatures</span>
+      </div>
+
+      <!-- Ribbon Command Area -->
+      <div class="ribbon-commands">
+        <div class="ribbon-group">
+          <div class="ribbon-group-content">
+            <button type="button" class="ribbon-action-btn primary-action" (click)="onSubmit()"
+              [disabled]="isSubmitting">
+              <span class="ribbon-action-icon">💾</span>
+              <span class="ribbon-action-label">Save & Submit IAR</span>
+            </button>
+            <button type="button" class="ribbon-action-btn" (click)="exportIarToExcel()">
+              <span class="ribbon-action-icon">📊</span>
+              <span class="ribbon-action-label">Export Excel</span>
+            </button>
+            <button type="button" class="ribbon-action-btn" (click)="isPreviewModalOpen = true">
+              <span class="ribbon-action-icon">🔍</span>
+              <span class="ribbon-action-label">Print Preview</span>
+            </button>
+          </div>
+          <div class="ribbon-group-title">Primary Operations</div>
+        </div>
+
+        <div class="ribbon-group-divider"></div>
+
+        <div class="ribbon-group">
+          <div class="ribbon-group-content">
+            <button type="button" class="ribbon-action-btn" (click)="addItemRow()">
+              <span class="ribbon-action-icon">➕</span>
+              <span class="ribbon-action-label">Add Item Row</span>
+            </button>
+            <button type="button" class="ribbon-action-btn text-danger" (click)="resetForm()">
+              <span class="ribbon-action-icon">🧹</span>
+              <span class="ribbon-action-label">Reset Sheet</span>
+            </button>
+          </div>
+          <div class="ribbon-group-title">Grid Controls</div>
+        </div>
+
+        <div class="ribbon-group-divider"></div>
+
+        <div class="ribbon-group">
+          <div class="ribbon-group-content">
+            <button type="button" class="ribbon-action-btn" routerLink="/property/registry">
+              <span class="ribbon-action-icon">🚪</span>
+              <span class="ribbon-action-label">Exit Registry</span>
+            </button>
+          </div>
+          <div class="ribbon-group-title">Navigation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Excel Formula Bar -->
+    <div class="excel-formula-bar">
+      <div class="active-cell-box" title="Focused Grid Coordinate">{{ activeCell || 'A1' }}</div>
+      <div class="formula-fx-btn">fx</div>
+      <div class="formula-input-container">
+        <input type="text" [(ngModel)]="activeCellValue" name="activeCellValue"
+          (ngModelChange)="setFormulaBarValue($event)" placeholder="Formula bar: Edit active cell value directly..."
+          class="formula-input">
+      </div>
+    </div>
+
+    <!-- Excel Grid Canvas -->
+    <div class="excel-canvas">
       <form (submit)="onSubmit()">
-        <!-- Header Grid -->
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Entity Name</label>
-            <input type="text" class="bsp-input" [(ngModel)]="entityName" name="entityName" placeholder="Boy Scouts of the Philippines">
+
+        <!-- Sheet 1: General Info -->
+        <div id="sheet-general" class="sheet-section scroll-mt">
+          <div class="sheet-header">
+            <h4>📄 Sheet 1: General Information & Acquisition Reference</h4>
           </div>
-          <div class="form-group">
-            <label>Fund Cluster</label>
-            <input type="text" class="bsp-input" [(ngModel)]="fundCluster" name="fundCluster" placeholder="Enter fund code...">
-          </div>
-          <div class="form-group">
-            <label>Supplier</label>
-            <input type="text" class="bsp-input" [(ngModel)]="supplierName" name="supplierName" placeholder="Enter supplier name...">
-          </div>
-          <div class="form-group">
-            <label>IAR No.</label>
-            <input type="text" class="bsp-input" [(ngModel)]="iarNo" name="iarNo" readonly>
-          </div>
-          <div class="form-group">
-            <label>IAR Date</label>
-            <input type="date" class="bsp-input" [(ngModel)]="iarDate" name="iarDate">
-          </div>
-          <div class="form-group">
-            <label>Purchase Order (P.O.) / P.R. No.</label>
-            <input type="text" class="bsp-input" [(ngModel)]="poPrNo" name="poPrNo" placeholder="Enter reference...">
-          </div>
-          <div class="form-group">
-            <label>P.O. / P.R. Date</label>
-            <input type="date" class="bsp-input" [(ngModel)]="poPrDate" name="poPrDate">
-          </div>
-          <div class="form-group">
-            <label>Requisitioning Office/Dept.</label>
-            <select class="bsp-input" [(ngModel)]="requisitioningOffice" name="requisitioningOffice">
-              <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Invoice / DR No.</label>
-            <input type="text" class="bsp-input" [(ngModel)]="invoiceDrNo" name="invoiceDrNo" placeholder="Enter reference...">
-          </div>
-          <div class="form-group">
-            <label>Invoice Date</label>
-            <input type="date" class="bsp-input" [(ngModel)]="invoiceDate" name="invoiceDate">
-          </div>
-          <div class="form-group">
-            <label>Responsibility Center Code</label>
-            <input type="text" class="bsp-input" [(ngModel)]="responsibilityCenterCode" name="responsibilityCenterCode" placeholder="Enter code...">
+          <div class="excel-grid-wrapper fit-grid">
+            <table class="excel-grid-table">
+              <colgroup>
+                <col style="width: 42px;">
+                <col style="width: 15%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 11%;">
+                <col style="width: 15%;">
+                <col style="width: 12%;">
+                <col style="width: 11%;">
+                <col style="width: 12%;">
+              </colgroup>
+              <thead>
+                <tr class="col-header-row">
+                  <th class="row-num-header"></th>
+                  <th>A</th>
+                  <th>B</th>
+                  <th>C</th>
+                  <th>D</th>
+                  <th>E</th>
+                  <th>F</th>
+                  <th>G</th>
+                  <th>H</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">1</td>
+                  <td colspan="8" class="excel-group-title-cell">BSP Entity & Financial Allocation Parameters</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">2</td>
+                  <td class="excel-label-cell">Entity Name</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B2'">
+                    <input type="text" [(ngModel)]="entityName" name="entityName"
+                      (focus)="onCellFocus('B2', 'Entity Name', 'entityName')" (ngModelChange)="onGridInputChange()"
+                      placeholder="Boy Scouts of the Philippines" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B2'"></div>
+                  </td>
+                  <td class="excel-label-cell">Fund Cluster</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F2'">
+                    <input type="text" [(ngModel)]="fundCluster" name="fundCluster"
+                      (focus)="onCellFocus('F2', 'Fund Cluster', 'fundCluster')" (ngModelChange)="onGridInputChange()"
+                      placeholder="Enter fund code..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F2'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">3</td>
+                  <td class="excel-label-cell">Responsibility Code</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B3'">
+                    <input type="text" [(ngModel)]="responsibilityCenterCode" name="responsibilityCenterCode"
+                      (focus)="onCellFocus('B3', 'Responsibility Center Code', 'responsibilityCenterCode')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Enter code..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B3'"></div>
+                  </td>
+                  <td class="excel-label-cell">Requisitioning Office</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F3'">
+                    <select [(ngModel)]="requisitioningOffice" name="requisitioningOffice"
+                      (focus)="onCellFocus('F3', 'Requisitioning Office', 'requisitioningOffice')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-select">
+                      <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F3'"></div>
+                  </td>
+                </tr>
+
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">4</td>
+                  <td colspan="8" class="excel-group-title-cell">Supplier & Acquisition Information</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">5</td>
+                  <td class="excel-label-cell">Supplier Name</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B5'">
+                    <input type="text" [(ngModel)]="supplierName" name="supplierName"
+                      (focus)="onCellFocus('B5', 'Supplier Name', 'supplierName')" (ngModelChange)="onGridInputChange()"
+                      placeholder="Enter supplier name..." class="grid-cell-input" required>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B5'"></div>
+                  </td>
+                  <td class="excel-label-cell">P.O. / P.R. No.</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F5'">
+                    <input type="text" [(ngModel)]="poPrNo" name="poPrNo"
+                      (focus)="onCellFocus('F5', 'Purchase Order / P.R. No.', 'poPrNo')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Enter reference..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F5'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">6</td>
+                  <td class="excel-label-cell">P.O. / P.R. Date</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B6'">
+                    <input type="date" [(ngModel)]="poPrDate" name="poPrDate"
+                      (focus)="onCellFocus('B6', 'P.O. / P.R. Date', 'poPrDate')" (ngModelChange)="onGridInputChange()"
+                      class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B6'"></div>
+                  </td>
+                  <td colspan="4" class="excel-empty-cell"></td>
+                </tr>
+
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">7</td>
+                  <td colspan="8" class="excel-group-title-cell">Inspection & Acceptance Reference / Invoicing</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">8</td>
+                  <td class="excel-label-cell">IAR No. (Readonly)</td>
+                  <td colspan="3" class="excel-value-cell cell-readonly" [class.focused]="activeCell === 'B8'">
+                    <input type="text" [(ngModel)]="iarNo" name="iarNo" readonly
+                      (focus)="onCellFocus('B8', 'IAR No. (Auto)', 'iarNo')" (ngModelChange)="onGridInputChange()"
+                      class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B8'"></div>
+                  </td>
+                  <td class="excel-label-cell">IAR Date</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F8'">
+                    <input type="date" [(ngModel)]="iarDate" name="iarDate"
+                      (focus)="onCellFocus('F8', 'IAR Date', 'iarDate')" (ngModelChange)="onGridInputChange()"
+                      class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F8'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">9</td>
+                  <td class="excel-label-cell">Invoice / DR No.</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B9'">
+                    <input type="text" [(ngModel)]="invoiceDrNo" name="invoiceDrNo"
+                      (focus)="onCellFocus('B9', 'Invoice / DR No.', 'invoiceDrNo')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Enter invoice/DR..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B9'"></div>
+                  </td>
+                  <td class="excel-label-cell">Invoice Date</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F9'">
+                    <input type="date" [(ngModel)]="invoiceDate" name="invoiceDate"
+                      (focus)="onCellFocus('F9', 'Invoice Date', 'invoiceDate')" (ngModelChange)="onGridInputChange()"
+                      class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F9'"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <hr class="section-divider">
+        <!-- Sheet 2: Item Details -->
+        <div id="sheet-items" class="sheet-section scroll-mt">
+          <div class="sheet-header flex-header">
+            <h4>📦 Sheet 2: Property & Equipment Grid Details (Line Items)</h4>
+            <button type="button" class="btn-excel-add" (click)="addItemRow()">
+              <span>➕ Insert Row</span>
+            </button>
+          </div>
 
-        <!-- Line Items Section -->
-        <div class="section-title">
-          <h3>2. Property & Equipment Details (Line Items)</h3>
-          <button type="button" class="btn-secondary" (click)="addItemRow()">+ Add Item Row</button>
+          <div class="excel-grid-wrapper overflow-x-auto">
+            <table class="excel-grid-table item-grid-table">
+              <thead>
+                <tr class="col-header-row">
+                  <th class="row-num-header"></th>
+                  <th style="width: 8%;">A</th>
+                  <th style="width: 15%;">B</th>
+                  <th style="width: 10%;">C</th>
+                  <th style="width: 8%;">D</th>
+                  <th style="width: 6%;">E</th>
+                  <th style="width: 10%;">F</th>
+                  <th style="width: 10%;">G</th>
+                  <th style="width: 12%;">H</th>
+                  <th style="width: 11%;">I</th>
+                  <th style="width: 10%;">J</th>
+                  <th style="width: 10%;">K</th>
+                  <th style="width: 3%;"></th>
+                </tr>
+                <tr class="item-table-header-labels">
+                  <th class="row-number-cell">#</th>
+                  <th>Prop No.</th>
+                  <th>Description</th>
+                  <th>Serial / OR</th>
+                  <th>Unit</th>
+                  <th>Qty</th>
+                  <th>Unit Cost</th>
+                  <th>SRP/Disc</th>
+                  <th>Net Amt</th>
+                  <th>Del. Date</th>
+                  <th>RCO</th>
+                  <th>Officer</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of items; let idx = index" class="item-grid-row">
+                  <td class="row-number-cell">{{ 10 + idx }}</td>
+                  <!-- A: Property No -->
+                  <td class="excel-value-cell text-center" [class.focused]="activeCell === 'A' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.property_no" [name]="'pno_' + idx"
+                      (focus)="onCellFocus('A' + (10 + idx), 'Row ' + (10 + idx) + ' Property No', 'items', idx, 'property_no')"
+                      (ngModelChange)="onGridInputChange()" placeholder="P-001..." class="grid-cell-input text-center">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'A' + (10 + idx)"></div>
+                  </td>
+                  <!-- B: Name/Description -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'B' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.name" [name]="'name_' + idx"
+                      (focus)="onCellFocus('B' + (10 + idx), 'Row ' + (10 + idx) + ' Description', 'items', idx, 'name')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Name/Desc..." class="grid-cell-input" required>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B' + (10 + idx)"></div>
+                  </td>
+                  <!-- C: Serial / OR Number -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'C' + (10 + idx)">
+                    <div class="flex flex-col gap-1 w-full p-0.5">
+                      <input type="text" [(ngModel)]="item.serial_no" [name]="'sn_' + idx"
+                        (focus)="onCellFocus('C' + (10 + idx), 'Row ' + (10 + idx) + ' Serial No', 'items', idx, 'serial_no')"
+                        (ngModelChange)="onGridInputChange()" placeholder="Serial No..."
+                        class="grid-cell-input text-xs border-b border-dashed border-slate-100">
+                      <input *ngIf="item.unit_cost >= 50000" type="text" [(ngModel)]="item.or_number"
+                        [name]="'or_' + idx"
+                        (focus)="onCellFocus('C' + (10 + idx) + '_or', 'Row ' + (10 + idx) + ' OR No', 'items', idx, 'or_number')"
+                        (ngModelChange)="onGridInputChange()" placeholder="OR No..."
+                        class="grid-cell-input text-xs text-emerald-700 bg-emerald-50">
+                    </div>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'C' + (10 + idx)"></div>
+                  </td>
+                  <!-- D: Unit -->
+                  <td class="excel-value-cell text-center" [class.focused]="activeCell === 'D' + (10 + idx)">
+                    <select [(ngModel)]="item.unit" [name]="'unit_' + idx"
+                      (focus)="onCellFocus('D' + (10 + idx), 'Row ' + (10 + idx) + ' Unit', 'items', idx, 'unit')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-select text-center">
+                      <option *ngFor="let u of units" [value]="u">{{ u }}</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'D' + (10 + idx)"></div>
+                  </td>
+                  <!-- E: Qty -->
+                  <td class="excel-value-cell text-center" [class.focused]="activeCell === 'E' + (10 + idx)">
+                    <input type="number" [(ngModel)]="item.quantity" [name]="'qty_' + idx"
+                      (focus)="onCellFocus('E' + (10 + idx), 'Row ' + (10 + idx) + ' Qty', 'items', idx, 'quantity')"
+                      (ngModelChange)="onGridInputChange()" min="1" class="grid-cell-input text-center font-bold">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'E' + (10 + idx)"></div>
+                  </td>
+                  <!-- F: Unit Cost -->
+                  <td class="excel-value-cell text-right" [class.focused]="activeCell === 'F' + (10 + idx)">
+                    <input type="number" [(ngModel)]="item.unit_cost" [name]="'cost_' + idx"
+                      (focus)="onCellFocus('F' + (10 + idx), 'Row ' + (10 + idx) + ' Unit Cost', 'items', idx, 'unit_cost')"
+                      (ngModelChange)="onGridInputChange()" min="0" class="grid-cell-input text-right font-mono">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F' + (10 + idx)"></div>
+                  </td>
+                  <!-- G: SRP/Disc -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'G' + (10 + idx)">
+                    <div class="flex flex-col gap-1 w-full p-0.5">
+                      <input type="number" [(ngModel)]="item.srp" [name]="'srp_' + idx"
+                        (focus)="onCellFocus('G' + (10 + idx) + '_srp', 'Row ' + (10 + idx) + ' SRP', 'items', idx, 'srp')"
+                        (ngModelChange)="onGridInputChange()" placeholder="SRP"
+                        class="grid-cell-input text-right font-mono text-xs border-b border-dashed border-slate-100">
+                      <input type="number" [(ngModel)]="item.discount" [name]="'disc_' + idx"
+                        (focus)="onCellFocus('G' + (10 + idx), 'Row ' + (10 + idx) + ' Discount', 'items', idx, 'discount')"
+                        (ngModelChange)="onGridInputChange()" placeholder="Disc"
+                        class="grid-cell-input text-right font-mono text-xs text-rose-600 bg-rose-50">
+                    </div>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'G' + (10 + idx)"></div>
+                  </td>
+                  <!-- H: Calculated Net Amount -->
+                  <td
+                    class="excel-value-cell cell-readonly text-right font-mono bg-emerald-50 text-emerald-800 font-bold p-2">
+                    <strong>₱{{ item.net_amount | number:'1.2-2' }}</strong>
+                    <div class="text-3xs text-slate-400 mt-0.5">Total: ₱{{ item.total_amount | number:'1.2-2' }}</div>
+                  </td>
+                  <!-- I: Del. Date -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'I' + (10 + idx)">
+                    <input type="date" [(ngModel)]="item.delivery_date" [name]="'delDate_' + idx"
+                      (focus)="onCellFocus('I' + (10 + idx), 'Row ' + (10 + idx) + ' Delivery Date', 'items', idx, 'delivery_date')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'I' + (10 + idx)"></div>
+                  </td>
+                  <!-- J: RCO -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'J' + (10 + idx)">
+                    <select [(ngModel)]="item.rco" [name]="'rco_' + idx"
+                      (focus)="onCellFocus('J' + (10 + idx), 'Row ' + (10 + idx) + ' RCO', 'items', idx, 'rco')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-select text-xs">
+                      <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'J' + (10 + idx)"></div>
+                  </td>
+                  <!-- K: Accountable Officer -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'K' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.accountable_officer" [name]="'off_' + idx"
+                      (focus)="onCellFocus('K' + (10 + idx), 'Row ' + (10 + idx) + ' Officer', 'items', idx, 'accountable_officer')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Officer..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'K' + (10 + idx)"></div>
+                  </td>
+                  <!-- L: Delete Actions -->
+                  <td class="excel-value-cell text-center p-1">
+                    <button type="button" class="btn-grid-delete" (click)="removeItemRow(idx)" *ngIf="items.length > 1"
+                      title="Delete Row">
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="table-container">
-          <table class="item-table sticky-header">
-            <thead>
-              <tr>
-                <th style="width: 10%;">Prop No.</th>
-                <th style="width: 15%;">Description</th>
-                <th style="width: 10%;">Serial / OR</th>
-                <th style="width: 6%;">Unit</th>
-                <th style="width: 5%;">Qty</th>
-                <th style="width: 10%;">Unit Cost</th>
-                <th style="width: 10%;">SRP/Disc</th>
-                <th style="width: 10%;">Net Amt</th>
-                <th style="width: 10%;">RCO</th>
-                <th style="width: 12%;">Officer</th>
-                <th style="width: 2%;"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of items; let idx = index" class="item-row">
-                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.property_no" [name]="'pno_' + idx" placeholder="P-001..."></td>
-                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.name" [name]="'name_' + idx" placeholder="Name/Desc..." required></td>
-                <td>
-                  <input type="text" class="bsp-table-input mb-1" [(ngModel)]="item.serial_no" [name]="'sn_' + idx" placeholder="Serial No...">
-                  <input *ngIf="item.unit_cost >= 50000" type="text" class="bsp-table-input" [(ngModel)]="item.or_number" [name]="'or_' + idx" placeholder="OR No...">
-                </td>
-                <td>
-                  <select class="bsp-table-input" [(ngModel)]="item.unit" [name]="'unit_' + idx">
-                    <option *ngFor="let u of units" [value]="u">{{ u }}</option>
-                  </select>
-                </td>
-                <td><input type="number" class="bsp-table-input" [(ngModel)]="item.quantity" [name]="'qty_' + idx" (ngModelChange)="calculateAmounts(item)" min="1"></td>
-                <td><input type="number" class="bsp-table-input" [(ngModel)]="item.unit_cost" [name]="'cost_' + idx" (ngModelChange)="calculateAmounts(item)" min="0"></td>
-                <td>
-                   <input type="number" class="bsp-table-input mb-1" [(ngModel)]="item.srp" [name]="'srp_' + idx" placeholder="SRP">
-                   <input type="number" class="bsp-table-input" [(ngModel)]="item.discount" [name]="'disc_' + idx" (ngModelChange)="calculateAmounts(item)" placeholder="Disc">
-                </td>
-                <td class="calculated-cell text-success">
-                  <strong>₱{{ item.net_amount | number:'1.2-2' }}</strong>
-                  <div class="text-xs text-muted mt-1">Total: ₱{{ item.total_amount | number:'1.2-2' }}</div>
-                </td>
-                <td>
-                  <select class="bsp-table-input" [(ngModel)]="item.rco" [name]="'rco_' + idx">
-                    <option *ngFor="let off of offices" [value]="off">{{ off }}</option>
-                  </select>
-                </td>
-                <td><input type="text" class="bsp-table-input" [(ngModel)]="item.accountable_officer" [name]="'off_' + idx" placeholder="Officer..."></td>
-                <td>
-                  <button type="button" class="btn-remove" (click)="removeItemRow(idx)" *ngIf="items.length > 1">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#dc3545" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Sheet 3: Inspection & Acceptance -->
+        <div id="sheet-signatures" class="sheet-section scroll-mt">
+          <div class="sheet-header">
+            <h4>✍️ Sheet 3: Inspection & Acceptance Signature Protocols</h4>
+          </div>
+          <div class="excel-grid-wrapper fit-grid">
+            <table class="excel-grid-table">
+              <colgroup>
+                <col style="width: 42px;">
+                <col style="width: 15%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 11%;">
+                <col style="width: 15%;">
+                <col style="width: 12%;">
+                <col style="width: 11%;">
+                <col style="width: 12%;">
+              </colgroup>
+              <thead>
+                <tr class="col-header-row">
+                  <th class="row-num-header"></th>
+                  <th>A</th>
+                  <th>B</th>
+                  <th>C</th>
+                  <th>D</th>
+                  <th>E</th>
+                  <th>F</th>
+                  <th>G</th>
+                  <th>H</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">20</td>
+                  <td colspan="4" class="excel-group-title-cell text-center bg-sky-50 text-sky-800">🔍 SECTION 3A:
+                    INSPECTION REPORT DATA</td>
+                  <td colspan="4" class="excel-group-title-cell text-center bg-teal-50 text-teal-800">📥 SECTION 3B:
+                    ACCEPTANCE VERIFICATION</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">21</td>
+                  <td class="excel-label-cell">Date Inspected</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B21'">
+                    <input type="date" [(ngModel)]="inspectionDate" name="inspectionDate"
+                      (focus)="onCellFocus('B21', 'Date Inspected', 'inspectionDate')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B21'"></div>
+                  </td>
+                  <td class="excel-label-cell">Date Received</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F21'">
+                    <input type="date" [(ngModel)]="receivedDate" name="receivedDate"
+                      (focus)="onCellFocus('F21', 'Date Received', 'receivedDate')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F21'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">22</td>
+                  <td class="excel-label-cell">Inspection Status</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B22'">
+                    <select [(ngModel)]="inspectionStatus" name="inspectionStatus"
+                      (focus)="onCellFocus('B22', 'Inspection Status', 'inspectionStatus')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-select font-xs">
+                      <option value="Inspected, verified and found in order">Inspected, verified and found in order
+                      </option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B22'"></div>
+                  </td>
+                  <td class="excel-label-cell">Acceptance Type</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F22'">
+                    <select [(ngModel)]="acceptanceType" name="acceptanceType"
+                      (focus)="onCellFocus('F22', 'Acceptance Type', 'acceptanceType')"
+                      (ngModelChange)="onGridInputChange()" class="grid-cell-select">
+                      <option value="Complete">Complete</option>
+                      <option value="Partial">Partial</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F22'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">23</td>
+                  <td class="excel-label-cell">Inspected By</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B23'">
+                    <input type="text" [(ngModel)]="inspectedBy" name="inspectedBy"
+                      (focus)="onCellFocus('B23', 'Inspected By', 'inspectedBy')" (ngModelChange)="onGridInputChange()"
+                      placeholder="Inspector Name..." class="grid-cell-input font-bold">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B23'"></div>
+                  </td>
+                  <td class="excel-label-cell">Received By</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F23'">
+                    <input type="text" [(ngModel)]="receivedBy" name="receivedBy"
+                      (focus)="onCellFocus('F23', 'Received By', 'receivedBy')" (ngModelChange)="onGridInputChange()"
+                      placeholder="Receiver Name..." class="grid-cell-input font-bold">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F23'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">24</td>
+                  <td class="excel-label-cell">Inspector Title</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B24'">
+                    <input type="text" [(ngModel)]="inspectedByDesignation" name="inspectedByDesignation"
+                      (focus)="onCellFocus('B24', 'Inspector Designation', 'inspectedByDesignation')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Designation..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'B24'"></div>
+                  </td>
+                  <td class="excel-label-cell">Receiver Title</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F24'">
+                    <input type="text" [(ngModel)]="receivedByDesignation" name="receivedByDesignation"
+                      (focus)="onCellFocus('F24', 'Receiver Designation', 'receivedByDesignation')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Designation..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F24'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">25</td>
+                  <td colspan="4" class="excel-empty-cell"></td>
+                  <td class="excel-label-cell">Receiver Office</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'F25'">
+                    <input type="text" [(ngModel)]="receivedByDivision" name="receivedByDivision"
+                      (focus)="onCellFocus('F25', 'Receiver Office/Division', 'receivedByDivision')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Office/Division..." class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'F25'"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <hr class="section-divider">
-
-        <!-- Footer Section -->
-        <div class="card-header mt-4">3. Inspection & Acceptance (Footer Section)</div>
-        <div class="form-grid mt-3">
-          <!-- Inspection -->
-          <div class="form-group">
-            <label>Date Inspected</label>
-            <input type="date" class="bsp-input" [(ngModel)]="inspectionDate" name="inspectionDate">
+        <!-- Excel Bottom Sheet Controls -->
+        <div class="excel-bottom-bar no-print">
+          <div class="excel-sheets-tabs">
+            <button type="button" class="sheet-tab active" (click)="scrollToSection('sheet-general')">
+              <span class="sheet-icon">📊</span> General Info
+            </button>
+            <button type="button" class="sheet-tab" (click)="scrollToSection('sheet-items')">
+              <span class="sheet-icon">📦</span> Property Items Grid
+            </button>
+            <button type="button" class="sheet-tab" (click)="scrollToSection('sheet-signatures')">
+              <span class="sheet-icon">✍️</span> Acceptance & Signatures
+            </button>
           </div>
-          <div class="form-group">
-            <label>Inspection Status</label>
-            <select class="bsp-input" [(ngModel)]="inspectionStatus" name="inspectionStatus">
-              <option value="Inspected, verified and found in order">Inspected, verified and found in order</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Inspected By</label>
-            <input type="text" class="bsp-input" [(ngModel)]="inspectedBy" name="inspectedBy">
-          </div>
-          <div class="form-group">
-            <label>Inspector Designation</label>
-            <input type="text" class="bsp-input" [(ngModel)]="inspectedByDesignation" name="inspectedByDesignation">
-          </div>
-
-          <!-- Acceptance -->
-          <div class="form-group">
-            <label>Date Received</label>
-            <input type="date" class="bsp-input" [(ngModel)]="receivedDate" name="receivedDate">
-          </div>
-          <div class="form-group">
-            <label>Acceptance Type</label>
-            <select class="bsp-input" [(ngModel)]="acceptanceType" name="acceptanceType">
-              <option value="Complete">Complete</option>
-              <option value="Partial">Partial</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Received By</label>
-            <input type="text" class="bsp-input" [(ngModel)]="receivedBy" name="receivedBy">
-          </div>
-          <div class="form-group">
-            <label>Receiver Designation</label>
-            <input type="text" class="bsp-input" [(ngModel)]="receivedByDesignation" name="receivedByDesignation">
+          <div class="excel-status-bar">
+            <span class="status-ready">🟢 Ready</span>
+            <span class="status-zoom">Workbook Mode: 100% Zoom</span>
           </div>
         </div>
 
-        <div class="form-actions mt-4">
-          <button type="button" class="btn-cancel-main" routerLink="/property/registry">Cancel</button>
-          <div class="action-buttons">
-            <button type="button" class="bsp-btn bg-secondary" (click)="isPreviewModalOpen = true">Print Preview</button>
-            <button type="button" class="bsp-btn bg-success" (click)="exportIarToExcel()">Export to Excel</button>
-            <button type="submit" class="bsp-btn btn-submit-main" [disabled]="isSubmitting">Submit & Generate Forms</button>
+        <!-- Bottom Action Submissions -->
+        <div class="form-actions-spreadsheet mt-5 mb-5 no-print">
+          <button type="button" class="btn-spreadsheet-cancel" routerLink="/property/registry">Cancel and Exit</button>
+          <div class="action-buttons-wrap">
+            <button type="button" class="btn-spreadsheet-action preview-action"
+              (click)="isPreviewModalOpen = true">Print Preview Form</button>
+            <button type="submit" class="btn-spreadsheet-action submit-action" [disabled]="isSubmitting">Submit &
+              Finalize IAR Record</button>
           </div>
         </div>
+
       </form>
     </div>
   </div>
@@ -188,81 +566,81 @@
     <div class="modal-header no-print">
       <h3>IAR Print Preview (2026 Layout)</h3>
       <div class="action-buttons">
-         <button class="bsp-btn bg-success" (click)="exportIarToExcel()">Export to Excel</button>
-         <button class="bsp-btn" (click)="printPreview()">Print PDF</button>
-         <button class="btn-icon" (click)="isPreviewModalOpen = false">×</button>
+        <button class="bsp-btn bg-success" (click)="exportIarToExcel()">Export to Excel</button>
+        <button class="bsp-btn" (click)="printPreview()">Print PDF</button>
+        <button class="btn-icon" (click)="isPreviewModalOpen = false">×</button>
       </div>
     </div>
     <div class="modal-body scrollable-content">
-       <div class="paper-page">
-          <!-- Final Precision Document Layout (Step 4) -->
-          <div class="doc-header">
-             <p class="text-center text-sm">Republic of the Philippines</p>
-             <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
-             <p class="text-center text-xs">National Office, Manila</p>
-             <h2 class="text-center mt-4">INSPECTION AND ACCEPTANCE REPORT (IAR)</h2>
+      <div class="paper-page">
+        <!-- Final Precision Document Layout (Step 4) -->
+        <div class="doc-header">
+          <p class="text-center text-sm">Republic of the Philippines</p>
+          <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
+          <p class="text-center text-xs">National Office, Manila</p>
+          <h2 class="text-center mt-4">INSPECTION AND ACCEPTANCE REPORT (IAR)</h2>
+        </div>
+
+        <table class="iar-meta-table mt-4">
+          <tr>
+            <td style="width: 60%;"><strong>Entity Name:</strong> {{ entityName }}</td>
+            <td style="width: 40%;"><strong>Fund Cluster:</strong> {{ fundCluster }}</td>
+          </tr>
+          <tr>
+            <td><strong>Supplier:</strong> {{ supplierName }}</td>
+            <td><strong>IAR No:</strong> {{ iarNo }}</td>
+          </tr>
+          <tr>
+            <td><strong>PO/PR No:</strong> {{ poPrNo }}</td>
+            <td><strong>Date:</strong> {{ iarDate | date:'longDate' }}</td>
+          </tr>
+        </table>
+
+        <table class="doc-item-details-table mt-4">
+          <thead>
+            <tr>
+              <th>Stock / Property No.</th>
+              <th>Description</th>
+              <th>Unit</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of items">
+              <td>{{ item.property_no || '(Pending)' }}</td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.unit }}</td>
+              <td>{{ item.quantity }}</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td colspan="3" class="text-muted-print">x x x x x Nothing Follows x x x x x</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Footer signatures matching 2026 reference staggered layout -->
+        <div class="iar-signature-container mt-4">
+          <div class="iar-sig-left">
+            <div class="sig-header">INSPECTION</div>
+            <p>Date Inspected: {{ (inspectionDate | date:'longDate') || '___________' }}</p>
+            <div class="sig-sign mt-4">
+              <div class="sig-line"></div>
+              <p class="sig-name">{{ inspectedBy }}</p>
+              <p class="sig-title">{{ inspectedByDesignation }}</p>
+            </div>
           </div>
-
-          <table class="iar-meta-table mt-4">
-             <tr>
-                <td style="width: 60%;"><strong>Entity Name:</strong> {{ entityName }}</td>
-                <td style="width: 40%;"><strong>Fund Cluster:</strong> {{ fundCluster }}</td>
-             </tr>
-             <tr>
-                <td><strong>Supplier:</strong> {{ supplierName }}</td>
-                <td><strong>IAR No:</strong> {{ iarNo }}</td>
-             </tr>
-             <tr>
-                <td><strong>PO/PR No:</strong> {{ poPrNo }}</td>
-                <td><strong>Date:</strong> {{ iarDate | date:'longDate' }}</td>
-             </tr>
-          </table>
-
-          <table class="doc-item-details-table mt-4">
-             <thead>
-                <tr>
-                   <th>Stock / Property No.</th>
-                   <th>Description</th>
-                   <th>Unit</th>
-                   <th>Quantity</th>
-                </tr>
-             </thead>
-             <tbody>
-                <tr *ngFor="let item of items">
-                   <td>{{ item.property_no || '(Pending)' }}</td>
-                   <td>{{ item.name }}</td>
-                   <td>{{ item.unit }}</td>
-                   <td>{{ item.quantity }}</td>
-                </tr>
-                <tr>
-                   <td>&nbsp;</td>
-                   <td colspan="3" class="text-muted-print">x   x   x   x   x   Nothing Follows   x   x   x   x   x</td>
-                </tr>
-             </tbody>
-          </table>
-
-          <!-- Footer signatures matching 2026 reference staggered layout -->
-          <div class="iar-signature-container mt-4">
-             <div class="iar-sig-left">
-                <div class="sig-header">INSPECTION</div>
-                <p>Date Inspected: {{ (inspectionDate | date:'longDate') || '___________' }}</p>
-                <div class="sig-sign mt-4">
-                   <div class="sig-line"></div>
-                   <p class="sig-name">{{ inspectedBy }}</p>
-                   <p class="sig-title">{{ inspectedByDesignation }}</p>
-                </div>
-             </div>
-             <div class="iar-sig-right">
-                <div class="sig-header">ACCEPTANCE</div>
-                <p>Date Received: {{ (receivedDate | date:'longDate') || '___________' }}</p>
-                <div class="sig-sign mt-4">
-                   <div class="sig-line"></div>
-                   <p class="sig-name">{{ receivedBy }}</p>
-                   <p class="sig-title">{{ receivedByDesignation }}</p>
-                </div>
-             </div>
+          <div class="iar-sig-right">
+            <div class="sig-header">ACCEPTANCE</div>
+            <p>Date Received: {{ (receivedDate | date:'longDate') || '___________' }}</p>
+            <div class="sig-sign mt-4">
+              <div class="sig-line"></div>
+              <p class="sig-name">{{ receivedBy }}</p>
+              <p class="sig-title">{{ receivedByDesignation }}</p>
+            </div>
           </div>
-       </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

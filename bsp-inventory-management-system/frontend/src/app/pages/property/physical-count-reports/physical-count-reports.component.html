@@ -1,67 +1,124 @@
 <div class="page-container no-print">
-  <div class="page-title-bar">
-    <h2>Physical Count Reports (RPCPPE / RPCSP)</h2>
+  
+  <!-- Sleek Header Bar matching IAR Workbook aesthetics -->
+  <div class="excel-header-bar shadow-sm">
+    <div class="excel-header-left">
+      <span class="excel-header-icon">📋</span>
+      <div class="excel-header-texts">
+        <h2>Physical Count Reports (RPCPPE / RPCSP)</h2>
+        <p class="subtitle">BSP National Property Custodianship & Physical Asset Inventory Sheets</p>
+      </div>
+    </div>
+    <div class="excel-header-actions no-print">
+      <button class="btn-refresh" (click)="loadReport()" [disabled]="isLoading">
+        <span class="btn-icon" [class.spinning]="isLoading">🔄</span>
+        {{ isLoading ? 'Refreshing...' : 'Refresh Sheet' }}
+      </button>
+    </div>
   </div>
 
-  <!-- Report Selection and Filters -->
-  <div class="filter-top-bar shadow-sm">
+  <!-- Ribbon Filter Control Panel -->
+  <div class="filter-top-bar shadow-sm border-excel">
     <div class="report-type-toggle">
-       <button class="toggle-btn" [class.active]="reportType === 'RPCPPE'" (click)="reportType = 'RPCPPE'; onFilterChange()">RPCPPE (PAR > 50k)</button>
-       <button class="toggle-btn" [class.active]="reportType === 'RPCSP'" (click)="reportType = 'RPCSP'; onFilterChange()">RPCSP (ICS < 50k)</button>
+       <button class="toggle-btn" [class.active]="reportType === 'RPCPPE'" (click)="reportType = 'RPCPPE'; onFilterChange()">
+         <span class="tab-icon">🏢</span> RPCPPE (PAR > 50k)
+       </button>
+       <button class="toggle-btn" [class.active]="reportType === 'RPCSP'" (click)="reportType = 'RPCSP'; onFilterChange()">
+         <span class="tab-icon">📦</span> RPCSP (ICS < 50k)
+       </button>
     </div>
 
     <div class="filter-group">
       <label for="employeeSelect">Employee / Accountable Officer:</label>
-      <select id="employeeSelect" class="bsp-input" [(ngModel)]="selectedEmployee" (change)="onFilterChange()">
-        <option value="ALL">All Employees</option>
-        <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
-      </select>
+      <div class="select-wrapper">
+        <select id="employeeSelect" class="grid-cell-select" [(ngModel)]="selectedEmployee" (change)="onFilterChange()">
+          <option value="ALL">All Accountable Officers</option>
+          <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
+        </select>
+      </div>
     </div>
 
     <div class="action-buttons">
-      <button class="bsp-btn" (click)="printReport()">Print to PDF</button>
-      <button class="bsp-btn bg-success" (click)="exportToExcel()">Export to Excel</button>
+      <button class="ribbon-btn preview-btn" (click)="printReport()" title="Print PDF Layout">
+        <span class="btn-symbol">🖨️</span> Print PDF
+      </button>
+      <button class="ribbon-btn excel-btn" (click)="exportToExcel()" title="Download Excel Sheet">
+        <span class="btn-symbol">📊</span> Export Excel
+      </button>
     </div>
   </div>
 
-  <div class="card shadow-sm mt-4">
-    <div class="card-header">
-       {{ reportType }} - {{ selectedEmployee === 'ALL' ? 'Main Database (All Units)' : 'Inventory for ' + selectedEmployee }}
+  <!-- Main Report Card -->
+  <div class="card shadow-sm mt-4 border-excel">
+    <div class="card-header border-excel-header">
+       📁 {{ reportType === 'RPCPPE' ? 'Report on Property, Plant and Equipment (RPCPPE)' : 'Report on Semi-Expendable Property (RPCSP)' }} 
+       <span class="header-divider">|</span> 
+       <span class="accountability-text">Accountability: {{ selectedEmployee === 'ALL' ? 'BSP National Office (All Custodians)' : selectedEmployee }}</span>
     </div>
-    <div class="card-content">
+    
+    <div class="card-content" style="padding: 0;">
       <div class="table-responsive">
-        <table class="simple-table">
+        <table class="premium-table">
           <thead>
             <tr>
-              <th>Property No.</th>
-              <th>Item Name</th>
-              <th>Serial No.</th>
-              <th>Unit Cost</th>
-              <th>Acquisition Date</th>
-              <th>Accountable Officer</th>
-              <th>Condition</th>
-              <th>Status</th>
+              <th style="width: 15%;">Property No.</th>
+              <th style="width: 25%;">Item Name & Description</th>
+              <th style="width: 12%;">Serial No.</th>
+              <th style="width: 12%;">Unit Cost</th>
+              <th style="width: 12%;">Acquisition Date</th>
+              <th style="width: 14%;">Accountable Officer</th>
+              <th style="width: 10%;">Condition</th>
+              <th style="width: 10%;">Status</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of reportData">
-              <td><strong>{{ item.property_no }}</strong></td>
-              <td>
-                 {{ item.item_name }}
-                 <div class="text-xs text-muted">{{ item.description }}</div>
-              </td>
-              <td>{{ item.serial_no || 'N/A' }}</td>
-              <td>₱{{ item.unit_cost | number:'1.2-2' }}</td>
-              <td>{{ item.delivery_date | date:'shortDate' }}</td>
-              <td>{{ item.accountable_officer }}</td>
-              <td>
-                 <span class="badge-condition" [class.badge-success]="item.condition === 'GOOD'">{{ item.condition }}</span>
-              </td>
-              <td>{{ item.status }}</td>
-            </tr>
-            <tr *ngIf="reportData.length === 0 && !isLoading">
-               <td colspan="8" class="text-center py-4 text-muted">No records found in the {{ reportType }} database for the selected employee.</td>
-            </tr>
+            <!-- Pulse loading skeletons -->
+            <ng-container *ngIf="isLoading">
+              <tr *ngFor="let s of [1, 2, 3, 4, 5]" class="skeleton-row">
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell long animate-pulse"></div></td>
+                <td><div class="skeleton-cell medium animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell medium animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+              </tr>
+            </ng-container>
+
+            <!-- Table Rows -->
+            <ng-container *ngIf="!isLoading">
+              <tr *ngFor="let item of reportData" class="clickable-row-item">
+                <td><strong class="prop-no-link">🔢 {{ item.property_no }}</strong></td>
+                <td>
+                   <div class="item-name-text">{{ item.item_name }}</div>
+                   <div class="text-xs text-muted font-italic">{{ item.description }}</div>
+                </td>
+                <td class="font-mono">{{ item.serial_no || 'N/A' }}</td>
+                <td class="font-mono text-right text-emerald-800 font-bold">₱{{ item.unit_cost | number:'1.2-2' }}</td>
+                <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
+                <td>{{ item.accountable_officer }}</td>
+                <td>
+                   <span class="badge-status" 
+                         [class.badge-active]="item.condition === 'GOOD'" 
+                         [class.badge-warning]="item.condition === 'FAIR'" 
+                         [class.badge-danger]="item.condition === 'POOR' || item.condition === 'UNUSABLE'">
+                     {{ item.condition }}
+                   </span>
+                </td>
+                <td>
+                   <span class="badge" 
+                         [class.badge-active-status]="item.status === 'ACTIVE'" 
+                         [class.badge-transferred-status]="item.status === 'TRANSFERRED'"
+                         [class.badge-returned-status]="item.status === 'RETURNED'">
+                     {{ item.status }}
+                   </span>
+                </td>
+              </tr>
+              <tr *ngIf="reportData.length === 0">
+                 <td colspan="8" class="text-center py-5 text-muted font-italic">No records registered in the {{ reportType }} database matching the filters.</td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
@@ -69,33 +126,65 @@
   </div>
 </div>
 
-<!-- Print-only Report Layout (Step 4) -->
+<!-- Print-only Report Layout (Precision PDF Staggered Format) -->
 <div class="print-only">
    <div class="paper-page-report">
-       <h2 class="text-center">{{ reportType === 'RPCPPE' ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY' }}</h2>
-       <p class="text-center">As of {{ today | date:'longDate' }}</p>
+       <div class="doc-header">
+         <p class="text-center text-sm">Republic of the Philippines</p>
+         <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
+         <p class="text-center text-xs">National Office, Manila</p>
+         <h2 class="text-center mt-4">{{ reportType === 'RPCPPE' ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY (RPCSP)' }}</h2>
+         <p class="text-center text-xs">As of {{ today | date:'longDate' }}</p>
+       </div>
+
+       <table class="report-meta-table mt-4">
+         <tr>
+           <td style="width: 50%;"><strong>Accountable Officer:</strong> {{ selectedEmployee === 'ALL' ? 'All Accountable Officers' : selectedEmployee }}</td>
+           <td style="width: 50%; text-align: right;"><strong>Fund Cluster:</strong> Regular & Trust Fund</td>
+         </tr>
+       </table>
 
        <table class="report-table-print mt-4">
           <thead>
              <tr>
-                <th>Property No.</th>
-                <th>Description</th>
-                <th>Serial No.</th>
-                <th>Unit Cost</th>
-                <th>Date Acquired</th>
-                <th>Accountable Officer</th>
+                <th style="width: 15%;">Property No.</th>
+                <th style="width: 35%;">Description & Brand Details</th>
+                <th style="width: 12%;">Serial No.</th>
+                <th style="width: 12%;">Unit Cost</th>
+                <th style="width: 12%;">Date Acquired</th>
+                <th style="width: 14%;">Condition</th>
              </tr>
           </thead>
           <tbody>
              <tr *ngFor="let item of reportData">
                 <td>{{ item.property_no }}</td>
                 <td>{{ item.item_name }} {{ item.description ? '(' + item.description + ')' : '' }}</td>
-                <td>{{ item.serial_no }}</td>
-                <td>{{ item.unit_cost | number:'1.2-2' }}</td>
-                <td>{{ item.delivery_date | date:'shortDate' }}</td>
-                <td>{{ item.accountable_officer }}</td>
+                <td>{{ item.serial_no || 'N/A' }}</td>
+                <td class="text-right">₱{{ item.unit_cost | number:'1.2-2' }}</td>
+                <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
+                <td class="text-center">{{ item.condition }}</td>
+             </tr>
+             <tr>
+               <td class="text-center">&nbsp;</td>
+               <td colspan="5" class="text-muted-print text-center">x x x x x Nothing Follows x x x x x</td>
              </tr>
           </tbody>
        </table>
+
+       <!-- Staggered Signature Signoffs -->
+       <div class="report-signature-container mt-5">
+         <div class="sig-section">
+           <div class="sig-header">Prepared By:</div>
+           <div class="sig-space mt-4"></div>
+           <p class="sig-name">JERRY B. RUBRICO</p>
+           <p class="sig-title">Administrative Officer II (Property Custodian)</p>
+         </div>
+         <div class="sig-section">
+           <div class="sig-header">Certified Correct By:</div>
+           <div class="sig-space mt-4"></div>
+           <p class="sig-name">ARVINA S. VINUYA</p>
+           <p class="sig-title">Administrative Officer III</p>
+         </div>
+       </div>
    </div>
 </div>

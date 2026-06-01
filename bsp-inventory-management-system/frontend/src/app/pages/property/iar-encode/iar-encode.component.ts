@@ -33,8 +33,9 @@ export class IarEncodeComponent implements OnInit {
 
   receivedDate: string = '';
   acceptanceType: 'Complete' | 'Partial' = 'Complete';
-  receivedBy: string = 'ARVINA S. VINUYA';
-  receivedByDesignation: string = 'Administrative Officer III';
+  receivedBy: string = '';
+  receivedByDesignation: string = '';
+  receivedByDivision: string = '';
 
   // Dropdown Options
   offices = ['OSG', 'OBS', 'ODSG', 'ONP', 'LSO', 'FOD', 'CPSMO', 'ADMIN', 'FINANCE', 'NSS', 'IAO', 'PMDD'];
@@ -46,7 +47,99 @@ export class IarEncodeComponent implements OnInit {
   isSubmitting: boolean = false;
   isPreviewModalOpen: boolean = false;
 
+  // Formula Bar & Spreadsheet Interaction State
+  activeCell: string = 'B2';
+  activeCellName: string = 'Entity Name';
+  activeCellValue: string = 'Boy Scouts of the Philippines';
+  activeModelKey: string = 'entityName';
+  activeItemIndex: number | null = null;
+  activeItemKey: string = '';
+
   constructor(private propertyService: PropertyService, private router: Router) { }
+
+  onCellFocus(cellId: string, name: string, modelKey: string, itemIndex: number | null = null, itemKey: string = '') {
+    this.activeCell = cellId;
+    this.activeCellName = name;
+    this.activeModelKey = modelKey;
+    this.activeItemIndex = itemIndex;
+    this.activeItemKey = itemKey;
+    this.activeCellValue = this.getFormulaBarValue();
+  }
+
+  getFormulaBarValue(): string {
+    if (this.activeModelKey) {
+      if (this.activeItemIndex !== null && this.activeItemKey) {
+        return this.items[this.activeItemIndex][this.activeItemKey] || '';
+      }
+      return (this as any)[this.activeModelKey] || '';
+    }
+    return '';
+  }
+
+  setFormulaBarValue(val: any) {
+    if (this.activeModelKey) {
+      if (this.activeItemIndex !== null && this.activeItemKey) {
+        this.items[this.activeItemIndex][this.activeItemKey] = val;
+        if (['quantity', 'unit_cost', 'discount'].includes(this.activeItemKey)) {
+          this.calculateAmounts(this.items[this.activeItemIndex]);
+        }
+      } else {
+        (this as any)[this.activeModelKey] = val;
+      }
+    }
+  }
+
+  onGridInputChange() {
+    this.activeCellValue = this.getFormulaBarValue();
+  }
+
+  resetForm() {
+    if (confirm('Are you sure you want to reset the form? All unsaved data will be lost.')) {
+      this.entityName = 'Boy Scouts of the Philippines';
+      this.fundCluster = '';
+      this.supplierName = '';
+      this.fetchNextIarNo();
+      this.iarDate = new Date().toISOString().split('T')[0];
+      this.poPrNo = '';
+      this.poPrDate = '';
+      this.requisitioningOffice = 'PMDD';
+      this.invoiceDrNo = '';
+      this.invoiceDate = '';
+      this.responsibilityCenterCode = '';
+      this.inspectionDate = '';
+      this.inspectionStatus = 'Inspected, verified and found in order';
+      this.inspectedBy = 'JERRY B. RUBRICO';
+      this.inspectedByDesignation = 'Administrative Officer II';
+      this.receivedDate = '';
+      this.acceptanceType = 'Complete';
+      this.receivedBy = '';
+      this.receivedByDesignation = '';
+      this.receivedByDivision = '';
+      this.items = [];
+      this.addItemRow();
+      this.onCellFocus('B2', 'Entity Name', 'entityName');
+    }
+  }
+
+  scrollToSection(id: string) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Update visual active tab state by class manipulation
+      document.querySelectorAll('.sheet-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent?.toLowerCase().includes(id.replace('sheet-', ''))) {
+          tab.classList.add('active');
+        } else if (id === 'sheet-general' && tab.textContent?.toLowerCase().includes('general')) {
+          tab.classList.add('active');
+        } else if (id === 'sheet-items' && tab.textContent?.toLowerCase().includes('property')) {
+          tab.classList.add('active');
+        } else if (id === 'sheet-signatures' && tab.textContent?.toLowerCase().includes('inspection')) {
+          tab.classList.add('active');
+        }
+      });
+    }
+  }
 
   ngOnInit() {
     this.fetchNextIarNo();
@@ -68,7 +161,7 @@ export class IarEncodeComponent implements OnInit {
       unit: 'unit',
       quantity: 1,
       unit_cost: 0,
-      delivery_date: '',
+      delivery_date: new Date().toISOString().split('T')[0],
       srp: 0,
       discount: 0,
       total_amount: 0, // Calculated
@@ -119,6 +212,7 @@ export class IarEncodeComponent implements OnInit {
       receivedDate: this.receivedDate,
       acceptedBy: this.receivedBy,
       acceptedByDesignation: this.receivedByDesignation,
+      acceptedByDivision: this.receivedByDivision,
       acceptanceStatus: this.acceptanceType,
       
       items: this.items
@@ -157,6 +251,7 @@ export class IarEncodeComponent implements OnInit {
       inspectionDate: this.inspectionDate,
       receivedDate: this.receivedDate,
       acceptance_status: this.acceptanceType,
+      acceptedByDivision: this.receivedByDivision,
       items: this.items
     };
 
