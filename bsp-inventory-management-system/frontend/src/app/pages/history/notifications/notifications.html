@@ -22,7 +22,7 @@
         @if (isFilterOpen) {
           <div class="filter-dropdown" style="width: 250px;">
             <div class="filter-header">
-              <h3>Filter By Type</h3>
+              <h3>Filter Options</h3>
               <button class="btn-clear-sm" (click)="clearFilters()">Clear</button>
             </div>
             
@@ -35,6 +35,16 @@
                   <option value="SUCCESS">Success</option>
                   <option value="WARNING">Warning</option>
                   <option value="ERROR">Error</option>
+                </select>
+              </div>
+
+              <div class="filter-group" style="margin-top: 10px;">
+                <label>Functional Category</label>
+                <select class="filter-select" [(ngModel)]="filterCategory">
+                  <option value="">All Categories</option>
+                  <option value="low_stock">Low Stock Alerts</option>
+                  <option value="request">Supply Requests</option>
+                  <option value="other">Other Messages</option>
                 </select>
               </div>
             </div>

@@ -75,4 +75,8 @@ export class PropertyService {
   previewIarExcel(payload: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/iars/preview-excel`, payload, { responseType: 'blob' });
   }
+
+  createPropertyTransfer(payload: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/transfers`, payload);
+  }
 }

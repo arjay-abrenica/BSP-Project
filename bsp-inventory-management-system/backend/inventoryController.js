@@ -436,7 +436,7 @@ exports.getNextRisNo = async (req, res) => {
 exports.createRequest = async (req, res) => {
   console.log('--- CREATE REQUEST START ---');
   console.log('User from token:', req.user);
-  let { purpose, priority, justification, items } = req.body;
+  let { purpose, priority, justification, items, requested_by } = req.body;
   let office_id = req.body.office_id;
   
   // If user is FOCAL_OFFICER, ALWAYS use their own office_id from token, ignoring any provided ID
@@ -444,7 +444,7 @@ exports.createRequest = async (req, res) => {
     office_id = req.user.office_id;
     console.log(`Focal Officer detected. Forcing office_id: ${office_id} for user: ${req.user.username}`);
   }
-
+  
   console.log('Final office_id to be used:', office_id);
 
   let client;
@@ -465,9 +465,9 @@ exports.createRequest = async (req, res) => {
 
     // 2. Insert Request Header
     const requestRes = await client.query(
-      `INSERT INTO Requests (request_number, office_id, purpose, priority, justification, status) 
-       VALUES ($1, $2, $3, $4, $5, 'PENDING') RETURNING request_id`,
-      [request_number, office_id, purpose, priority || 'NORMAL', justification]
+      `INSERT INTO Requests (request_number, office_id, purpose, priority, justification, status, requested_by) 
+       VALUES ($1, $2, $3, $4, $5, 'PENDING', $6) RETURNING request_id`,
+      [request_number, office_id, purpose, priority || 'NORMAL', justification, requested_by]
     );
     const requestId = requestRes.rows[0].request_id;
 
@@ -742,6 +742,9 @@ exports.getPendingRequests = async (req, res) => {
         r.request_number as "reqNumber",
         r.request_number as "reqDisplay",
         r.purpose,
+        r.priority,
+        r.justification,
+        r.requested_by,
         r.office_id as department_id,
         o.office_name as "deptName",
         o.office_name,
@@ -778,6 +781,7 @@ exports.getApprovedRequests = async (req, res) => {
         (SELECT COUNT(*) FROM Transaction_Details td WHERE td.transaction_id = t.transaction_id) as "itemsCount",
         COALESCE(r.purpose, t.remarks) as purpose,
         t.remarks,
+        r.requested_by,
         t.transaction_id
       FROM Transactions t
       LEFT JOIN Requests r ON t.request_id = r.request_id
@@ -1209,8 +1213,9 @@ exports.getLowStockItems = async (req, res) => {
 };
 
 exports.getIssuanceSummary = async (req, res) => {
+  const { month, year } = req.query;
   try {
-    const query = `
+    let query = `
       SELECT 
         o.office_name as office,
         o.acronym,
@@ -1221,10 +1226,22 @@ exports.getIssuanceSummary = async (req, res) => {
       LEFT JOIN Offices o ON t.office_id = o.office_id
       LEFT JOIN Requests r ON t.request_id = r.request_id
       WHERE t.transaction_type = 'OUT'
+    `;
+    const params = [];
+    let paramIdx = 1;
+    if (month && year) {
+      query += ` AND EXTRACT(MONTH FROM t.transaction_date) = $${paramIdx++} AND EXTRACT(YEAR FROM t.transaction_date) = $${paramIdx++}`;
+      params.push(parseInt(month), parseInt(year));
+    } else if (year) {
+      query += ` AND EXTRACT(YEAR FROM t.transaction_date) = $${paramIdx++}`;
+      params.push(parseInt(year));
+    }
+
+    query += `
       GROUP BY o.office_name, o.acronym
       ORDER BY total_issued DESC NULLS LAST
     `;
-    const result = await db.query(query);
+    const result = await db.query(query, params);
     res.status(200).json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1303,8 +1320,9 @@ exports.getUsageTrend = async (req, res) => {
 };
 
 exports.getCategoryBreakdown = async (req, res) => {
+  const { month, year } = req.query;
   try {
-    const usageQuery = `
+    let usageQuery = `
       SELECT 
         COALESCE(c.category_name, 'Uncategorized') as name,
         SUM(td.quantity) as total_issued
@@ -1313,10 +1331,22 @@ exports.getCategoryBreakdown = async (req, res) => {
       JOIN Items i ON td.item_id = i.item_id
       LEFT JOIN Categories c ON i.category_id = c.category_id
       WHERE t.transaction_type = 'OUT'
+    `;
+    const params = [];
+    let paramIdx = 1;
+    if (month && year) {
+      usageQuery += ` AND EXTRACT(MONTH FROM t.transaction_date) = $${paramIdx++} AND EXTRACT(YEAR FROM t.transaction_date) = $${paramIdx++}`;
+      params.push(parseInt(month), parseInt(year));
+    } else if (year) {
+      usageQuery += ` AND EXTRACT(YEAR FROM t.transaction_date) = $${paramIdx++}`;
+      params.push(parseInt(year));
+    }
+
+    usageQuery += `
       GROUP BY c.category_name
       ORDER BY total_issued DESC
     `;
-    const usageRes = await db.query(usageQuery);
+    const usageRes = await db.query(usageQuery, params);
 
     const valueQuery = `
       SELECT 

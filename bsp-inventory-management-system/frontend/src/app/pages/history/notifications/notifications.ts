@@ -19,6 +19,7 @@ export class Notifications implements OnInit {
   // Filters
   searchQuery = '';
   filterType = '';
+  filterCategory = '';
   isFilterOpen = false;
 
   // Pagination state
@@ -60,6 +61,19 @@ export class Notifications implements OnInit {
       temp = temp.filter(n => n.type === this.filterType);
     }
     
+    if (this.filterCategory) {
+      temp = temp.filter(n => {
+        const msg = n.message.toLowerCase();
+        const isLowStock = msg.includes('low stock');
+        const isRequest = msg.includes('request') || msg.includes('ris');
+        
+        if (this.filterCategory === 'low_stock') return isLowStock;
+        if (this.filterCategory === 'request') return isRequest;
+        if (this.filterCategory === 'other') return !isLowStock && !isRequest;
+        return true;
+      });
+    }
+    
     if (this.searchQuery.trim()) {
       const q = this.searchQuery.toLowerCase();
       temp = temp.filter(n => 
@@ -75,6 +89,7 @@ export class Notifications implements OnInit {
 
   clearFilters(): void {
     this.filterType = '';
+    this.filterCategory = '';
     this.searchQuery = '';
     this.applyFilters();
     this.isFilterOpen = false;

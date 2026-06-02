@@ -27,14 +27,19 @@
         <div class="request-card" *ngFor="let req of requests" [class.selected]="selectedRequest?.id === req.id" (click)="selectRequest(req.id)">
           <div class="req-avatar" [ngClass]="'avatar-' + req.acronym.toLowerCase()">{{ req.acronym }}</div>
           <div class="req-info">
-            <div class="req-title">{{ req.deptCode }}</div>
+            <div class="req-title" style="display: flex; align-items: center; gap: 8px;">
+              {{ req.deptCode }}
+              <span *ngIf="req.priority && req.priority !== 'NORMAL'" class="priority-badge-mini" [ngClass]="req.priority.toLowerCase()">
+                {{ req.priority }}
+              </span>
+            </div>
             <div class="req-items">{{ req.itemsCount }} Items</div>
             <div class="req-date">{{ req.date }} at {{ req.time }}</div>
           </div>
           <div class="req-number">{{ req.reqNumber }}</div>
         </div>
       </div>
-
+      
       <!-- Approved Tab Content (Left Panel) -->
       <div class="requests-list" *ngIf="activeTab === 'approved'">
         <div class="request-card" *ngFor="let office of approvedOffices" 
@@ -87,6 +92,20 @@
       <ng-container *ngIf="activeTab === 'pending'">
         
         <div class="details-content" *ngIf="selectedRequest">
+          <!-- Urgent / Emergency Alert Banner -->
+          <div *ngIf="selectedRequest.priority && selectedRequest.priority !== 'NORMAL'" 
+               class="priority-alert-banner" 
+               [ngClass]="selectedRequest.priority.toLowerCase()"
+               style="margin-bottom: 20px;">
+            <div class="alert-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>{{ selectedRequest.priority }} PRIORITY REQUISITION</span>
+            </div>
+            <div class="alert-body" *ngIf="selectedRequest.justification">
+              <strong>Justification:</strong> {{ selectedRequest.justification }}
+            </div>
+          </div>
+
           <div class="details-info-grid">
             <div class="info-block">
               <label>Requesting Office</label>
@@ -481,14 +500,14 @@
               </tr>
               <tr class="sig-name">
                 <td colspan="2" style="font-weight: bold; font-size: 9pt;">Printed Name</td>
-                <td colspan="2"></td>
+                <td colspan="2" style="font-weight: bold; text-transform: uppercase;">{{ printData.requested_by || '' }}</td>
                 <td></td>
                 <td colspan="3">SERVILLANO J. BAJORA</td>
                 <td></td>
               </tr>
               <tr class="sig-designation">
                 <td colspan="2" style="font-weight: bold; font-size: 9pt;">Designation</td>
-                <td colspan="2"></td>
+                <td colspan="2" style="font-size: 9pt;">Focal Person</td>
                 <td>Division Head</td>
                 <td colspan="3">Supply Officer</td>
                 <td></td>

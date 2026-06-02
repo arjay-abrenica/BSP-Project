@@ -56,10 +56,23 @@ const createPropertyTransfer = async (req, res) => {
   const client = await db.pool.connect();
   try {
     await client.query('BEGIN');
-    await client.query(`INSERT INTO Property_Transfers (ptr_no, property_id, transfer_date, transfer_type, from_officer, to_officer, to_office_id, reason, received_by, approved_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`, [ptrNo, propertyId, transferDate, transferType || 'TRANSFER', fromOfficer, toOfficer, toOfficeId, reason || null, receivedBy || null, approvedBy || null]);
-    await client.query(`UPDATE Property_Items SET accountable_officer = $1, office_id = $2, status = 'TRANSFERRED' WHERE property_id = $3`, [toOfficer, toOfficeId, propertyId]);
-    await client.query('COMMIT'); res.json({ message: 'Recorded.' });
-  } catch (error) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
+    const tResult = await client.query(
+      `INSERT INTO Property_Transfers (ptr_no, property_id, transfer_date, transfer_type, from_officer, to_officer, to_office_id, reason, received_by, approved_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING transfer_id`,
+      [ptrNo, propertyId, transferDate, transferType || 'TRANSFER', fromOfficer, toOfficer, toOfficeId || null, reason || null, receivedBy || null, approvedBy || null]
+    );
+    const transferId = tResult.rows[0].transfer_id;
+    
+    // Fallback: Preserve original office_id of the property if toOfficeId is not provided
+    const targetOfficeId = toOfficeId || (await client.query("SELECT office_id FROM Property_Items WHERE property_id = $1", [propertyId])).rows[0]?.office_id || null;
+    
+    await client.query(`UPDATE Property_Items SET accountable_officer = $1, office_id = $2, status = 'TRANSFERRED' WHERE property_id = $3`, [toOfficer, targetOfficeId, propertyId]);
+    await client.query('COMMIT'); 
+    res.json({ message: 'Recorded.', transferId });
+  } catch (error) { 
+    await client.query('ROLLBACK'); 
+    console.error('Error in createPropertyTransfer:', error);
+    res.status(500).json({ error: 'Failed to record transfer.' }); 
+  } finally { client.release(); }
 };
 
 const createPropertyReturn = async (req, res) => {

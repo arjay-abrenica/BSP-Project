@@ -1,10 +1,53 @@
 <div class="page-container">
-    <div class="page-title-bar">
-        <h2>Reports Dashboard</h2>
-        <div class="header-actions">
-            <button class="bsp-btn generate-btn" (click)="openGenerateModal()">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Generate New Report
+    <div class="dashboard-header-container">
+        <div class="page-title-bar">
+            <h2>Reports Dashboard</h2>
+            <div class="header-actions">
+                <button class="bsp-btn generate-btn" (click)="openGenerateModal()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Generate New Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Unified Dashboard Filter Bar -->
+        <div class="dashboard-filter-bar">
+            <div class="filter-group">
+                <label class="filter-label">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Office
+                </label>
+                <select class="bsp-select-filter" [(ngModel)]="dashboardOfficeFilter" (change)="onFilterChange()" [disabled]="authService.currentUserValue?.role?.toLowerCase() === 'focal_officer'">
+                    <option value="all">All Offices</option>
+                    <option *ngFor="let office of offices" [value]="office.acronym">{{office.office_name}} ({{office.acronym}})</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Month
+                </label>
+                <select class="bsp-select-filter" [(ngModel)]="dashboardMonthFilter" (change)="onFilterChange()">
+                    <option value="all">All Months</option>
+                    <option *ngFor="let m of monthNames" [value]="m">{{m}}</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Year
+                </label>
+                <select class="bsp-select-filter" [(ngModel)]="dashboardYearFilter" (change)="onFilterChange()">
+                    <option value="all">All Years</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+            </div>
+            <button class="reset-filter-btn" (click)="resetDashboardFilters()" title="Reset all filters">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                Reset
             </button>
         </div>
     </div>
@@ -56,13 +99,22 @@
                 <div class="search-bar">
                     <div class="search-input-wrapper">
                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" placeholder="Search Report..." [(ngModel)]="searchQuery">
+                        <input type="text" placeholder="Search Report..." [(ngModel)]="searchQuery" (input)="onSearchChange()">
                     </div>
-                    <div class="filter-pills-container">
-                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'all'" (click)="setCategoryFilter('all')">All</button>
-                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'INVENTORY'" (click)="setCategoryFilter('INVENTORY')">Inventory</button>
-                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'RSMI'" (click)="setCategoryFilter('RSMI')">RSMI</button>
-                        <button class="filter-pill" [class.active]="selectedCategoryFilter === 'SUMMARY'" (click)="setCategoryFilter('SUMMARY')">Summary</button>
+                    <div class="segmented-filter-bar">
+                        <button class="filter-tab" [class.active]="selectedCategoryFilter === 'all'" (click)="setCategoryFilter('all')">All</button>
+                        <button class="filter-tab" [class.active]="selectedCategoryFilter === 'INVENTORY'" (click)="setCategoryFilter('INVENTORY')">Inventory</button>
+                        <button class="filter-tab" [class.active]="selectedCategoryFilter === 'RSMI'" (click)="setCategoryFilter('RSMI')">RSMI</button>
+                        <button class="filter-tab" [class.active]="selectedCategoryFilter === 'SUMMARY'" (click)="setCategoryFilter('SUMMARY')">Summary</button>
+                    </div>
+                    <div class="segmented-filter-bar format-filter-bar">
+                        <button class="filter-tab" [class.active]="dashboardFormatFilter === 'all'" (click)="setFormatFilter('all')">All Formats</button>
+                        <button class="filter-tab" [class.active]="dashboardFormatFilter === 'pdf'" (click)="setFormatFilter('pdf')">
+                            <span class="format-dot pdf-dot"></span> PDF
+                        </button>
+                        <button class="filter-tab" [class.active]="dashboardFormatFilter === 'xls'" (click)="setFormatFilter('xls')">
+                            <span class="format-dot xls-dot"></span> Excel
+                        </button>
                     </div>
                 </div>
                 
@@ -140,10 +192,31 @@
                         <p>Loading document from database...</p>
                    </div>
 
-                   <iframe *ngIf="safeBlobUrl" 
+                   <iframe *ngIf="selectedReport.type === 'pdf' && safeBlobUrl" 
                        [src]="safeBlobUrl" 
                        class="viewer-iframe">
                    </iframe>
+
+                   <!-- Premium Tabular Data Viewer for Excel / CSV exports -->
+                   <div *ngIf="selectedReport.type === 'xls'" class="excel-preview-container">
+                       <div class="excel-sheet-header">
+                           <span class="sheet-title">📊 Spreadsheet Data Preview</span>
+                       </div>
+                       <div class="excel-table-wrapper">
+                           <table class="excel-table">
+                               <thead>
+                                   <tr *ngIf="parsedCsvData.length > 0">
+                                       <th *ngFor="let header of parsedCsvData[0]">{{header}}</th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+                                   <tr *ngFor="let row of parsedCsvData.slice(1)">
+                                       <td *ngFor="let cell of row">{{cell}}</td>
+                                   </tr>
+                               </tbody>
+                           </table>
+                       </div>
+                   </div>
                 </div>
             </div>
         </div>
@@ -201,12 +274,26 @@
                     </div>
                 </div>
             </div>
+
+            <div class="form-section">
+                <label class="section-label">Report Format</label>
+                <div class="format-selector">
+                    <div class="format-opt" [class.active]="selectedFormat === 'pdf'" (click)="selectedFormat = 'pdf'">
+                        <span class="f-title">PDF Document</span>
+                        <span class="f-desc">Visual print layout.</span>
+                    </div>
+                    <div class="format-opt" [class.active]="selectedFormat === 'excel'" (click)="selectedFormat = 'excel'">
+                        <span class="f-title">Excel Spreadsheet</span>
+                        <span class="f-desc">Export tabular CSV.</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="modal-footer" *ngIf="!isGenerating">
             <button class="bsp-btn cancel-btn" (click)="closeGenerateModal()">Cancel</button>
             <button class="bsp-btn submit-btn" (click)="generateReport()">
-                Compile PDF
+                {{ selectedFormat === 'excel' ? 'Export Excel' : 'Compile PDF' }}
             </button>
         </div>
     </div>

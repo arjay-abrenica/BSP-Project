@@ -26,15 +26,7 @@ app.use(cors({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // --- API Routes ---
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/property', propertyRoutes);
-app.use('/api', inventoryRoutes);
-
-// --- System Health Checks ---
-// Endpoint to verify database connection status
+// Endpoint to verify database connection status (unauthenticated health check)
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await db.query('SELECT NOW()');
@@ -44,6 +36,15 @@ app.get('/api/test-db', async (req, res) => {
     res.status(500).json({ error: 'Database connection failed' });
   }
 });
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/property', propertyRoutes);
+app.use('/api', inventoryRoutes);
+
+// --- System Health Checks ---
 
 // Simple server status check
 app.get('/', (req, res) => {

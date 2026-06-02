@@ -163,8 +163,18 @@
 
       <div class="request-details-form">
         <div class="form-group">
-          <label>Purpose <span class="required">*</span></label>
-          <textarea [(ngModel)]="requestPurpose" placeholder="e.g. Office supplies for the next quarter"></textarea>
+          <label>Requested By (Name) <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="requestedByName" placeholder="e.g. Juan Dela Cruz">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="margin: 0;">Purpose <span class="required">*</span></label>
+            <span [style.color]="requestPurpose.length > 150 ? '#dc2626' : '#64748b'" style="font-size: 11px; font-weight: 700; letter-spacing: 0.2px;">
+              {{ requestPurpose.length }} / 150 letters
+            </span>
+          </div>
+          <textarea [(ngModel)]="requestPurpose" maxlength="150" placeholder="e.g. Office supplies for the next quarter"></textarea>
         </div>
 
         <div class="form-group">
@@ -185,7 +195,7 @@
 
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closePreview()">Back to list</button>
-      <button class="btn-submit-full" (click)="submitFullRequest()" [disabled]="isSubmitting">
+      <button class="btn-submit-full" (click)="submitFullRequest()" [disabled]="isSubmitting || requestPurpose.length > 150 || !requestedByName || !requestedByName.trim()">
         <span *ngIf="isSubmitting" class="spinner"></span>
         Submit Requisition
       </button>
@@ -204,95 +214,8 @@
     </div>
     <h2>Request Submitted!</h2>
     <p>Your requisition <strong>{{lastRequestNumber}}</strong> has been successfully sent for approval.</p>
-    
-    <div class="receipt-actions">
-      <button class="btn-outline" (click)="printRis()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Print RIS
-      </button>
-      <button class="btn-outline" (click)="downloadPDF()">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Download PDF
-      </button>
-    </div>
-
     <div class="modal-actions">
       <button class="btn-primary" (click)="closeSuccessModal()">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Hidden RIS Receipt Template for Printing -->
-<div id="ris-receipt" style="display: none;">
-  <div class="ris-container" style="padding: 40px; color: #000; background: #fff; width: 800px;">
-    <div style="text-align: center; margin-bottom: 30px;">
-      <h2 style="margin: 0; text-transform: uppercase;">Boy Scouts of the Philippines</h2>
-      <p style="margin: 5px 0;">National Headquarters, Manila</p>
-      <h3 style="margin: 20px 0 10px; text-decoration: underline;">REQUISITION AND ISSUE SLIP</h3>
-    </div>
-
-    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-      <div>
-        <p><strong>Division:</strong> {{receiptData?.office}}</p>
-        <p><strong>Office:</strong> {{receiptData?.office}}</p>
-      </div>
-      <div style="text-align: right;">
-        <p><strong>RIS No:</strong> {{lastRequestNumber}}</p>
-        <p><strong>Date:</strong> {{receiptData?.date}}</p>
-      </div>
-    </div>
-
-    <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
-      <thead>
-        <tr>
-          <th style="border: 1px solid #000; padding: 10px; text-align: center;" colspan="4">REQUISITION</th>
-          <th style="border: 1px solid #000; padding: 10px; text-align: center;" colspan="2">ISSUE</th>
-        </tr>
-        <tr>
-          <th style="border: 1px solid #000; padding: 8px;">Stock No.</th>
-          <th style="border: 1px solid #000; padding: 8px;">Unit</th>
-          <th style="border: 1px solid #000; padding: 8px;">Description</th>
-          <th style="border: 1px solid #000; padding: 8px;">Quantity</th>
-          <th style="border: 1px solid #000; padding: 8px;">Quantity</th>
-          <th style="border: 1px solid #000; padding: 8px;">Remarks</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of receiptData?.items">
-          <td style="border: 1px solid #000; padding: 8px;">{{item.item_code}}</td>
-          <td style="border: 1px solid #000; padding: 8px;">{{item.unit_of_measure}}</td>
-          <td style="border: 1px solid #000; padding: 8px;">{{item.item_name}}</td>
-          <td style="border: 1px solid #000; padding: 8px; text-align: center;">{{item.requestQuantity}}</td>
-          <td style="border: 1px solid #000; padding: 8px;"></td>
-          <td style="border: 1px solid #000; padding: 8px;"></td>
-        </tr>
-        <!-- Fill remaining space if few items -->
-        <tr *ngFor="let i of [1,2,3,4,5]">
-          <td style="border: 1px solid #000; padding: 15px;">&nbsp;</td>
-          <td style="border: 1px solid #000; padding: 15px;"></td>
-          <td style="border: 1px solid #000; padding: 15px;"></td>
-          <td style="border: 1px solid #000; padding: 15px;"></td>
-          <td style="border: 1px solid #000; padding: 15px;"></td>
-          <td style="border: 1px solid #000; padding: 15px;"></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div style="margin-top: 20px;">
-      <p><strong>Purpose:</strong> {{receiptData?.purpose}}</p>
-    </div>
-
-    <div style="margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px;">
-      <div style="text-align: center;">
-        <p style="margin-bottom: 40px;">Requested by:</p>
-        <p style="border-bottom: 1px solid #000; margin-bottom: 0; font-weight: bold;">{{authService.currentUserValue?.username | uppercase}}</p>
-        <p style="margin-top: 5px;">Signature over Printed Name</p>
-      </div>
-      <div style="text-align: center;">
-        <p style="margin-bottom: 40px;">Approved by:</p>
-        <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-        <p style="margin-top: 5px;">Head of Office/Authorized Representative</p>
-      </div>
     </div>
   </div>
 </div>

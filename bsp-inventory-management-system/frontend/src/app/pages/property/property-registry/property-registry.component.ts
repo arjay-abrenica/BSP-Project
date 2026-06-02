@@ -162,14 +162,21 @@ export class PropertyRegistryComponent implements OnInit {
        toOfficer: this.transferData.toOfficer,
        reason: this.transferData.reason
     };
-    // Let's assume we have a transferProperty method in propertyService
-    // Since we don't have it explicitly mapped in this file yet, I'll use raw fetch or assume it exists.
-    // For now we will mock the success and directly hit the PTR export.
-    alert('Transfer complete! Downloading PTR...');
-    this.downloadPtrExcel(this.propToTransfer.property_id, this.propToTransfer.property_no);
-    this.isSubmittingTransfer = false;
-    this.isTransferModalOpen = false;
-    this.loadProperties();
+
+    this.propertyService.createPropertyTransfer(payload).subscribe({
+      next: (res) => {
+        alert('Transfer completed successfully! Downloading PTR...');
+        this.downloadPtrExcel(res.transferId, this.propToTransfer.property_no);
+        this.isSubmittingTransfer = false;
+        this.isTransferModalOpen = false;
+        this.loadProperties();
+      },
+      error: (err) => {
+        console.error('Property transfer failed:', err);
+        alert('Failed to submit property transfer.');
+        this.isSubmittingTransfer = false;
+      }
+    });
   }
 
   downloadPtrExcel(id: number, propNo: string) {

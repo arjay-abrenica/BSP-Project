@@ -1047,6 +1047,7 @@
   display: flex;
   flex-direction: column;
   margin: 0;
+  flex-shrink: 0; /* Prevent flex parent from shrinking the A4 canvas */
 }
 
 /* SCOPED RIS STYLES from RIS-FORM-2025.html */
@@ -1747,4 +1748,74 @@
   .direct-items-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================================
+   PRIORITY ALERT BADGES & BANNERS
+   ========================================= */
+.priority-badge-mini {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  &.urgent {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fee2e2;
+  }
+  
+  &.emergency {
+    background-color: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+    animation: pulse-border 1.5s infinite;
+  }
+}
+
+.priority-alert-banner {
+  padding: 16px 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  
+  .alert-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  
+  .alert-body {
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  
+  &.urgent {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    .alert-header { color: #dc2626; }
+  }
+  
+  &.emergency {
+    background-color: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #9f1239;
+    .alert-header { color: #e11d48; }
+  }
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.4); }
+  70% { box-shadow: 0 0 0 4px rgba(225, 29, 72, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
 }
