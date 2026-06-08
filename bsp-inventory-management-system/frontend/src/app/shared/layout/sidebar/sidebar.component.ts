@@ -21,6 +21,27 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
     // Notifications
     showNotifDropdown = false;
+    activeFilter: 'all' | 'low_stock' | 'request' | 'other' = 'all';
+
+    setFilter(filter: 'all' | 'low_stock' | 'request' | 'other', event: Event) {
+        event.stopPropagation();
+        this.activeFilter = filter;
+    }
+
+    getFilteredNotifications(notifications: any[] | null): any[] {
+        if (!notifications) return [];
+        if (this.activeFilter === 'all') return notifications;
+        return notifications.filter(n => {
+            const msg = n.message.toLowerCase();
+            const isLowStock = msg.includes('low stock');
+            const isRequest = msg.includes('request') || msg.includes('ris');
+            
+            if (this.activeFilter === 'low_stock') return isLowStock;
+            if (this.activeFilter === 'request') return isRequest;
+            if (this.activeFilter === 'other') return !isLowStock && !isRequest;
+            return true;
+        });
+    }
 
     constructor(
         public router: Router, 

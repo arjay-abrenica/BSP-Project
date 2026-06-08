@@ -40,7 +40,7 @@ import { AuthService } from '../../core/services/auth.service';
 export class ReportsComponent implements OnInit, OnDestroy {
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private sanitizer: DomSanitizer,
     private http: HttpClient
   ) { }
@@ -50,6 +50,15 @@ export class ReportsComponent implements OnInit, OnDestroy {
   selectedMonth: string = '';
   selectedYear: string = '';
   selectedFormat: 'pdf' | 'excel' = 'pdf';
+
+  // Dashboard Level Filters
+  dashboardOfficeFilter: string = 'all';
+  dashboardMonthFilter: string = 'all';
+  dashboardYearFilter: string = 'all';
+  dashboardFormatFilter: string = 'all';
+
+  offices: any[] = [];
+  parsedCsvData: string[][] = [];
 
   reports: ReportItem[] = [];
   metrics: DashboardMetrics = {
@@ -97,7 +106,17 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.selectedYear = today.getFullYear().toString();
 
     this.loadReports();
+    this.loadOffices();
     this.fetchDashboardMetrics();
+  }
+
+  private loadOffices() {
+    this.http.get<any[]>('http://localhost:5000/api/offices').subscribe({
+      next: (data) => {
+        this.offices = data;
+      },
+      error: (err) => console.error('Failed to load offices', err)
+    });
   }
 
   private loadReports() {
@@ -109,24 +128,71 @@ export class ReportsComponent implements OnInit, OnDestroy {
     });
   }
 
-  private fetchDashboardMetrics() {
-    const issuanceSummary$ = this.http.get<any[]>('http://localhost:5000/api/reports/issuance-summary');
+  fetchDashboardMetrics() {
+    let params: string[] = [];
+    if (this.dashboardMonthFilter !== 'all') {
+      const monthNum = this.monthMap[this.dashboardMonthFilter];
+      if (monthNum) {
+        params.push(`month=${monthNum}`);
+      }
+    }
+    if (this.dashboardYearFilter !== 'all') {
+      params.push(`year=${this.dashboardYearFilter}`);
+    }
+
+    const queryString = params.length > 0 ? '?' + params.join('&') : '';
+
+    const issuanceSummary$ = this.http.get<any[]>(`http://localhost:5000/api/reports/issuance-summary${queryString}`);
     const lowStock$ = this.http.get<any[]>('http://localhost:5000/api/reports/low-stock');
-    const categories$ = this.http.get<any>('http://localhost:5000/api/reports/category-breakdown');
+    const categories$ = this.http.get<any>(`http://localhost:5000/api/reports/category-breakdown${queryString}`);
 
     forkJoin({
       issuances: issuanceSummary$,
       lowStock: lowStock$,
       categories: categories$
     }).subscribe({
-      next: (res) => {
-        this.metrics.totalRequests = res.issuances.reduce((acc, curr) => acc + parseInt(curr.total_requests || 0), 0);
-        this.metrics.totalIssued = res.issuances.reduce((acc, curr) => acc + parseInt(curr.total_issued || 0), 0);
-        this.metrics.lowStockCount = res.lowStock.length;
+      next: (res: any) => {
+        const user = this.authService.currentUserValue;
+        let officeToFilter = this.dashboardOfficeFilter;
+        if (user && user.role?.toLowerCase() === 'focal_officer') {
+          officeToFilter = user.office || 'all';
+        }
+
+        let filteredIssuances = res.issuances || [];
+        if (officeToFilter !== 'all') {
+          filteredIssuances = filteredIssuances.filter((iss: any) => 
+            iss.acronym?.toUpperCase() === officeToFilter.toUpperCase() ||
+            iss.office?.toUpperCase() === officeToFilter.toUpperCase()
+          );
+        }
+
+        this.metrics.totalRequests = filteredIssuances.reduce((acc: number, curr: any) => acc + parseInt(curr.total_requests || 0), 0);
+        this.metrics.totalIssued = filteredIssuances.reduce((acc: number, curr: any) => acc + parseInt(curr.total_issued || 0), 0);
+        this.metrics.lowStockCount = res.lowStock ? res.lowStock.length : 0;
         this.metrics.topCategory = res.categories?.topUsage?.[0]?.name || 'N/A';
       },
       error: (err) => console.error('Failed to fetch dashboard metrics', err)
     });
+  }
+
+  onFilterChange() {
+    this.fetchDashboardMetrics();
+    this.currentPage = 1;
+  }
+
+  resetDashboardFilters() {
+    this.dashboardOfficeFilter = 'all';
+    this.dashboardMonthFilter = 'all';
+    this.dashboardYearFilter = 'all';
+    this.dashboardFormatFilter = 'all';
+    this.selectedCategoryFilter = 'all';
+    this.searchQuery = '';
+    this.onFilterChange();
+  }
+
+  setFormatFilter(format: string) {
+    this.dashboardFormatFilter = format;
+    this.currentPage = 1;
   }
 
   getSafeUrl(dataUrl?: string): SafeResourceUrl | null {
@@ -138,32 +204,62 @@ export class ReportsComponent implements OnInit, OnDestroy {
     const user = this.authService.currentUserValue;
     let baseList = this.reports;
 
+    // Filter by Office
     if (user && user.role?.toLowerCase() === 'focal_officer') {
       const userOffice = user.office?.toUpperCase();
       baseList = baseList.filter(r => r.office === userOffice);
+    } else if (this.dashboardOfficeFilter !== 'all') {
+      baseList = baseList.filter(r => r.office?.toUpperCase() === this.dashboardOfficeFilter.toUpperCase());
     }
 
-    if (this.filterType !== 'all') {
-      baseList = baseList.filter(r => r.type === this.filterType);
+    // Filter by Format (PDF vs Excel)
+    if (this.dashboardFormatFilter !== 'all') {
+      baseList = baseList.filter(r => r.type === this.dashboardFormatFilter);
     }
 
+    // Filter by Month
+    if (this.dashboardMonthFilter !== 'all') {
+      const queryMonth = this.dashboardMonthFilter.toLowerCase();
+      baseList = baseList.filter(r => 
+        r.dateGenerated?.toLowerCase().includes(queryMonth) ||
+        r.title?.toLowerCase().includes(queryMonth)
+      );
+    }
+
+    // Filter by Year
+    if (this.dashboardYearFilter !== 'all') {
+      baseList = baseList.filter(r => 
+        r.dateGenerated?.toLowerCase().includes(this.dashboardYearFilter) ||
+        r.title?.toLowerCase().includes(this.dashboardYearFilter)
+      );
+    }
+
+    // Filter by Status
     const targetStatus = this.showArchived ? 'ARCHIVED' : 'ACTIVE';
     baseList = baseList.filter(r => (r.status || 'ACTIVE').toUpperCase() === targetStatus);
 
+    // Filter by Category
     if (this.selectedCategoryFilter !== 'all') {
       baseList = baseList.filter(r => r.category?.toUpperCase() === this.selectedCategoryFilter.toUpperCase());
     }
 
+    // Filter by Search Query
     if (!this.searchQuery) {
       return baseList;
     }
 
     const query = this.searchQuery.toLowerCase();
     return baseList.filter(report =>
-      report.title.toLowerCase().includes(query) ||
-      report.dateGenerated.toLowerCase().includes(query) ||
-      report.reportNumber.toLowerCase().includes(query)
+      (report.title && report.title.toLowerCase().includes(query)) ||
+      (report.dateGenerated && report.dateGenerated.toLowerCase().includes(query)) ||
+      (report.reportNumber && report.reportNumber.toLowerCase().includes(query)) ||
+      (report.category && report.category.toLowerCase().includes(query)) ||
+      (report.office && report.office.toLowerCase().includes(query))
     );
+  }
+
+  onSearchChange() {
+    this.currentPage = 1;
   }
 
   // Pagination Accessors
@@ -215,6 +311,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   selectReport(report: ReportItem) {
     this.selectedReport = report;
     this.safeBlobUrl = null;
+    this.parsedCsvData = [];
 
     if (this.currentBlobUrl) {
       URL.revokeObjectURL(this.currentBlobUrl);
@@ -226,13 +323,34 @@ export class ReportsComponent implements OnInit, OnDestroy {
         next: (res) => {
           report.fileData = res.fileData;
           if (this.selectedReport?.id === report.id) {
-            this.createSafeBlobUrl(res.fileData);
+            if (report.type === 'xls') {
+              this.parseCsvData(res.fileData);
+            } else {
+              this.createSafeBlobUrl(res.fileData);
+            }
           }
         },
         error: (err) => console.error('Failed to load report file data', err)
       });
     } else {
-      this.createSafeBlobUrl(report.fileData);
+      if (report.type === 'xls') {
+        this.parseCsvData(report.fileData);
+      } else {
+        this.createSafeBlobUrl(report.fileData);
+      }
+    }
+  }
+
+  private parseCsvData(dataUri: string) {
+    try {
+      const base64 = dataUri.split(',')[1];
+      const csvContent = decodeURIComponent(escape(atob(base64)));
+      const lines = csvContent.split('\n');
+      this.parsedCsvData = lines
+        .map(line => line.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()))
+        .filter(row => row.some(cell => cell !== ''));
+    } catch (e) {
+      console.error('Failed to parse CSV report', e);
     }
   }
 
@@ -363,9 +481,17 @@ export class ReportsComponent implements OnInit, OnDestroy {
         }
 
         if (this.selectedReportType === 'inventory') {
-          this.generateInventoryPDF(data);
+          if (this.selectedFormat === 'excel') {
+            this.generateInventoryExcel(data);
+          } else {
+            this.generateInventoryPDF(data);
+          }
         } else {
-          this.generateRSMIPDF(data);
+          if (this.selectedFormat === 'excel') {
+            this.generateRSMIExcel(data);
+          } else {
+            this.generateRSMIPDF(data);
+          }
         }
       },
       error: (err) => {
@@ -377,7 +503,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
   }
 
   // --- Core Processing Logic ---
-  private archiveReport(pdfDataUri: string, filename: string, category: string) {
+  private archiveReport(pdfDataUri: string, filename: string, category: string, customType?: string) {
     const reportNum = 'BSP-' + Math.floor(Math.random() * 10000);
     const userOffice = this.authService.currentUserValue?.office || 'HQ';
 
@@ -385,7 +511,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       title: filename,
       report_number: `Report # ${reportNum}`,
       category: category,
-      type: 'pdf',
+      type: customType || 'pdf',
       office: userOffice,
       file_data: pdfDataUri
     };
@@ -413,13 +539,105 @@ export class ReportsComponent implements OnInit, OnDestroy {
     link.click();
   }
 
+  // --- Excel Export Helpers (generates Base64 CSV data URLs) ---
+
+  private generateInventoryExcel(data: any[]) {
+    const headers = [
+      'ITEM NO', 'ITEM CATEGORY', 'ITEM NAME', 'SUPPLIER', 'BRAND', 'SIZE', 'UNIT',
+      'BEGINNING QTY', 'BEGINNING AMOUNT', 'NEW DELIVERY DATE', 'NEW DELIVERY QTY',
+      'NEW DELIVERY AMOUNT', 'UNIT COST', 'TOTAL ISSUANCES QTY', 'TOTAL ISSUANCES AMOUNT',
+      'ENDING QTY', 'ENDING AMOUNT'
+    ];
+    
+    let csvContent = headers.join(',') + '\n';
+    
+    data.forEach((item, index) => {
+      const price = parseFloat(item.unit_price) || 0;
+      const row = [
+        index + 1,
+        `"${item.category_name || ''}"`,
+        `"${item.item_name || ''}"`,
+        `"${item.supplier_name || ''}"`,
+        '""', // Brand
+        '""', // Size
+        `"${item.unit_of_measure || ''}"`,
+        item.beginning_qty || 0,
+        (item.beginning_qty * price).toFixed(2),
+        '""', // New Date
+        item.total_in || 0,
+        (item.total_in * price).toFixed(2),
+        price.toFixed(2),
+        item.total_out || 0,
+        (item.total_out * price).toFixed(2),
+        item.ending_qty || 0,
+        (item.ending_qty * price).toFixed(2)
+      ];
+      csvContent += row.join(',') + '\n';
+    });
+    
+    const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+    const dataUri = `data:text/csv;base64,${base64Content}`;
+    const filename = `Inventory_Report_${this.selectedMonth}_${this.selectedYear}.csv`;
+    
+    this.archiveReport(dataUri, filename, 'INVENTORY', 'xls');
+  }
+
+  private generateRSMIExcel(data: any[]) {
+    const headers = ['RIS No.', 'Responsibility Center Code', 'Stock No.', 'Item', 'Unit', 'Quantity', 'Unit Cost', 'Amount'];
+    let csvContent = headers.join(',') + '\n';
+    
+    data.forEach(item => {
+      const row = [
+        `"${item.ris_no || ''}"`,
+        `"${item.office_name || 'N/A'}"`,
+        `"${item.item_code || ''}"`,
+        `"${item.item_name || ''}"`,
+        `"${item.unit_of_measure || ''}"`,
+        item.quantity || 0,
+        (parseFloat(item.unit_cost) || 0).toFixed(2),
+        (parseFloat(item.total_cost) || 0).toFixed(2)
+      ];
+      csvContent += row.join(',') + '\n';
+    });
+    
+    const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+    const dataUri = `data:text/csv;base64,${base64Content}`;
+    const filename = `RSMI_Report_${this.selectedMonth}_${this.selectedYear}.csv`;
+    
+    this.archiveReport(dataUri, filename, 'RSMI', 'xls');
+  }
+
+  private generateSummaryExcel(issuances: any[], stocks: any[]) {
+    let csvContent = 'OFFICE ISSUANCE SUMMARY\n';
+    csvContent += 'Office,Total Requests,Total Issued\n';
+    issuances.forEach(iss => {
+      csvContent += `"${iss.office}",${iss.total_requests},${iss.total_issued}\n`;
+    });
+    
+    csvContent += '\nSTOCK DISTRIBUTION BY CATEGORY\n';
+    csvContent += 'Category,Total Items,Total Stock\n';
+    stocks.forEach(s => {
+      csvContent += `"${s.category}",${s.total_items},${s.total_stock}\n`;
+    });
+    
+    const base64Content = btoa(unescape(encodeURIComponent(csvContent)));
+    const dataUri = `data:text/csv;base64,${base64Content}`;
+    const filename = `System_Summary_${this.selectedMonth}_${this.selectedYear}.csv`;
+    
+    this.archiveReport(dataUri, filename, 'SUMMARY', 'xls');
+  }
+
   private generateSummaryReport() {
     const issuanceSummary$ = this.http.get<any[]>('http://localhost:5000/api/reports/issuance-summary');
     const stockDist$ = this.http.get<any[]>('http://localhost:5000/api/reports/stock-distribution');
 
     forkJoin({ issuances: issuanceSummary$, stocks: stockDist$ }).subscribe({
       next: (res) => {
-        this.generateSummaryPDF(res.issuances, res.stocks);
+        if (this.selectedFormat === 'excel') {
+          this.generateSummaryExcel(res.issuances, res.stocks);
+        } else {
+          this.generateSummaryPDF(res.issuances, res.stocks);
+        }
       },
       error: (err) => {
         this.isGenerating = false;

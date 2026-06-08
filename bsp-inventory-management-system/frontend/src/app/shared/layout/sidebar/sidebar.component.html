@@ -106,8 +106,25 @@
                     <h3>Notifications</h3>
                     <button class="mark-all-btn" (click)="markAllRead()">Mark all as read</button>
                 </div>
+                
+                <!-- Category Filter Pills -->
+                <div class="notif-filters">
+                    <button class="filter-pill" [class.active]="activeFilter === 'all'" (click)="setFilter('all', $event)">
+                        All
+                    </button>
+                    <button class="filter-pill" [class.active]="activeFilter === 'low_stock'" (click)="setFilter('low_stock', $event)">
+                        Low Stock
+                    </button>
+                    <button class="filter-pill" [class.active]="activeFilter === 'request'" (click)="setFilter('request', $event)">
+                        Requests
+                    </button>
+                    <button class="filter-pill" [class.active]="activeFilter === 'other'" (click)="setFilter('other', $event)">
+                        Other
+                    </button>
+                </div>
+
                 <div class="notif-list">
-                    <div class="notif-item" *ngFor="let n of notifService.notifications$ | async" 
+                    <div class="notif-item" *ngFor="let n of getFilteredNotifications(notifService.notifications$ | async)" 
                          [class.unread]="!n.is_read" (click)="handleNotifClick(n, $event)">
                         <div class="notif-icon" [ngClass]="n.type.toLowerCase()"></div>
                         <div class="notif-content">

@@ -545,7 +545,14 @@ export class OutflowComponent implements OnInit {
   }
 
   printRis(data: any) {
-    this.printData = data;
+    const formRemarks = this.issueForm.get('remarks')?.value;
+    const formRisNo = this.issueForm.get('ris_no')?.value || this.generatedIssuanceNumber;
+
+    this.printData = {
+      ...data,
+      remarks: data.remarks || formRemarks || data.purpose || '',
+      risNo: data.risNo || formRisNo || ''
+    };
     this.showPrintPreview = true;
   }
 

@@ -36,6 +36,11 @@ pool.query("ALTER TABLE IAR_Line_Items ADD COLUMN IF NOT EXISTS net_amount DECIM
   .then(() => console.log("Database IAR_Line_Items net_amount column verified successfully."))
   .catch(err => console.error("Database migration error for IAR_Line_Items net_amount column:", err));
 
+// Auto-migration: Ensure requested_by column exists in Requests
+pool.query("ALTER TABLE Requests ADD COLUMN IF NOT EXISTS requested_by VARCHAR(150)")
+  .then(() => console.log("Database Requests requested_by column verified successfully."))
+  .catch(err => console.error("Database migration error for Requests requested_by column:", err));
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool, // Exported for transaction management (client.connect)
