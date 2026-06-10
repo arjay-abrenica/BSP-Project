@@ -169,8 +169,25 @@ export class IarEncodeComponent implements OnInit {
       serial_no: '',
       or_number: '',
       rco: 'National Office',
-      accountable_officer: ''
+      accountable_officer: '',
+      estimated_useful_life: '5 years',
+      receiver_designation: '',
+      issuer_name: 'JERRY B. RUBRICO',
+      issuer_designation: 'Administrative Officer II',
+      issuer_office: 'Administration Division',
+      attributes: []
     });
+  }
+
+  addAttribute(itemIndex: number) {
+    if (!this.items[itemIndex].attributes) {
+      this.items[itemIndex].attributes = [];
+    }
+    this.items[itemIndex].attributes.push({ label: '', value: '' });
+  }
+
+  removeAttribute(itemIndex: number, attrIndex: number) {
+    this.items[itemIndex].attributes.splice(attrIndex, 1);
   }
 
   removeItemRow(index: number) {
