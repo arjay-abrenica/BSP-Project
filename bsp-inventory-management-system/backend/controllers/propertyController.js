@@ -21,9 +21,11 @@ const createIar = async (req, res) => {
       const srp = parseFloat(item.srp) || 0.00;
       const discount = parseFloat(item.discount) || 0.00;
       const netAmount = parseFloat(item.net_amount) || (quantity * unitCost - discount);
-      const lResult = await client.query(`INSERT INTO IAR_Line_Items (iar_id, item_description, unit, quantity, unit_cost, total_amount, rco, accountable_officer, delivery_date, srp, discount, net_amount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING iar_line_id`, [iarId, item.name, item.unit || 'Unit', quantity, unitCost, quantity * unitCost, item.rco || 'National Office', item.accountable_officer || acceptedBy || 'Sir Jerry', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0], srp, discount, netAmount]);
+      const estLife = item.estimated_useful_life || null;
+      const attributes = JSON.stringify(item.attributes || []);
+      const lResult = await client.query(`INSERT INTO IAR_Line_Items (iar_id, item_description, unit, quantity, unit_cost, total_amount, rco, accountable_officer, delivery_date, srp, discount, net_amount, estimated_useful_life, attributes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING iar_line_id`, [iarId, item.name, item.unit || 'Unit', quantity, unitCost, quantity * unitCost, item.rco || 'National Office', item.accountable_officer || acceptedBy || 'Sir Jerry', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0], srp, discount, netAmount, estLife, attributes]);
       const iarLineId = lResult.rows[0].iar_line_id; const type = unitCost >= 50000.00 ? 'PAR' : 'ICS';
-      for (let q = 0; q < quantity; q++) { runId += 1; const pNo = `BSP-PROP-${String(runId).padStart(4, '0')}`; const sNo = quantity > 1 ? `${item.serial_no || 'SN'}-${q + 1}` : (item.serial_no || null); await client.query(`INSERT INTO Property_Items (property_no, iar_id, iar_line_id, item_name, description, serial_no, unit_cost, or_no, type, accountable_officer, rco, office_id, status, condition, delivery_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`, [pNo, iarId, iarLineId, item.name, item.description || null, sNo, unitCost, type === 'PAR' ? (item.or_number || null) : null, type, item.accountable_officer || acceptedBy || 'Sir Jerry', item.rco || 'National Office', officeId, 'ACTIVE', 'GOOD', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0]]); }
+      for (let q = 0; q < quantity; q++) { runId += 1; const pNo = `BSP-PROP-${String(runId).padStart(4, '0')}`; const sNo = quantity > 1 ? `${item.serial_no || 'SN'}-${q + 1}` : (item.serial_no || null); await client.query(`INSERT INTO Property_Items (property_no, iar_id, iar_line_id, item_name, description, serial_no, unit_cost, or_no, type, accountable_officer, rco, office_id, status, condition, delivery_date, estimated_useful_life, receiver_designation, issuer_name, issuer_designation, issuer_office, attributes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`, [pNo, iarId, iarLineId, item.name, item.description || null, sNo, unitCost, type === 'PAR' ? (item.or_number || null) : null, type, item.accountable_officer || acceptedBy || 'Sir Jerry', item.rco || 'National Office', officeId, 'ACTIVE', 'GOOD', item.delivery_date || receivedDate || new Date().toISOString().split('T')[0], estLife, item.receiver_designation || null, item.issuer_name || 'JERRY B. RUBRICO', item.issuer_designation || null, item.issuer_office || null, attributes]); }
     }
     await client.query('COMMIT'); res.status(201).json({ message: 'IAR encoded successfully.', iarId });
   } catch (error) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed to encode IAR.' }); } finally { client.release(); }
@@ -257,6 +259,7 @@ const buildExcelReport = async (iarData, res) => {
     const ExcelJS = require("exceljs"); const path = require("path"); const workbook = new ExcelJS.Workbook();
     const templatePath = path.join(__dirname, "../iar_template.xlsx"); await workbook.xlsx.readFile(templatePath);
     const worksheet = workbook.worksheets[0];
+    worksheet.name = (iarData.iar_no || "IAR Report").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
     const formatDate = (dateStr) => { if (!dateStr) return ""; const d = new Date(dateStr); if (isNaN(d.getTime())) return ""; return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }); };
 
     worksheet.getCell("C10").value = iarData.entityName || iarData.entity_name || "Boy Scouts of the Philippines";
@@ -414,6 +417,7 @@ const exportParExcel = async (req, res) => {
     const ExcelJS = require("exceljs"); const path = require("path"); const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(path.join(__dirname, "../par_template.xlsx"));
     const ws = workbook.worksheets[0];
+    ws.name = (prop.item_name || prop.property_no || "PAR").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
     const formatDate = (dateStr) => { if (!dateStr) return ""; const d = new Date(dateStr); if (isNaN(d.getTime())) return ""; return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }); };
 
     ws.getCell("D10").value = prop.rco || "National Office"; 
@@ -428,13 +432,35 @@ const exportParExcel = async (req, res) => {
     ws.getCell("I15").value = formatDate(prop.delivery_date);
     ws.getCell("J15").value = parseFloat(prop.unit_cost) || 0;
 
-    for(let r=16; r<=25; r++) {
-       ws.getCell("B"+r).value = null; ws.getCell("C"+r).value = null; ws.getCell("D"+r).value = null;
-       ws.getCell("H"+r).value = null; ws.getCell("I"+r).value = null; ws.getCell("J"+r).value = null;
+    for(let r=16; r<=34; r++) {
+       for(const c of ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']) {
+          ws.getCell(c+r).value = null;
+       }
+    }
+
+    let parsedAttributes = [];
+    try {
+      parsedAttributes = typeof prop.attributes === 'string' ? JSON.parse(prop.attributes) : (prop.attributes || []);
+    } catch(e) {}
+
+    if (Array.isArray(parsedAttributes)) {
+      let attrRow = 16;
+      for (const attr of parsedAttributes) {
+        if (attrRow > 34) break;
+        ws.getCell("D" + attrRow).value = attr.label;
+        ws.getCell("E" + attrRow).value = ":";
+        ws.getCell("F" + attrRow).value = attr.value;
+        attrRow++;
+      }
     }
 
     ws.getCell("B39").value = prop.accountable_officer ? prop.accountable_officer.toUpperCase() : "";
-    ws.getCell("H39").value = "JERRY B. RUBRICO";
+    ws.getCell("B40").value = prop.receiver_designation || "";
+    ws.getCell("B41").value = prop.rco || "National Office";
+
+    ws.getCell("H39").value = prop.issuer_name ? prop.issuer_name.toUpperCase() : "JERRY B. RUBRICO";
+    ws.getCell("H40").value = prop.issuer_designation || "Administrative Officer II (Acting Property Custodian)";
+    ws.getCell("H41").value = prop.issuer_office || "Administration Division";
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=PAR_" + prop.property_no + ".xlsx");
@@ -458,6 +484,7 @@ const exportIcsExcel = async (req, res) => {
     const ExcelJS = require("exceljs"); const path = require("path"); const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(path.join(__dirname, "../ics_template.xlsx"));
     const ws = workbook.worksheets[0];
+    ws.name = (prop.item_name || prop.property_no || "ICS").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
     const formatDate = (dateStr) => { if (!dateStr) return ""; const d = new Date(dateStr); if (isNaN(d.getTime())) return ""; return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" }); };
 
     ws.getCell("B10").value = "Entity Name: " + (prop.rco || "Boy Scouts of the Philippines");
@@ -471,15 +498,35 @@ const exportIcsExcel = async (req, res) => {
     ws.getCell("E16").value = parseFloat(prop.unit_cost) || 0; 
     ws.getCell("F16").value = prop.item_name + (prop.description ? " (" + prop.description + ")" : "") + (prop.serial_no ? " SN: " + prop.serial_no : "");
     ws.getCell("H16").value = prop.property_no;
-    ws.getCell("I16").value = "5 years";
+    ws.getCell("I16").value = prop.estimated_useful_life || "5 years";
 
     for(let r=17; r<=21; r++) {
-       ws.getCell("B"+r).value = null; ws.getCell("C"+r).value = null; ws.getCell("D"+r).value = null;
-       ws.getCell("E"+r).value = null; ws.getCell("F"+r).value = null; ws.getCell("H"+r).value = null; ws.getCell("I"+r).value = null;
+       for(const c of ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']) {
+          ws.getCell(c+r).value = null;
+       }
     }
 
-    ws.getCell("B26").value = prop.accountable_officer ? prop.accountable_officer.toUpperCase() : "";
-    ws.getCell("G26").value = "JERRY B. RUBRICO";
+    let parsedAttributes = [];
+    try {
+      parsedAttributes = typeof prop.attributes === 'string' ? JSON.parse(prop.attributes) : (prop.attributes || []);
+    } catch(e) {}
+
+    if (Array.isArray(parsedAttributes)) {
+      let attrRow = 17;
+      for (const attr of parsedAttributes) {
+        if (attrRow > 21) break;
+        ws.getCell("F" + attrRow).value = "   " + attr.label + ": " + attr.value;
+        attrRow++;
+      }
+    }
+
+    ws.getCell("B26").value = prop.issuer_name ? prop.issuer_name.toUpperCase() : "JERRY B. RUBRICO";
+    ws.getCell("B27").value = prop.issuer_designation || "Administrative Officer II (Acting Property Custodian)";
+    ws.getCell("B28").value = prop.issuer_office || "Administration Division";
+
+    ws.getCell("G26").value = prop.accountable_officer ? prop.accountable_officer.toUpperCase() : "";
+    ws.getCell("G27").value = prop.receiver_designation || "";
+    ws.getCell("G28").value = prop.rco || "National Office";
 
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.setHeader("Content-Disposition", "attachment; filename=ICS_" + prop.property_no + ".xlsx");
@@ -503,6 +550,7 @@ const exportPhysicalCountExcel = async (req, res) => {
     const ExcelJS = require('exceljs'); const path = require('path'); const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(path.join(__dirname, '../rpcppe_template.xlsx'));
     const ws = workbook.worksheets[0];
+    ws.name = (reportType || "Physical Count").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
     const formatDate = (dateStr) => { if (!dateStr) return ''; const d = new Date(dateStr); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }); };
 
     const year = new Date().getFullYear();
@@ -565,6 +613,7 @@ const exportPtrExcel = async (req, res) => {
     const ExcelJS = require('exceljs'); const path = require('path'); const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(path.join(__dirname, '../ptr_template.xlsx'));
     const ws = workbook.worksheets[0];
+    ws.name = (prop.item_name || prop.property_no || "PTR").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
     const formatDate = (dateStr) => { if (!dateStr) return ''; const d = new Date(dateStr); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); };
 
     ws.getCell('D6').value = 'Boy Scouts of the Philippines';

@@ -41,6 +41,22 @@ pool.query("ALTER TABLE Requests ADD COLUMN IF NOT EXISTS requested_by VARCHAR(1
   .then(() => console.log("Database Requests requested_by column verified successfully."))
   .catch(err => console.error("Database migration error for Requests requested_by column:", err));
 
+// Auto-migration for PAR and ICS custom fields
+const parIcsQueries = [
+  "ALTER TABLE IAR_Line_Items ADD COLUMN IF NOT EXISTS estimated_useful_life VARCHAR(100)",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS estimated_useful_life VARCHAR(100)",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS receiver_designation VARCHAR(255)",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS issuer_name VARCHAR(255) DEFAULT 'JERRY B. RUBRICO'",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS issuer_designation VARCHAR(255)",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS issuer_office VARCHAR(255)",
+  "ALTER TABLE IAR_Line_Items ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '[]'::jsonb",
+  "ALTER TABLE Property_Items ADD COLUMN IF NOT EXISTS attributes JSONB DEFAULT '[]'::jsonb"
+];
+
+parIcsQueries.forEach(q => {
+  pool.query(q).catch(err => console.error("Database migration error for PAR/ICS column:", err));
+});
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool, // Exported for transaction management (client.connect)

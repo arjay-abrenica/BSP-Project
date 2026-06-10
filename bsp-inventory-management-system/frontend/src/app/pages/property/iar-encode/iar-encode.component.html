@@ -266,6 +266,11 @@
                   <th style="width: 11%;">I</th>
                   <th style="width: 10%;">J</th>
                   <th style="width: 10%;">K</th>
+                  <th style="width: 8%;">L</th>
+                  <th style="width: 10%;">M</th>
+                  <th style="width: 10%;">N</th>
+                  <th style="width: 10%;">O</th>
+                  <th style="width: 10%;">P</th>
                   <th style="width: 3%;"></th>
                 </tr>
                 <tr class="item-table-header-labels">
@@ -281,6 +286,11 @@
                   <th>Del. Date</th>
                   <th>RCO</th>
                   <th>Officer</th>
+                  <th>Recv Desig</th>
+                  <th>Est. Life</th>
+                  <th>Issuer Name</th>
+                  <th>Issuer Desig</th>
+                  <th>Issuer Office</th>
                   <th></th>
                 </tr>
               </thead>
@@ -296,9 +306,22 @@
                   </td>
                   <!-- B: Name/Description -->
                   <td class="excel-value-cell" [class.focused]="activeCell === 'B' + (10 + idx)">
-                    <input type="text" [(ngModel)]="item.name" [name]="'name_' + idx"
-                      (focus)="onCellFocus('B' + (10 + idx), 'Row ' + (10 + idx) + ' Description', 'items', idx, 'name')"
-                      (ngModelChange)="onGridInputChange()" placeholder="Name/Desc..." class="grid-cell-input" required>
+                    <div class="flex flex-col gap-1 w-full p-0.5">
+                      <input type="text" [(ngModel)]="item.name" [name]="'name_' + idx"
+                        (focus)="onCellFocus('B' + (10 + idx), 'Row ' + (10 + idx) + ' Description', 'items', idx, 'name')"
+                        (ngModelChange)="onGridInputChange()" placeholder="Name/Desc..." class="grid-cell-input font-bold" required>
+                      
+                      <div class="flex items-center gap-1 mt-1" *ngFor="let attr of item.attributes; let attrIdx = index">
+                        <input type="text" [(ngModel)]="attr.label" [name]="'attrLabel_' + idx + '_' + attrIdx"
+                          placeholder="Label (e.g. Color)" class="grid-cell-input text-xs w-2/5 border-b border-dashed border-slate-200">
+                        <span class="text-xs font-bold text-slate-400">:</span>
+                        <input type="text" [(ngModel)]="attr.value" [name]="'attrVal_' + idx + '_' + attrIdx"
+                          placeholder="Value" class="grid-cell-input text-xs flex-1 border-b border-dashed border-slate-200">
+                        <button type="button" class="text-rose-500 text-xs px-1 hover:bg-rose-50 rounded" (click)="removeAttribute(idx, attrIdx)" title="Remove Spec">✕</button>
+                      </div>
+                      
+                      <button type="button" class="text-sky-600 text-xs text-left mt-1 hover:underline w-fit" (click)="addAttribute(idx)">+ Add Spec / Inclusion</button>
+                    </div>
                     <div class="active-cell-dot" *ngIf="activeCell === 'B' + (10 + idx)"></div>
                   </td>
                   <!-- C: Serial / OR Number -->
@@ -382,7 +405,42 @@
                       (ngModelChange)="onGridInputChange()" placeholder="Officer..." class="grid-cell-input">
                     <div class="active-cell-dot" *ngIf="activeCell === 'K' + (10 + idx)"></div>
                   </td>
-                  <!-- L: Delete Actions -->
+                  <!-- L: Receiver Designation -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'L' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.receiver_designation" [name]="'recvDesig_' + idx"
+                      (focus)="onCellFocus('L' + (10 + idx), 'Row ' + (10 + idx) + ' Receiver Designation', 'items', idx, 'receiver_designation')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Designation..." class="grid-cell-input text-xs">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'L' + (10 + idx)"></div>
+                  </td>
+                  <!-- M: Estimated Useful Life (ICS) -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'M' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.estimated_useful_life" [name]="'estLife_' + idx"
+                      (focus)="onCellFocus('M' + (10 + idx), 'Row ' + (10 + idx) + ' Estimated Life', 'items', idx, 'estimated_useful_life')"
+                      (ngModelChange)="onGridInputChange()" placeholder="5 years" class="grid-cell-input text-xs text-center">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'M' + (10 + idx)"></div>
+                  </td>
+                  <!-- N: Issuer Name -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'N' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.issuer_name" [name]="'issName_' + idx"
+                      (focus)="onCellFocus('N' + (10 + idx), 'Row ' + (10 + idx) + ' Issuer Name', 'items', idx, 'issuer_name')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Issuer..." class="grid-cell-input text-xs">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'N' + (10 + idx)"></div>
+                  </td>
+                  <!-- O: Issuer Designation -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'O' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.issuer_designation" [name]="'issDesig_' + idx"
+                      (focus)="onCellFocus('O' + (10 + idx), 'Row ' + (10 + idx) + ' Issuer Designation', 'items', idx, 'issuer_designation')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Issuer Desig..." class="grid-cell-input text-xs">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'O' + (10 + idx)"></div>
+                  </td>
+                  <!-- P: Issuer Office -->
+                  <td class="excel-value-cell" [class.focused]="activeCell === 'P' + (10 + idx)">
+                    <input type="text" [(ngModel)]="item.issuer_office" [name]="'issOffice_' + idx"
+                      (focus)="onCellFocus('P' + (10 + idx), 'Row ' + (10 + idx) + ' Issuer Office', 'items', idx, 'issuer_office')"
+                      (ngModelChange)="onGridInputChange()" placeholder="Issuer Office..." class="grid-cell-input text-xs">
+                    <div class="active-cell-dot" *ngIf="activeCell === 'P' + (10 + idx)"></div>
+                  </td>
+                  <!-- Q: Delete Actions -->
                   <td class="excel-value-cell text-center p-1">
                     <button type="button" class="btn-grid-delete" (click)="removeItemRow(idx)" *ngIf="items.length > 1"
                       title="Delete Row">
