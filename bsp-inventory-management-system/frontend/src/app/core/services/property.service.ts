@@ -79,4 +79,8 @@ export class PropertyService {
   createPropertyTransfer(payload: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/transfers`, payload);
   }
+
+  updateProperty(id: number, payload: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, payload);
+  }
 }

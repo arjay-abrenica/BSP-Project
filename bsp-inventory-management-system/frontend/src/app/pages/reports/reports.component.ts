@@ -81,6 +81,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
   reportTarget: ReportItem | null = null;
   showArchived: boolean = false;
 
+  // Custom Status Modal properties (Success / Error / Warning notifications)
+  isStatusModalOpen: boolean = false;
+  statusModalTitle: string = '';
+  statusModalMessage: string = '';
+  statusModalType: 'success' | 'error' | 'warning' = 'success';
+
   // Dynamic Blob Preview Properties
   private currentBlobUrl: string | null = null;
   safeBlobUrl: SafeResourceUrl | null = null;
@@ -409,6 +415,17 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.reportTarget = null;
   }
 
+  showStatus(title: string, message: string, type: 'success' | 'error' | 'warning' = 'success') {
+    this.statusModalTitle = title;
+    this.statusModalMessage = message;
+    this.statusModalType = type;
+    this.isStatusModalOpen = true;
+  }
+
+  closeStatusModal() {
+    this.isStatusModalOpen = false;
+  }
+
   executeConfirm() {
     if (!this.reportTarget) return;
 
@@ -426,8 +443,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error(err);
-          alert('Failed to archive report.');
           this.cancelConfirm();
+          this.showStatus('Archive Failed', 'Failed to archive the report. Please try again.', 'error');
         }
       });
     } else {
@@ -443,8 +460,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error(err);
-          alert('Failed to restore report.');
           this.cancelConfirm();
+          this.showStatus('Restore Failed', 'Failed to restore the report. Please try again.', 'error');
         }
       });
     }
@@ -475,8 +492,8 @@ export class ReportsComponent implements OnInit, OnDestroy {
     this.http.get<any[]>(endpoint).subscribe({
       next: (data) => {
         if (!data || data.length === 0) {
-          alert('No data found for the selected period.');
           this.isGenerating = false;
+          this.showStatus('No Data Found', 'No records were found for the selected period.', 'warning');
           return;
         }
 
@@ -497,7 +514,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isGenerating = false;
         console.error('Failed to fetch report data', err);
-        alert('Failed to generate report. Ensure backend is running and you are logged in.');
+        this.showStatus('Generation Failed', 'Failed to generate report. Ensure backend is running and you are logged in.', 'error');
       }
     });
   }
@@ -521,12 +538,12 @@ export class ReportsComponent implements OnInit, OnDestroy {
         this.loadReports();
         this.isGenerating = false;
         this.closeGenerateModal();
-        alert('Report generated and saved to archive successfully.');
+        this.showStatus('Success', 'Report generated and saved to archive successfully.', 'success');
       },
       error: (err) => {
         console.error('Failed to save report to database', err);
         this.isGenerating = false;
-        alert('Report generated but failed to save to archive.');
+        this.showStatus('Save Failed', 'Report generated but failed to save to archive.', 'error');
       }
     });
   }
