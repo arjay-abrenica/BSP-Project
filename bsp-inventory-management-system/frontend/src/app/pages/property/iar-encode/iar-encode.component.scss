@@ -1,810 +1,452 @@
-// =========================================================================
-// SAGE-GREEN EYES-FRIENDLY SYSTEM VARIABLES
-// =========================================================================
-$primary-green: #2a523b;       // Calm, low-saturation dark forest green for titles & primary action
-$primary-green-light: #f2f6f3;  // Soft, warm sage-gray off-white for panels and backgrounds
-$accent-green: #43805c;        // Calming, gentle sage green for active selector borders
-$bg-canvas: #eaeae7;           // Calm neutral off-white canvas with slight warm reflection
-$border-color: #cbd5cf;        // Soft, muted green-gray borders (eliminates harsh high contrast)
-$text-dark: #2a382e;           // Relaxing charcoal green-gray for primary text
-$text-muted: #5e6f65;          // Calming soft olive-slate for labels and subtitles
-$bg-label: #f4f6f4;            // Soft off-white backdrop for table headers and label cells
-$bg-readonly: #f8faf9;         // Low-strain background for read-only cells
-$shadow-soft: 0 10px 30px rgba(42, 82, 59, 0.05);
-
-.page-container {
-  padding: 2rem;
-  background-color: $bg-canvas;
-  min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: $text-dark;
-  box-sizing: border-box;
-}
-
 /* =========================================================================
-   EXCEL APPLICATION CONTAINER (MUTED PRESERVED HIGHLIGHTS)
+   NATIVE WEB DASHBOARD THEME
    ========================================================================= */
-.excel-window {
-  background: white;
-  border-radius: 16px;
-  border: 1.5px solid $border-color;
-  box-shadow: 0 20px 50px -15px rgba(42, 82, 59, 0.1), 
-              0 0 0 1px rgba(42, 82, 59, 0.02),
-              inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
 
-  &:hover {
-    box-shadow: 0 25px 60px -10px rgba(42, 82, 59, 0.14);
-  }
+// Modern SaaS Color Palette
+$primary: #0f172a;        // Deep slate (main text/headers)
+$primary-light: #334155;  // Muted text
+$accent: #2563eb;         // Vibrant blue for primary actions
+$accent-hover: #1d4ed8;
+$accent-light: #eff6ff;   // Blue tint for backgrounds
+$bg-body: #f8fafc;        // Off-white canvas
+$surface: #ffffff;        // White cards
+$border: #e2e8f0;         // Light borders
+$border-strong: #cbd5e1;  // Slightly stronger borders
+$danger: #ef4444;         // Red for delete
+$danger-hover: #dc2626;
+$danger-bg: #fef2f2;
+$success: #16a34a;        // Green
+$success-bg: #f0fdf4;
+
+// Reset & Typography
+.workspace-container {
+  padding: 2rem;
+  background-color: $bg-body;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: $primary;
+  box-sizing: border-box;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-/* Title Bar - Calm Deep Forest */
-.excel-title-bar {
-  background: linear-gradient(90deg, $primary-green 0%, #1c3b28 100%);
-  color: #e2f0d9;
-  padding: 0.65rem 1.25rem;
+/* --- Page Header --- */
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  border-bottom: 1.5px solid #142a1d;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 
-  .excel-title-left {
+  .header-titles {
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-  .excel-title-icon {
-    font-size: 1.1rem;
-    filter: opacity(0.9);
-  }
-  .excel-doc-title {
-    color: white;
-  }
-  .excel-title-actions {
-    display: flex;
-    gap: 0.9rem;
-    align-items: center;
-    
-    .win-btn {
-      cursor: pointer;
-      opacity: 0.75;
-      transition: all 0.2s ease;
-      font-size: 0.85rem;
-
-      &:hover {
-        opacity: 1;
-        color: #a7f3d0;
-        transform: scale(1.1);
-      }
-    }
-  }
-}
-
-/* =========================================================================
-   EXCEL RIBBON DESIGN (EYE-FRIENDLY TONES)
-   ========================================================================= */
-.excel-ribbon {
-  background-color: $primary-green-light;
-  border-bottom: 1.5px solid $border-color;
-  display: flex;
-  flex-direction: column;
-
-  /* Ribbon Tabs Segmented Controls */
-  .ribbon-tabs {
-    display: flex;
-    padding-left: 1.25rem;
-    background-color: #e3ece6;
-    border-bottom: 1px solid $border-color;
+    flex-direction: column;
     gap: 0.25rem;
 
-    .ribbon-tab {
-      padding: 0.6rem 1.2rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: $text-muted;
-      cursor: pointer;
-      border: none;
-      position: relative;
-      transition: all 0.2s ease;
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: $primary-light;
+      text-decoration: none;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+      
+      &:hover { color: $accent; }
+    }
 
-      &:hover {
-        color: $primary-green;
-        background-color: $primary-green-light;
-      }
+    .page-title {
+      margin: 0;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: $primary;
+      letter-spacing: -0.02em;
+    }
 
-      &.active {
-        background-color: $primary-green-light;
-        color: $primary-green;
-        font-weight: 800;
-        
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background-color: $primary-green;
-          border-radius: 3px 3px 0 0;
-        }
-      }
+    .page-subtitle {
+      margin: 0;
+      font-size: 0.95rem;
+      color: $primary-light;
     }
   }
 
-  /* Command Toolbar Buttons */
-  .ribbon-commands {
-    background-color: $primary-green-light;
-    padding: 0.75rem 1.5rem;
+  .header-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-
-    .ribbon-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.4rem;
-
-      .ribbon-group-content {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .ribbon-group-title {
-        font-size: 0.62rem;
-        color: $text-muted;
-        text-transform: uppercase;
-        font-weight: 800;
-        letter-spacing: 0.8px;
-        margin-top: 0.25rem;
-      }
-    }
-
-    .ribbon-group-divider {
-      height: 42px;
-      width: 1px;
-      background-color: $border-color;
-      margin: 0 1rem;
-    }
-
-    /* Modern Soft Muted Ribbon Buttons */
-    .ribbon-action-btn {
-      background: white;
-      border: 1px solid $border-color;
-      border-radius: 8px;
-      padding: 0.45rem 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.3rem;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      min-width: 95px;
-      box-shadow: 0 2px 4px rgba(42, 82, 59, 0.02);
-
-      .ribbon-action-icon {
-        font-size: 1.35rem;
-        transition: transform 0.2s ease;
-      }
-
-      .ribbon-action-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: $text-dark;
-      }
-
-      &:hover {
-        background-color: #e8eee9;
-        border-color: $accent-green;
-        box-shadow: 0 4px 12px rgba(42, 82, 59, 0.06);
-
-        .ribbon-action-label {
-          color: $primary-green;
-        }
-
-        .ribbon-action-icon {
-          transform: scale(1.1) translateY(-1px);
-        }
-      }
-
-      &:active {
-        transform: scale(0.97) translateY(0);
-        box-shadow: none;
-      }
-
-      &.primary-action {
-        background: linear-gradient(135deg, $primary-green 0%, #1e3b2a 100%);
-        border-color: #1e3b2a;
-        box-shadow: 0 4px 10px rgba(42, 82, 59, 0.12);
-        
-        .ribbon-action-icon, .ribbon-action-label {
-          color: white;
-        }
-
-        &:hover {
-          background: linear-gradient(135deg, $accent-green 0%, $primary-green 100%);
-          border-color: $primary-green;
-          box-shadow: 0 6px 15px rgba(42, 82, 59, 0.2);
-        }
-      }
-
-      &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-        background: #e9ecea;
-        border-color: #d2ded7;
-        box-shadow: none;
-        transform: none !important;
-        
-        .ribbon-action-label, .ribbon-action-icon {
-          color: #a1b0a7;
-        }
-      }
-    }
+    gap: 0.75rem;
   }
 }
 
-/* =========================================================================
-   EXCEL FORMULA BAR (MUTE CONTRAST)
-   ========================================================================= */
-.excel-formula-bar {
-  background-color: $primary-green-light;
-  border-bottom: 1.5px solid $border-color;
-  display: flex;
-  align-items: center;
-  padding: 0.45rem 0.75rem;
-  gap: 0.6rem;
-  box-sizing: border-box;
+/* --- Form Cards --- */
+.form-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+  overflow: hidden;
 
-  /* Coordinate box */
-  .active-cell-box {
-    background-color: white;
-    border: 1px solid $border-color;
-    padding: 0.25rem 0.75rem;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: $primary-green;
-    min-width: 65px;
-    text-align: center;
-    border-radius: 6px;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
-    user-select: none;
-  }
+  &.m-0 { margin: 0; }
 
-  /* Math fx tag */
-  .formula-fx-btn {
-    font-family: 'Playfair Display', 'Georgia', serif;
-    font-style: italic;
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: $text-muted;
-    padding: 0 0.5rem 0 0.25rem;
-    cursor: default;
-    user-select: none;
-    border-right: 1px solid $border-color;
-    margin-right: 0.25rem;
-  }
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid $border;
+    background-color: $surface;
 
-  /* Active value input box */
-  .formula-input-container {
-    flex-grow: 1;
-    display: flex;
-  }
-
-  .formula-input {
-    width: 100%;
-    border: 1px solid $border-color;
-    border-radius: 6px;
-    padding: 0.35rem 0.85rem;
-    font-size: 0.85rem;
-    color: $text-dark;
-    outline: none;
-    background-color: white;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.01);
-    transition: all 0.2s ease-in-out;
-
-    &:focus {
-      border-color: $accent-green;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.02), 0 0 0 3px rgba(67, 128, 92, 0.15);
-    }
-  }
-}
-
-/* =========================================================================
-   EXCEL WORKSPACE CANVAS (WARM SAGE WRAPPING)
-   ========================================================================= */
-.excel-canvas {
-  background-color: $bg-canvas;
-  padding: 1.5rem;
-  max-height: 75vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-
-  .sheet-section {
-    background: white;
-    border: 1.5px solid $border-color;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px -5px rgba(42, 82, 59, 0.03);
-    margin-bottom: 2.5rem;
-    overflow: hidden;
-
-    .sheet-header {
-      background: linear-gradient(90deg, #e8eee9 0%, #fbfcfb 100%);
-      color: $primary-green;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid #d2ded5;
-      
-      h4 {
-        margin: 0;
-        font-size: 0.95rem;
-        font-weight: 800;
-        letter-spacing: -0.15px;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-      }
-    }
-
-    .sheet-header.flex-header {
+    &.with-actions {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-  }
-}
 
-/* Grid Wrapper & Table styling */
-.excel-grid-wrapper {
-  overflow-x: auto;
-  background-color: white;
-
-  &.fit-grid {
-    overflow-x: hidden;
-  }
-}
-
-.excel-grid-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-  color: $text-dark;
-  table-layout: fixed;
-
-  /* Header structure matching Excel but modernized Sage theme */
-  .col-header-row {
-    background-color: $bg-label;
-    
-    th {
-      font-size: 0.68rem;
+    h2 {
+      margin: 0;
+      font-size: 1.1rem;
       font-weight: 700;
-      color: $text-muted;
-      text-align: center;
-      padding: 0.22rem 0;
-      border: 1px solid $border-color;
-      background-color: $bg-label;
-      user-select: none;
-    }
-    
-    th.row-num-header {
-      width: 42px;
-      background-color: #e3ece6;
-      border-right: 2px solid $border-color;
+      color: $primary;
     }
   }
 
-  .item-table-header-labels {
-    background-color: $bg-label;
-    
-    th {
-      padding: 0.6rem 0.8rem;
-      font-weight: 800;
-      color: $text-dark;
-      border: 1px solid $border-color;
-      text-transform: uppercase;
-      font-size: 0.74rem;
-      letter-spacing: 0.5px;
-      text-align: left;
+  .card-body {
+    padding: 1.5rem;
+
+    &.form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
     }
 
-    th.row-number-cell {
-      text-align: center;
-      background-color: #e3ece6;
-      border-right: 2px solid $border-color;
+    &.form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
     }
   }
 
-  /* Row numbering column */
-  .row-number-cell {
-    background-color: $bg-label;
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: $text-muted;
-    text-align: center;
-    border: 1px solid $border-color;
-    border-right: 2px solid $border-color;
-    user-select: none;
-    width: 42px;
-  }
-
-  /* Divider grouping rows (gradient style) */
-  .excel-group-title-cell {
-    background: linear-gradient(90deg, #e8eee9 0%, rgba(255,255,255,0) 100%);
-    color: $primary-green;
-    font-weight: 800;
-    font-size: 0.8rem;
-    padding: 0.6rem 1.25rem;
-    border: 1px solid $border-color;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-  }
-
-  .section-divider-row {
-    border-bottom: 2px solid $border-color;
-  }
-
-  /* Cells styling */
-  .excel-label-cell {
-    background-color: $bg-label;
-    font-weight: 700;
-    color: $text-muted;
-    padding: 0.7rem 1rem;
-    border: 1px solid $border-color;
-    text-align: right;
-    font-size: 0.8rem;
-    user-select: none;
-  }
-
-  .excel-value-cell {
-    background-color: white;
-    border: 1px solid $border-color;
-    position: relative;
+  .table-responsive {
     padding: 0;
-    transition: background-color 0.1s ease;
-
-    &:hover {
-      background-color: #f2f7f4;
+    overflow-x: auto;
+    width: 100%;
+    
+    /* Optional: Custom scrollbar for better look */
+    &::-webkit-scrollbar {
+      height: 8px;
     }
-
-    /* Gentle outline on focus (Eyes friendly sage outline) */
-    &.focused {
-      outline: 2px solid $accent-green;
-      outline-offset: -1px;
-      box-shadow: 0 0 10px rgba(67, 128, 92, 0.15);
-      z-index: 10;
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 4px;
     }
-
-    /* Input inside cell */
-    .grid-cell-input {
-      width: 100%;
-      height: 100%;
-      border: none;
-      padding: 0.65rem 0.9rem;
-      font-size: 0.82rem;
-      color: $text-dark;
-      background: transparent;
-      outline: none;
-      box-sizing: border-box;
-
-      &::placeholder {
-        color: #a3b3a9;
-        font-style: italic;
-      }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
     }
-
-    /* Select inside cell */
-    .grid-cell-select {
-      width: 100%;
-      height: 100%;
-      border: none;
-      padding: 0.6rem 0.9rem;
-      font-size: 0.82rem;
-      color: $text-dark;
-      background: transparent;
-      outline: none;
-      cursor: pointer;
+    &::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
-  }
-
-  .excel-empty-cell {
-    background-color: $bg-label;
-    border: 1px solid $border-color;
-  }
-
-  .cell-readonly {
-    background-color: $bg-readonly;
-    cursor: not-allowed;
-
-    input {
-      cursor: not-allowed;
-      color: $text-muted !important;
-      font-weight: 600;
-    }
-  }
-
-  /* Modernized Circular Pulse Dot selector */
-  .active-cell-dot {
-    position: absolute;
-    bottom: -3px;
-    right: -3px;
-    width: 7px;
-    height: 7px;
-    background-color: $accent-green;
-    border: 1.5px solid white;
-    border-radius: 50%;
-    z-index: 12;
-    box-shadow: 0 0 4px rgba(67, 128, 92, 0.4);
-    cursor: crosshair;
   }
 }
 
-/* Item details specific */
-.item-grid-table {
-  .col-header-row th {
-    font-size: 0.62rem;
-    padding: 0.15rem 0;
-  }
+.split-cards-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
 
-  .excel-value-cell {
-    .grid-cell-input {
-      padding: 0.5rem 0.6rem;
-    }
-    .grid-cell-select {
-      padding: 0.45rem 0.5rem;
-    }
-  }
+/* --- Form Inputs --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 
-  .excel-value-cell.focused {
-    outline-color: $accent-green;
+  &.span-2 { grid-column: span 2; }
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $primary-light;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .required { color: $danger; }
   }
 }
 
-/* Insert row button */
-.btn-excel-add {
-  background: linear-gradient(135deg, $primary-green 0%, #1c3b28 100%);
-  color: white;
-  border: none;
-  padding: 0.4rem 0.9rem;
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid $border-strong;
   border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.76rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  box-shadow: 0 3px 6px rgba(42, 82, 59, 0.1);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: linear-gradient(135deg, $accent-green 0%, $primary-green 100%);
-    box-shadow: 0 5px 12px rgba(42, 82, 59, 0.2);
-    transform: translateY(-1px);
-  }
-}
-
-/* Remove button inside row */
-.btn-grid-delete {
-  background: transparent;
-  border: none;
-  color: #c94a5a;
-  font-weight: 800;
-  cursor: pointer;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background-color: #fee9eb;
-    color: #a82c3c;
-  }
-}
-
-/* =========================================================================
-   BOTTOM EXCEL TAB BAR (SEGMENTED MODERN PILL TABS)
-   ========================================================================= */
-.excel-bottom-bar {
-  background-color: $primary-green-light;
-  border-top: 1.5px solid $border-color;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.4rem 1rem;
-  user-select: none;
+  font-size: 0.95rem;
+  color: $primary;
+  background-color: $surface;
+  transition: all 0.2s;
   box-sizing: border-box;
 
-  .excel-sheets-tabs {
-    display: flex;
-    align-items: center;
-    background-color: #cbd5cf;
-    padding: 0.2rem;
-    border-radius: 8px;
-    gap: 0.15rem;
-
-    .sheet-tab {
-      background-color: transparent;
-      border: none;
-      border-radius: 6px;
-      padding: 0.35rem 0.9rem;
-      font-size: 0.74rem;
-      font-weight: 700;
-      color: $text-muted;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-      .sheet-icon {
-        font-size: 0.85rem;
-      }
-
-      &:hover {
-        color: $primary-green;
-        background-color: rgba(255, 255, 255, 0.25);
-      }
-
-      &.active {
-        background-color: white;
-        color: $primary-green;
-        font-weight: 800;
-        box-shadow: 0 2px 6px rgba(42, 82, 59, 0.05);
-      }
-    }
+  &:hover:not(.readonly) { border-color: #94a3b8; }
+  
+  &:focus {
+    outline: none;
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
 
-  .excel-status-bar {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    font-size: 0.7rem;
-    color: $text-muted;
-    font-weight: 700;
+  &.readonly {
+    background-color: $bg-body;
+    color: $primary-light;
+    cursor: default;
+    
+    &.highlight { font-weight: 700; color: $primary; }
   }
+
+  &.font-medium { font-weight: 600; }
 }
 
+/* --- Data Table (Card 2) --- */
+.data-table {
+  width: 100%;
+  min-width: max-content;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  white-space: nowrap;
 
+  thead {
+    background-color: $bg-body;
+    border-bottom: 2px solid $border;
+    
+    th {
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      color: $primary-light;
+      text-align: left;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
 
-/* =========================================================================
-   BOTTOM OPERATION ACTIONS BAR
-   ========================================================================= */
-.form-actions-spreadsheet {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem 0;
-  border-top: 1.5px solid #cbd5e1;
-
-  .btn-spreadsheet-cancel {
-    color: #64748b;
-    background: transparent;
-    border: none;
-    font-weight: 700;
-    font-size: 0.88rem;
-    cursor: pointer;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: all 0.2s;
-
-    &:hover {
-      background-color: #f1f5f9;
-      color: #334155;
+      &.text-center { text-align: center; }
+      &.text-right { text-align: right; }
     }
   }
 
-  .action-buttons-wrap {
-    display: flex;
-    gap: 0.8rem;
-  }
+  tbody tr {
+    border-bottom: 1px solid $border;
+    transition: background-color 0.15s;
 
-  .btn-spreadsheet-action {
-    padding: 0.65rem 1.4rem;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.86rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    &:hover { background-color: $accent-light; }
 
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 5px 12px rgba(0,0,0,0.1);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-
-    &.preview-action {
-      background-color: #475569;
-      color: white;
-
-      &:hover {
-        background-color: #334155;
-      }
-    }
-
-    &.submit-action {
-      background: linear-gradient(135deg, #005E38 0%, #004c2d 100%);
-      color: white;
-      box-shadow: 0 4px 6px -1px rgba(0, 94, 56, 0.2);
-
-      &:hover {
-        background: linear-gradient(135deg, #007545 0%, #005e38 100%);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
+    td {
+      padding: 0.75rem 1rem;
+      vertical-align: top;
+      
+      &.text-center { text-align: center; }
+      &.text-right { text-align: right; }
+      &.text-muted { color: $primary-light; }
     }
   }
 }
 
-/* Custom Scroll margins */
-.scroll-mt {
-  scroll-margin-top: 15px;
+/* Table Inputs */
+.table-input, .table-select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 0.85rem;
+  color: $primary;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:hover { background-color: white; border-color: $border; }
+  &:focus {
+    background-color: white;
+    border-color: $accent;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  }
+
+  &.text-center { text-align: center; }
+  &.text-right { text-align: right; }
+  &.font-mono { font-family: monospace; font-size: 0.9rem; }
+  &.font-medium { font-weight: 600; }
+
+  &.sm { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
+  
+  &.danger { color: $danger; }
+  &.success { color: $success; background-color: $success-bg; border-color: transparent; }
 }
 
-.excel-subsection-header {
-  background-color: #f1f5f9;
+.calculated-net {
   font-weight: 700;
-  color: #334155;
-  text-align: center;
-  padding: 0.4rem;
-  border: 1px solid #d1d5db;
+  color: $accent;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
 }
-
-.text-3xs {
-  font-size: 0.65rem;
-}
-.p-0\.5 {
-  padding: 0.125rem;
-}
-.font-xs {
+.calculated-total {
   font-size: 0.75rem;
+  color: $primary-light;
 }
 
-/* =========================================================================
-   ORIGINAL PRINT PREVIEW MODAL STYLES (PRESERVED)
-   ========================================================================= */
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; z-index: 1000;
+.specs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+
+  .spec-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-bottom: 2px;
+    
+    .spec-input {
+      background-color: $bg-body;
+      border: 1px solid $border;
+      min-width: 80px;
+      padding: 0.4rem 0.5rem;
+      font-size: 0.8rem;
+      
+      &:focus {
+        background-color: white;
+        border-color: $accent;
+      }
+
+      &.flex-1 {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+    
+    .colon { color: $primary-light; font-weight: 700; }
+  }
 }
 
-.modal-container {
-  background: white; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  width: 90%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column;
+/* --- Buttons --- */
+button { font-family: inherit; }
+
+.btn-primary {
+  background-color: $accent;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: $accent-hover;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  &.lg { padding: 0.85rem 1.5rem; font-size: 1rem; }
 }
 
-.modal-header {
-  padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0;
-  display: flex; justify-content: space-between; align-items: center;
+.btn-secondary {
+  background-color: $surface;
+  color: $primary;
+  border: 1px solid $border-strong;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+
+  &:hover { background-color: $bg-body; border-color: #94a3b8; }
+  &.text-danger { color: $danger; &:hover { background-color: $danger-bg; color: $danger-hover; border-color: $danger-hover; } }
 }
 
-.modal-body {
-  padding: 2rem; overflow-y: auto; background-color: #f1f5f9;
+.btn-outline {
+  background: transparent;
+  color: $accent;
+  border: 1px solid $accent;
+  border-radius: 6px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover { background-color: $accent-light; }
 }
 
-.paper-page {
-  background: white; width: 100%; max-width: 8.5in; min-height: 11in; margin: 0 auto;
-  padding: 0.5in; box-shadow: 0 0 20px rgba(0,0,0,0.1);
+.btn-link {
+  background: transparent;
+  border: none;
+  color: $accent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  
+  &:hover { color: $accent-hover; text-decoration: underline; }
+  &.sm { font-size: 0.75rem; }
 }
 
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: $primary-light;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  transition: all 0.2s;
+
+  &:hover { background-color: $border; color: $primary; }
+  &.danger:hover { background-color: $danger-bg; color: $danger; }
+  &.lg { width: 32px; height: 32px; font-size: 1.2rem; }
+}
+
+/* --- Footer Actions --- */
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid $border;
+}
+
+/* --- Badges --- */
+.badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.badge-gray { background-color: $border; color: $primary-light; }
+}
+
+/* --- Utility --- */
+.flex-1 { flex: 1; }
+.mt-1 { margin-top: 0.25rem; }
+
+/* --- Print Modal (Preserved but styled slightly) --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-container { background: white; border-radius: 16px; width: 90%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+.modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid $border; background: $surface; display: flex; justify-content: space-between; align-items: center; h3 { margin: 0; font-weight: 700; color: $primary; font-size: 1.25rem; } }
+.modal-body { padding: 2rem; overflow-y: auto; background-color: $bg-body; }
+.paper-page { background: white; width: 8.5in; min-height: 11in; margin: 0 auto; padding: 0.5in; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); font-family: 'Times New Roman', serif; }
 .action-buttons { display: flex; gap: 0.75rem; align-items: center; }
 
 /* --- Layout fixes for Property & Equipment Grid Details (Line Items) --- */

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { PropertyService } from '../../../core/services/property.service';
+import { EmployeeService, Employee } from '../../../core/services/employee.service';
 
 @Component({
   selector: 'app-iar-encode',
@@ -40,6 +41,7 @@ export class IarEncodeComponent implements OnInit {
   // Dropdown Options
   offices = ['OSG', 'OBS', 'ODSG', 'ONP', 'LSO', 'FOD', 'CPSMO', 'ADMIN', 'FINANCE', 'NSS', 'IAO', 'PMDD'];
   units = ['unit', 'pc', 'set', 'lot', 'box', 'roll'];
+  employees: Employee[] = [];
 
   // 2. Property & Equipment Details (Line Items)
   items: any[] = [];
@@ -55,7 +57,7 @@ export class IarEncodeComponent implements OnInit {
   activeItemIndex: number | null = null;
   activeItemKey: string = '';
 
-  constructor(private propertyService: PropertyService, private router: Router) { }
+  constructor(private propertyService: PropertyService, private router: Router, private employeeService: EmployeeService) { }
 
   onCellFocus(cellId: string, name: string, modelKey: string, itemIndex: number | null = null, itemKey: string = '') {
     this.activeCell = cellId;
@@ -143,7 +145,30 @@ export class IarEncodeComponent implements OnInit {
 
   ngOnInit() {
     this.fetchNextIarNo();
+    this.loadEmployees();
     this.addItemRow(); // Start with one empty row
+  }
+
+  loadEmployees() {
+    this.employeeService.getAllEmployees().subscribe({
+      next: (data) => this.employees = data,
+      error: (err) => console.error('Error loading employees:', err)
+    });
+  }
+
+  onInspectorChange() {
+    const emp = this.employees.find(e => e.full_name === this.inspectedBy);
+    if (emp) {
+      this.inspectedByDesignation = emp.designation || '';
+    }
+  }
+
+  onReceiverChange() {
+    const emp = this.employees.find(e => e.full_name === this.receivedBy);
+    if (emp) {
+      this.receivedByDesignation = emp.designation || '';
+      // Assume office mapping if needed, or leave it blank/default
+    }
   }
 
   fetchNextIarNo() {
@@ -188,6 +213,14 @@ export class IarEncodeComponent implements OnInit {
 
   removeAttribute(itemIndex: number, attrIndex: number) {
     this.items[itemIndex].attributes.splice(attrIndex, 1);
+  }
+
+  trackByItem(index: number, item: any) {
+    return index;
+  }
+
+  trackByAttr(index: number, attr: any) {
+    return `attr_${index}`;
   }
 
   removeItemRow(index: number) {
