@@ -806,3 +806,260 @@ $shadow-soft: 0 10px 30px rgba(42, 82, 59, 0.05);
 }
 
 .action-buttons { display: flex; gap: 0.75rem; align-items: center; }
+
+/* --- Layout fixes for Property & Equipment Grid Details (Line Items) --- */
+.item-grid-table {
+  width: 100% !important; /* Fit inside the page without scrollbar */
+  table-layout: fixed;
+  
+  th, td {
+    padding: 0.35rem 0.15rem !important; /* Extremely tight padding */
+    font-size: 0.7rem !important; /* Small condensed font size */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .col-header-row th {
+    padding: 0.15rem 0 !important;
+    font-size: 0.62rem !important;
+  }
+  
+  .item-table-header-labels th {
+    padding: 0.4rem 0.2rem !important;
+    font-size: 0.68rem !important;
+  }
+
+  .excel-value-cell {
+    position: relative;
+    overflow: hidden;
+
+    .grid-cell-input,
+    input, select, textarea {
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    .grid-cell-input {
+      padding: 0.35rem 0.25rem !important;
+      font-size: 0.7rem !important;
+    }
+    
+    .grid-cell-select {
+      padding: 0.3rem 0.15rem !important;
+      font-size: 0.7rem !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background-color: transparent !important;
+      text-overflow: ellipsis !important;
+    }
+  }
+
+  /* Compact date picker with absolute positioned webkit calendar indicator */
+  input[type="date"] {
+    padding: 0.2rem 14px 0.2rem 0.1rem !important; /* Right padding for absolute icon */
+    font-size: 0.65rem !important;
+    position: relative !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+
+    &::-webkit-calendar-picker-indicator {
+      position: absolute !important;
+      right: 2px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 11px !important;
+      height: 11px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      cursor: pointer !important;
+      opacity: 0.75 !important;
+    }
+  }
+
+  /* Hide number input spinners to prevent width expansion */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Textarea inside Description cell */
+  .grid-cell-input-textarea {
+    font-size: 0.7rem !important;
+    padding: 0.35rem 0.25rem !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+.item-grid-table button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.item-grid-table .flex-col, 
+.item-grid-table .flex {
+  display: flex;
+}
+
+.item-grid-table .flex-col {
+  flex-direction: column;
+}
+
+.item-grid-table .gap-1 {
+  gap: 0.1rem;
+}
+
+.item-grid-table .w-full {
+  width: 100%;
+}
+
+.item-grid-table .p-0\.5 {
+  padding: 0.05rem;
+}
+
+.item-grid-table .items-center {
+  align-items: center;
+}
+
+.item-grid-table .mt-1 {
+  margin-top: 0.1rem;
+}
+
+.item-grid-table .text-xs {
+  font-size: 0.65rem !important;
+}
+
+.item-grid-table .w-2\/5 {
+  width: 40% !important;
+  min-width: 0 !important;
+}
+
+.item-grid-table .border-b {
+  border-bottom-width: 1px;
+}
+
+.item-grid-table .border-dashed {
+  border-style: dashed;
+}
+
+.item-grid-table .border-slate-200 {
+  border-color: #cbd5cf;
+}
+
+.item-grid-table .border-slate-100 {
+  border-color: #eaeae7;
+}
+
+.item-grid-table .flex-1 {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+}
+
+.item-grid-table .text-rose-500 {
+  color: #b91c1c;
+}
+
+.item-grid-table .px-1 {
+  padding-left: 0.15rem;
+  padding-right: 0.15rem;
+}
+
+.item-grid-table .hover\:bg-rose-50:hover {
+  background-color: #fef2f2;
+}
+
+.item-grid-table .rounded {
+  border-radius: 0.25rem;
+}
+
+.item-grid-table .text-sky-600 {
+  color: #0284c7;
+}
+
+.item-grid-table .text-left {
+  text-align: left;
+}
+
+.item-grid-table .hover\:underline:hover {
+  text-decoration: underline;
+}
+
+.item-grid-table .w-fit {
+  width: fit-content;
+}
+
+.item-grid-table .bg-emerald-50 {
+  background-color: #ecfdf5;
+}
+
+.item-grid-table .text-emerald-800 {
+  color: #065f46;
+}
+
+.item-grid-table .bg-rose-50 {
+  background-color: #fff1f2;
+}
+
+.item-grid-table .text-rose-600 {
+  color: #e11d48;
+}
+
+.item-grid-table .font-bold {
+  font-weight: 700;
+}
+
+.item-grid-table .text-3xs {
+  font-size: 0.58rem !important;
+}
+
+/* --- Two-row layout grouping styles --- */
+.item-grid-table {
+  .item-grid-row.main-row {
+    background-color: white !important;
+    
+    td {
+      border-bottom: 1px dashed #cbd5cf !important; /* light separation inside the same item group */
+    }
+  }
+
+  .item-grid-row.sub-row {
+    background-color: #f6f8f6 !important; /* warm soft sage-gray highlight for Row 2 */
+    
+    td {
+      border-bottom: 2.5px solid #94a39b !important; /* thicker separation between different item groups */
+    }
+  }
+
+  .item-table-header-labels.sub-header-labels {
+    background-color: #e3ece6;
+    
+    th {
+      font-size: 0.65rem !important;
+      color: #5e6f65;
+      padding: 0.35rem 0.2rem !important;
+      text-transform: uppercase;
+      font-weight: 700;
+      border-bottom: 2px solid #cbd5cf;
+    }
+  }
+}
+
+.text-2xs {
+  font-size: 0.62rem !important;
+}
+

@@ -102,13 +102,16 @@
                   <svg class="action-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>Tag</span>
                 </button>
                 <button class="btn-action-pill btn-transfer" (click)="openTransferModal(prop); $event.stopPropagation()" *ngIf="prop.status === 'ACTIVE'" title="Transfer Accountability">
                   <svg class="action-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                   </svg>
-                  <span>Transfer</span>
+                </button>
+                <button class="btn-action-pill btn-edit" (click)="openEditModal(prop); $event.stopPropagation()" title="Edit Equipment">
+                  <svg class="action-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
                 </button>
               </div>
             </td>
@@ -163,6 +166,12 @@
         <h3>Document Preview</h3>
       </div>
       <div class="modal-header-actions">
+        <button class="btn-modal-action bg-edit" (click)="openEditModal(selectedPropForForm)">
+          <svg class="modal-action-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          Edit Details
+        </button>
         <button class="btn-modal-action bg-excel" (click)="downloadExcelForm()">
           <svg class="modal-action-svg" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -270,6 +279,232 @@
             <span *ngIf="isSubmittingTransfer">Processing...</span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Equipment Modal -->
+<div class="modal-overlay" *ngIf="isEditModalOpen">
+  <div class="modal-container edit-modal-container excel-window shadow-lg">
+    
+    <!-- Excel Title Bar -->
+    <div class="excel-title-bar">
+      <div class="excel-title-left">
+        <span class="excel-title-icon">📗</span>
+        <span class="excel-doc-title">Property Registry Workbook [Edit Mode]</span>
+      </div>
+      <div class="excel-title-actions">
+        <span class="win-btn minimise">─</span>
+        <span class="win-btn maximise">❑</span>
+        <span class="win-btn close" (click)="closeEditModal()">✕</span>
+      </div>
+    </div>
+
+    <!-- Excel Formula Bar -->
+    <div class="excel-formula-bar no-print">
+      <div class="active-cell-box" title="Focused Grid Coordinate">{{ activeEditCell || 'A1' }}</div>
+      <div class="formula-fx-btn">fx</div>
+      <div class="formula-input-container">
+        <input type="text" [value]="getFormulaBarValue()" readonly class="formula-input" placeholder="Select a grid cell below to edit...">
+      </div>
+    </div>
+    
+    <div class="modal-body excel-canvas scrollable-content">
+      <div class="edit-form-body">
+        <form (ngSubmit)="submitEdit()" #editForm="ngForm">
+          
+          <div class="excel-grid-wrapper fit-grid">
+            <table class="excel-grid-table">
+              <colgroup>
+                <col style="width: 42px;">
+                <col style="width: 16%;">
+                <col style="width: 12%;">
+                <col style="width: 12%;">
+                <col style="width: 10%;">
+                <col style="width: 16%;">
+                <col style="width: 12%;">
+                <col style="width: 10%;">
+                <col style="width: 12%;">
+              </colgroup>
+              <thead>
+                <tr class="col-header-row">
+                  <th class="row-num-header"></th>
+                  <th>A</th>
+                  <th>B</th>
+                  <th>C</th>
+                  <th>D</th>
+                  <th>E</th>
+                  <th>F</th>
+                  <th>G</th>
+                  <th>H</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Section 1: Asset Information -->
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">1</td>
+                  <td colspan="8" class="excel-group-title-cell">Asset Specifications & Classification Details</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">2</td>
+                  <td class="excel-label-cell">Property No. *</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B2'">
+                    <input type="text" [(ngModel)]="editData.property_no" name="property_no" required
+                      (focus)="activeEditCell = 'B2'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B2'"></div>
+                  </td>
+                  <td class="excel-label-cell">Asset Name *</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F2'">
+                    <input type="text" [(ngModel)]="editData.item_name" name="item_name" required
+                      (focus)="activeEditCell = 'F2'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F2'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">3</td>
+                  <td class="excel-label-cell">Serial No.</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B3'">
+                    <input type="text" [(ngModel)]="editData.serial_no" name="serial_no" placeholder="N/A"
+                      (focus)="activeEditCell = 'B3'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B3'"></div>
+                  </td>
+                  <td class="excel-label-cell">Unit Cost (₱) *</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F3'">
+                    <input type="number" step="0.01" [(ngModel)]="editData.unit_cost" name="unit_cost" required
+                      (focus)="activeEditCell = 'F3'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F3'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">4</td>
+                  <td class="excel-label-cell">Description</td>
+                  <td colspan="7" class="excel-value-cell" [class.focused]="activeEditCell === 'B4'">
+                    <textarea [(ngModel)]="editData.description" name="description" rows="2"
+                      (focus)="activeEditCell = 'B4'" class="grid-cell-input-textarea" placeholder="Item description, specs, brand details..."></textarea>
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B4'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">5</td>
+                  <td class="excel-label-cell">Condition</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B5'">
+                    <select [(ngModel)]="editData.condition" name="condition"
+                      (focus)="activeEditCell = 'B5'" class="grid-cell-select">
+                      <option value="GOOD">GOOD</option>
+                      <option value="FAIR">FAIR</option>
+                      <option value="POOR">POOR</option>
+                      <option value="UNUSABLE">UNUSABLE</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B5'"></div>
+                  </td>
+                  <td class="excel-label-cell">Status</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F5'">
+                    <select [(ngModel)]="editData.status" name="status"
+                      (focus)="activeEditCell = 'F5'" class="grid-cell-select">
+                      <option value="ACTIVE">ACTIVE</option>
+                      <option value="TRANSFERRED">TRANSFERRED</option>
+                      <option value="RETURNED">RETURNED</option>
+                      <option value="DISPOSED">DISPOSED</option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F5'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">6</td>
+                  <td class="excel-label-cell">Delivery Date</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B6'">
+                    <input type="date" [(ngModel)]="editData.delivery_date" name="delivery_date"
+                      (focus)="activeEditCell = 'B6'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B6'"></div>
+                  </td>
+                  <td class="excel-label-cell">Est. Useful Life</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F6'">
+                    <input type="text" [(ngModel)]="editData.estimated_useful_life" name="estimated_useful_life" placeholder="e.g. 5 years"
+                      (focus)="activeEditCell = 'F6'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F6'"></div>
+                  </td>
+                </tr>
+
+                <!-- Section 2: Accountable / Custodianship Details -->
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">7</td>
+                  <td colspan="8" class="excel-group-title-cell">Accountability & Custodianship Parameters</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">8</td>
+                  <td class="excel-label-cell">Accountable Officer *</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B8'">
+                    <input type="text" [(ngModel)]="editData.accountable_officer" name="accountable_officer" required
+                      (focus)="activeEditCell = 'B8'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B8'"></div>
+                  </td>
+                  <td class="excel-label-cell">Custodian Office / RCO *</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F8'">
+                    <select [(ngModel)]="editData.rco" name="rco" required
+                      (focus)="activeEditCell = 'F8'" class="grid-cell-select">
+                      <option *ngFor="let office of offices" [value]="office" [hidden]="office === 'ALL'">
+                        {{ office }}
+                      </option>
+                    </select>
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F8'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">9</td>
+                  <td class="excel-label-cell">Receiver Designation</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B9'">
+                    <input type="text" [(ngModel)]="editData.receiver_designation" name="receiver_designation" placeholder="e.g. Administrative Officer II"
+                      (focus)="activeEditCell = 'B9'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B9'"></div>
+                  </td>
+                  <td colspan="4" class="excel-empty-cell"></td>
+                </tr>
+
+                <!-- Section 3: Signatures & Authority -->
+                <tr class="section-divider-row">
+                  <td class="row-number-cell">10</td>
+                  <td colspan="8" class="excel-group-title-cell">Signatures & Authority (Issuer Credentials)</td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">11</td>
+                  <td class="excel-label-cell">Issuer Name</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B11'">
+                    <input type="text" [(ngModel)]="editData.issuer_name" name="issuer_name"
+                      (focus)="activeEditCell = 'B11'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B11'"></div>
+                  </td>
+                  <td class="excel-label-cell">Issuer Designation</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'F11'">
+                    <input type="text" [(ngModel)]="editData.issuer_designation" name="issuer_designation" placeholder="e.g. Property Custodian"
+                      (focus)="activeEditCell = 'F11'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'F11'"></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="row-number-cell">12</td>
+                  <td class="excel-label-cell">Issuer Office / Division</td>
+                  <td colspan="3" class="excel-value-cell" [class.focused]="activeEditCell === 'B12'">
+                    <input type="text" [(ngModel)]="editData.issuer_office" name="issuer_office" placeholder="e.g. Administration Division"
+                      (focus)="activeEditCell = 'B12'" class="grid-cell-input">
+                    <div class="active-cell-dot" *ngIf="activeEditCell === 'B12'"></div>
+                  </td>
+                  <td colspan="4" class="excel-empty-cell"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-actions-spreadsheet mt-4 no-print" style="border-top: none; padding-bottom: 0;">
+            <button type="button" class="btn-spreadsheet-cancel" (click)="closeEditModal()">Cancel</button>
+            <div class="action-buttons-wrap">
+              <button type="submit" class="btn-spreadsheet-action submit-action" [disabled]="isSubmittingEdit || !editForm.form.valid">
+                <span *ngIf="!isSubmittingEdit">Save Changes</span>
+                <span *ngIf="isSubmittingEdit">Saving...</span>
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   </div>
