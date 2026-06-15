@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PropertyService } from '../../../core/services/property.service';
+import { EmployeeService, Employee } from '../../../core/services/employee.service';
 
 @Component({
   selector: 'app-physical-count-reports',
@@ -21,7 +22,7 @@ export class PhysicalCountReportsComponent implements OnInit {
   isLoading: boolean = false;
   today: Date = new Date();
 
-  constructor(private propertyService: PropertyService) { }
+  constructor(private propertyService: PropertyService, private employeeService: EmployeeService) { }
 
   ngOnInit() {
     this.loadReport();
@@ -43,10 +44,8 @@ export class PhysicalCountReportsComponent implements OnInit {
   }
 
   loadEmployees() {
-    // In a real app, this would fetch unique accountable_officer names
-    this.propertyService.getAllProperties().subscribe(props => {
-      const names = props.map(p => p.accountable_officer);
-      this.employees = Array.from(new Set(names)).filter(n => !!n);
+    this.employeeService.getAllEmployees().subscribe(data => {
+      this.employees = data.map(e => e.full_name);
     });
   }
 

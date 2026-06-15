@@ -400,9 +400,12 @@
                   </td>
                   <!-- K: Accountable Officer -->
                   <td class="excel-value-cell" [class.focused]="activeCell === 'K' + (10 + idx)">
-                    <input type="text" [(ngModel)]="item.accountable_officer" [name]="'off_' + idx"
+                    <input type="text" [(ngModel)]="item.accountable_officer" [name]="'off_' + idx" list="employeeList"
                       (focus)="onCellFocus('K' + (10 + idx), 'Row ' + (10 + idx) + ' Officer', 'items', idx, 'accountable_officer')"
-                      (ngModelChange)="onGridInputChange()" placeholder="Officer..." class="grid-cell-input">
+                      (ngModelChange)="onGridInputChange()" placeholder="Search Officer..." class="grid-cell-input">
+                    <datalist id="employeeList">
+                      <option *ngFor="let emp of employees" [value]="emp.full_name">{{ emp.designation }}</option>
+                    </datalist>
                     <div class="active-cell-dot" *ngIf="activeCell === 'K' + (10 + idx)"></div>
                   </td>
                   <!-- L: Receiver Designation -->
@@ -536,10 +539,14 @@
                 <tr>
                   <td class="row-number-cell">23</td>
                   <td class="excel-label-cell">Inspected By</td>
-                  <td colspan="3" class="excel-value-cell" [class.focused]="activeCell === 'B23'">
-                    <input type="text" [(ngModel)]="inspectedBy" name="inspectedBy"
-                      (focus)="onCellFocus('B23', 'Inspected By', 'inspectedBy')" (ngModelChange)="onGridInputChange()"
-                      placeholder="Inspector Name..." class="grid-cell-input font-bold">
+                  <td colspan="4" class="excel-value-cell signature-cell" [class.focused]="activeCell === 'B23'">
+                    <select [(ngModel)]="inspectedBy" name="inspectedBy"
+                      (focus)="onCellFocus('B23', 'Inspected By', 'inspectedBy')"
+                      (change)="onInspectorChange(); onGridInputChange()"
+                      class="grid-cell-select w-100">
+                      <option value="">Select Inspector...</option>
+                      <option *ngFor="let emp of employees" [value]="emp.full_name">{{ emp.full_name }}</option>
+                    </select>
                     <div class="active-cell-dot" *ngIf="activeCell === 'B23'"></div>
                   </td>
                   <td class="excel-label-cell">Received By</td>

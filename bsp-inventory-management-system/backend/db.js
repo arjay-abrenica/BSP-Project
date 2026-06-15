@@ -57,6 +57,35 @@ parIcsQueries.forEach(q => {
   pool.query(q).catch(err => console.error("Database migration error for PAR/ICS column:", err));
 });
 
+// Auto-migration: Employees table
+const employeeMigrationQuery = `
+CREATE TABLE IF NOT EXISTS Employees (
+    employee_id SERIAL PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    designation VARCHAR(255),
+    office_id INT,
+    status VARCHAR(50) DEFAULT 'ACTIVE'
+);
+`;
+
+pool.query(employeeMigrationQuery)
+  .then(() => {
+    console.log("Database Employees table verified successfully.");
+    return pool.query('SELECT COUNT(*) FROM Employees');
+  })
+  .then(res => {
+    if (res && res.rows[0].count === '0') {
+      const insertDefaultEmployees = `
+        INSERT INTO Employees (full_name, designation, office_id, status) VALUES
+        ('JERRY B. RUBRICO', 'Bank Officer VI', NULL, 'ACTIVE'),
+        ('JHON DOE', 'Bank Officer I', NULL, 'ACTIVE'),
+        ('JANE SMITH', 'Supply Officer', NULL, 'ACTIVE')
+      `;
+      return pool.query(insertDefaultEmployees).then(() => console.log("Default employees inserted."));
+    }
+  })
+  .catch(err => console.error("Database migration error for Employees table:", err));
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
   pool, // Exported for transaction management (client.connect)
