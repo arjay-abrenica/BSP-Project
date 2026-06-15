@@ -215,6 +215,14 @@ export class IarEncodeComponent implements OnInit {
     this.items[itemIndex].attributes.splice(attrIndex, 1);
   }
 
+  trackByItem(index: number, item: any) {
+    return index;
+  }
+
+  trackByAttr(index: number, attr: any) {
+    return `attr_${index}`;
+  }
+
   removeItemRow(index: number) {
     if (this.items.length > 1) {
       this.items.splice(index, 1);
