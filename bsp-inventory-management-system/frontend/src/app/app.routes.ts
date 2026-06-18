@@ -99,6 +99,15 @@ export const routes: Routes = [
                     import('./pages/property/physical-count-reports/physical-count-reports.component').then(c => c.PhysicalCountReportsComponent)
             },
 
+            // Property > RPCPPE (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
+            {
+                path: 'property/rpcppe',
+                canActivate: [AuthGuard, RoleGuard],
+                data: { roles: ['SUPERADMIN', 'ACTING_PROPERTY_CUSTODIAN'] },
+                loadComponent: () =>
+                    import('./pages/property/rpcppe/rpcppe').then(c => c.Rpcppe)
+            },
+
             // Property > Sticker Generator (Restricted to SUPERADMIN and ACTING_PROPERTY_CUSTODIAN)
             {
                 path: 'property/stickers',

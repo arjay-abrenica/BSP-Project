@@ -1,0 +1,167 @@
+<div class="page-container no-print">
+  
+  <div class="excel-header-bar shadow-sm">
+    <div class="excel-header-left">
+      <span class="excel-header-icon">🏢</span>
+      <div class="excel-header-texts">
+        <h2>Dedicated RPCPPE Dashboard</h2>
+        <p class="subtitle">Report on the Physical Count of Property, Plant and Equipment</p>
+      </div>
+    </div>
+    <div class="excel-header-actions no-print">
+      <button class="btn-refresh" (click)="loadReport()" [disabled]="isLoading">
+        <span class="btn-icon" [class.spinning]="isLoading">🔄</span>
+        {{ isLoading ? 'Refreshing...' : 'Refresh Data' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="filter-top-bar shadow-sm border-excel">
+    <div class="filter-group">
+      <label for="employeeSelect">Employee / Accountable Officer:</label>
+      <div class="select-wrapper">
+        <select id="employeeSelect" class="grid-cell-select" [(ngModel)]="selectedEmployee" (change)="onFilterChange()">
+          <option value="ALL">All Accountable Officers</option>
+          <option *ngFor="let emp of employees" [value]="emp">{{ emp }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label for="asOfDate">As of Date:</label>
+      <div class="select-wrapper">
+        <input type="date" id="asOfDate" class="grid-cell-select" [(ngModel)]="asOfDate" (change)="onFilterChange()">
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="ribbon-btn preview-btn" (click)="printReport()" title="Print PDF Layout">
+        <span class="btn-symbol">🖨️</span> Print PDF
+      </button>
+      <button class="ribbon-btn excel-btn" (click)="exportToExcel()" title="Download Excel Sheet">
+        <span class="btn-symbol">📊</span> Export Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Report Card -->
+  <div class="card shadow-sm mt-4 border-excel">
+    <div class="card-header border-excel-header">
+       📁 Report on Property, Plant and Equipment (RPCPPE)
+       <span class="header-divider">|</span> 
+       <span class="accountability-text">Accountability: {{ selectedEmployee === 'ALL' ? 'BSP National Office' : selectedEmployee }}</span>
+    </div>
+    
+    <div class="card-content" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="premium-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Property No.</th>
+              <th style="width: 25%;">Item Name & Description</th>
+              <th style="width: 12%;">Serial No.</th>
+              <th style="width: 12%;">Unit Cost</th>
+              <th style="width: 12%;">Acquisition Date</th>
+              <th style="width: 14%;">Accountable Officer</th>
+              <th style="width: 10%;">Condition</th>
+              <th style="width: 10%;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngIf="isLoading">
+              <tr *ngFor="let s of [1, 2, 3, 4, 5]" class="skeleton-row">
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell long animate-pulse"></div></td>
+                <td><div class="skeleton-cell medium animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell medium animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+                <td><div class="skeleton-cell short animate-pulse"></div></td>
+              </tr>
+            </ng-container>
+
+            <ng-container *ngIf="!isLoading">
+              <tr *ngFor="let item of getFilteredData()" class="clickable-row-item">
+                <td><strong class="prop-no-link">🔢 {{ item.property_no }}</strong></td>
+                <td>
+                   <div class="item-name-text">{{ item.item_name }}</div>
+                   <div class="text-xs text-muted font-italic">{{ item.description }}</div>
+                </td>
+                <td class="font-mono">{{ item.serial_no || 'N/A' }}</td>
+                <td class="font-mono text-right text-emerald-800 font-bold">₱{{ item.unit_cost | number:'1.2-2' }}</td>
+                <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
+                <td>{{ item.accountable_officer }}</td>
+                <td>
+                   <span class="badge-status" 
+                         [class.badge-active]="item.condition === 'GOOD'" 
+                         [class.badge-warning]="item.condition === 'FAIR'" 
+                         [class.badge-danger]="item.condition === 'POOR' || item.condition === 'UNUSABLE'">
+                     {{ item.condition }}
+                   </span>
+                </td>
+                <td>
+                   <span class="badge" 
+                         [class.badge-active-status]="item.status === 'ACTIVE'" 
+                         [class.badge-transferred-status]="item.status === 'TRANSFERRED'"
+                         [class.badge-returned-status]="item.status === 'RETURNED'">
+                     {{ item.status }}
+                   </span>
+                </td>
+              </tr>
+              <tr *ngIf="getFilteredData().length === 0">
+                 <td colspan="8" class="text-center py-5 text-muted font-italic">No records found.</td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="print-only">
+   <div class="paper-page-report">
+       <div class="doc-header">
+         <p class="text-center text-sm">Republic of the Philippines</p>
+         <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
+         <p class="text-center text-xs">National Office, Manila</p>
+         <h2 class="text-center mt-4">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)</h2>
+         <p class="text-center text-xs">As of {{ today | date:'longDate' }}</p>
+       </div>
+
+       <table class="report-meta-table mt-4">
+         <tr>
+           <td style="width: 50%;"><strong>Accountable Officer:</strong> {{ selectedEmployee === 'ALL' ? 'All Accountable Officers' : selectedEmployee }}</td>
+           <td style="width: 50%; text-align: right;"><strong>Fund Cluster:</strong> Regular & Trust Fund</td>
+         </tr>
+       </table>
+
+       <table class="report-table-print mt-4">
+          <thead>
+             <tr>
+                <th style="width: 15%;">Property No.</th>
+                <th style="width: 35%;">Description & Brand Details</th>
+                <th style="width: 12%;">Serial No.</th>
+                <th style="width: 12%;">Unit Cost</th>
+                <th style="width: 12%;">Date Acquired</th>
+                <th style="width: 14%;">Condition</th>
+             </tr>
+          </thead>
+          <tbody>
+             <tr *ngFor="let item of getFilteredData()">
+                <td>{{ item.property_no }}</td>
+                <td>{{ item.item_name }} {{ item.description ? '(' + item.description + ')' : '' }}</td>
+                <td>{{ item.serial_no || 'N/A' }}</td>
+                <td class="text-right">₱{{ item.unit_cost | number:'1.2-2' }}</td>
+                <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
+                <td class="text-center">{{ item.condition }}</td>
+             </tr>
+             <tr>
+               <td class="text-center">&nbsp;</td>
+               <td colspan="5" class="text-muted-print text-center">x x x x x Nothing Follows x x x x x</td>
+             </tr>
+          </tbody>
+       </table>
+   </div>
+</div>
