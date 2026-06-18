@@ -89,7 +89,7 @@ const createPropertyReturn = async (req, res) => {
 };
 
 const getPropertyReportsCount = async (req, res) => {
-  const { type, reportType, rco, employee } = req.query;
+  const { type, reportType, rco, employee, asOfDate } = req.query;
   const targetType = type || (reportType === 'RPCPPE' ? 'PAR' : reportType === 'RPCSP' ? 'ICS' : null);
   const targetEmployee = rco || employee;
 
@@ -104,6 +104,11 @@ const getPropertyReportsCount = async (req, res) => {
   if (targetEmployee && targetEmployee !== 'ALL') {
     params.push(targetEmployee);
     q += ` AND (p.accountable_officer = $${params.length} OR p.rco = $${params.length})`;
+  }
+
+  if (asOfDate) {
+    params.push(asOfDate);
+    q += ` AND p.delivery_date <= $${params.length}`;
   }
   
   q += ' ORDER BY p.property_no ASC';
@@ -536,13 +541,17 @@ const exportIcsExcel = async (req, res) => {
 };
 
 const exportPhysicalCountExcel = async (req, res) => {
-  const { reportType, employee } = req.query;
+  const { reportType, employee, asOfDate } = req.query;
   const classification = reportType === 'RPCPPE' ? 'PAR' : 'ICS';
   
   try {
     let q = 'SELECT p.*, o.office_name FROM Property_Items p LEFT JOIN Offices o ON p.office_id = o.office_id WHERE p.type = $1 AND p.status != \'RETURNED\'';
     const params = [classification];
     if (employee && employee !== 'ALL') { params.push(employee); q += ' AND p.accountable_officer = $2'; }
+    if (asOfDate) {
+      params.push(asOfDate);
+      q += ` AND p.delivery_date <= $${params.length}`;
+    }
     q += ' ORDER BY p.accountable_officer ASC, p.property_no ASC';
     
     const pRes = await db.query(q, params);
@@ -556,7 +565,7 @@ const exportPhysicalCountExcel = async (req, res) => {
     const year = new Date().getFullYear();
     const title = reportType === 'RPCPPE' ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY (RPCSP)';
     ws.getCell('A6').value = year + ' ' + title;
-    ws.getCell('A9').value = 'as of ' + formatDate(new Date());
+    ws.getCell('A9').value = 'as of ' + formatDate(asOfDate || new Date());
 
     if (employee && employee !== 'ALL') {
        ws.getCell('B12').value = 'For which: ' + employee.toUpperCase() + ' is accountable.';

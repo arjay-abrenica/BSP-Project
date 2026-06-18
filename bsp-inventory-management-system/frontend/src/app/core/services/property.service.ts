@@ -26,17 +26,23 @@ export class PropertyService {
     return this.http.get(`${this.apiUrl}/${id}`);
   }
 
-  getPhysicalCountReports(reportType: string, employee: string): Observable<any[]> {
+  getPhysicalCountReports(reportType: string, employee: string, asOfDate?: string): Observable<any[]> {
     let params = new HttpParams();
     params = params.set('reportType', reportType);
     params = params.set('employee', employee);
+    if (asOfDate) {
+      params = params.set('asOfDate', asOfDate);
+    }
     return this.http.get<any[]>(`${this.apiUrl}/reports/physical-count`, { params });
   }
 
-  downloadPhysicalCountExcel(reportType: string, employee: string): Observable<Blob> {
+  downloadPhysicalCountExcel(reportType: string, employee: string, asOfDate?: string): Observable<Blob> {
     let params = new HttpParams();
     params = params.set('reportType', reportType);
     params = params.set('employee', employee);
+    if (asOfDate) {
+      params = params.set('asOfDate', asOfDate);
+    }
     return this.http.get(`${this.apiUrl}/reports/physical-count/excel`, { params, responseType: 'blob' });
   }
 
