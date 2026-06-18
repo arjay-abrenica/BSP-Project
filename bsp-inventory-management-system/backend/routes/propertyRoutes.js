@@ -15,6 +15,7 @@ router.post('/iars/preview-excel', propertyController.previewIarExcel);
 router.get('/:id/par', propertyController.exportParExcel);
 router.get('/:id/ics', propertyController.exportIcsExcel);
 router.get('/:id', propertyController.getPropertyDetails);
+router.put('/:id', propertyController.updateProperty);
 router.post('/transfers', propertyController.createPropertyTransfer);
 router.get('/transfers/:id/excel', propertyController.exportPtrExcel);
 router.post('/returns', propertyController.createPropertyReturn);

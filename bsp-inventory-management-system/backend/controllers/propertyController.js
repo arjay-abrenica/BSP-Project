@@ -647,4 +647,78 @@ const exportPtrExcel = async (req, res) => {
   } catch (error) { console.error('PTR Export Error:', error); res.status(500).json({ error: 'Failed.' }); }
 };
 
-module.exports = { createIar, getAllProperties, getPropertyDetails, createPropertyTransfer, createPropertyReturn, getPropertyReportsCount, getPropertyAnalytics, getAllIars, getIarDetails, exportIarExcel, previewIarExcel, getNextIarNo, exportParExcel, exportIcsExcel, exportPhysicalCountExcel, exportPtrExcel };
+const updateProperty = async (req, res) => {
+  const { id } = req.params;
+  const {
+    property_no,
+    item_name,
+    description,
+    serial_no,
+    unit_cost,
+    accountable_officer,
+    receiver_designation,
+    rco,
+    delivery_date,
+    estimated_useful_life,
+    condition,
+    status,
+    issuer_name,
+    issuer_designation,
+    issuer_office
+  } = req.body;
+
+  try {
+    const classification = parseFloat(unit_cost) >= 50000.00 ? 'PAR' : 'ICS';
+    const result = await db.query(
+      `UPDATE Property_Items 
+       SET property_no = $1,
+           item_name = $2,
+           description = $3,
+           serial_no = $4,
+           unit_cost = $5,
+           accountable_officer = $6,
+           receiver_designation = $7,
+           rco = $8,
+           delivery_date = $9,
+           estimated_useful_life = $10,
+           condition = $11,
+           status = $12,
+           issuer_name = $13,
+           issuer_designation = $14,
+           issuer_office = $15,
+           type = $16
+       WHERE property_id = $17
+       RETURNING *`,
+      [
+        property_no,
+        item_name,
+        description || null,
+        serial_no || null,
+        parseFloat(unit_cost) || 0.00,
+        accountable_officer,
+        receiver_designation || null,
+        rco || 'National Office',
+        delivery_date || null,
+        estimated_useful_life || null,
+        condition || 'GOOD',
+        status || 'ACTIVE',
+        issuer_name || 'JERRY B. RUBRICO',
+        issuer_designation || null,
+        issuer_office || null,
+        classification,
+        id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Property not found.' });
+    }
+
+    res.json({ message: 'Property updated successfully.', property: result.rows[0] });
+  } catch (error) {
+    console.error('Error in updateProperty:', error);
+    res.status(500).json({ error: 'Failed to update property.' });
+  }
+};
+
+module.exports = { createIar, getAllProperties, getPropertyDetails, createPropertyTransfer, createPropertyReturn, getPropertyReportsCount, getPropertyAnalytics, getAllIars, getIarDetails, exportIarExcel, previewIarExcel, getNextIarNo, exportParExcel, exportIcsExcel, exportPhysicalCountExcel, exportPtrExcel, updateProperty };
