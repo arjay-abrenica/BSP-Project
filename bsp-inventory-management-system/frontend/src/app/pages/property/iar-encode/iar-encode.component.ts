@@ -42,6 +42,12 @@ export class IarEncodeComponent implements OnInit {
   offices = ['OSG', 'OBS', 'ODSG', 'ONP', 'LSO', 'FOD', 'CPSMO', 'ADMIN', 'FINANCE', 'NSS', 'IAO', 'PMDD'];
   units = ['unit', 'pc', 'set', 'lot', 'box', 'roll'];
   employees: Employee[] = [];
+  filteredOffices: string[][] = [];
+  filteredUnits: string[][] = [];
+  filteredEmployees: Employee[][] = [];
+  activeDropdownType: 'unit' | 'office' | 'employee' | null = null;
+  activeDropdownIndex: number | null = null;
+  dropdownPosition = { top: '0px', left: '0px', width: '0px' };
 
   // 2. Property & Equipment Details (Line Items)
   items: any[] = [];
@@ -91,8 +97,11 @@ export class IarEncodeComponent implements OnInit {
     }
   }
 
-  onGridInputChange() {
+  onGridInputChange(item?: any, key?: string) {
     this.activeCellValue = this.getFormulaBarValue();
+    if (item && key && ['quantity', 'unit_cost', 'discount'].includes(key)) {
+      this.calculateAmounts(item);
+    }
   }
 
   resetForm() {
@@ -183,19 +192,19 @@ export class IarEncodeComponent implements OnInit {
       property_no: '',
       name: '', // used for description in template
       description: '', // brand/model
-      unit: 'unit',
-      quantity: 1,
-      unit_cost: 0,
-      delivery_date: new Date().toISOString().split('T')[0],
-      srp: 0,
-      discount: 0,
+      unit: '',
+      quantity: null,
+      unit_cost: null,
+      delivery_date: '',
+      srp: null,
+      discount: null,
       total_amount: 0, // Calculated
       net_amount: 0,   // Calculated
       serial_no: '',
       or_number: '',
-      rco: 'National Office',
+      rco: '',
       accountable_officer: '',
-      estimated_useful_life: '5 years',
+      estimated_useful_life: '',
       receiver_designation: '',
       issuer_name: 'JERRY B. RUBRICO',
       issuer_designation: 'Administrative Officer II',
@@ -321,5 +330,97 @@ export class IarEncodeComponent implements OnInit {
         alert('Failed to export Excel.');
       }
     });
+  }
+
+  openDropdown(event: FocusEvent, type: 'unit' | 'office' | 'employee', idx: number) {
+    const inputEl = event.target as HTMLElement;
+    if (inputEl) {
+      const rect = inputEl.getBoundingClientRect();
+      this.dropdownPosition = {
+        top: `${rect.bottom}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`
+      };
+      this.activeDropdownType = type;
+      this.activeDropdownIndex = idx;
+      
+      // Filter recommendations initially
+      if (type === 'unit') this.filterUnits(this.items[idx].unit, idx);
+      if (type === 'office') this.filterOffices(this.items[idx].rco, idx);
+      if (type === 'employee') this.filterEmployees(this.items[idx].accountable_officer, idx);
+    }
+  }
+
+  closeDropdown() {
+    setTimeout(() => {
+      this.activeDropdownType = null;
+      this.activeDropdownIndex = null;
+    }, 200);
+  }
+
+  onDropdownInput(val: string) {
+    if (this.activeDropdownType === 'unit' && this.activeDropdownIndex !== null) {
+      this.filterUnits(val, this.activeDropdownIndex);
+    }
+    if (this.activeDropdownType === 'office' && this.activeDropdownIndex !== null) {
+      this.filterOffices(val, this.activeDropdownIndex);
+    }
+    if (this.activeDropdownType === 'employee' && this.activeDropdownIndex !== null) {
+      this.filterEmployees(val, this.activeDropdownIndex);
+    }
+  }
+
+  selectUnit(idx: number, unit: string) {
+    if (this.items[idx]) {
+      this.items[idx].unit = unit;
+      this.onGridInputChange();
+    }
+  }
+
+  filterUnits(query: string, idx: number) {
+    if (!query) {
+      this.filteredUnits[idx] = this.units;
+    } else {
+      const q = query.toLowerCase();
+      this.filteredUnits[idx] = this.units.filter(u => u.toLowerCase().includes(q));
+    }
+  }
+
+  selectOffice(idx: number, office: string) {
+    if (this.items[idx]) {
+      this.items[idx].rco = office;
+      this.onGridInputChange();
+    }
+  }
+
+  filterOffices(query: string, idx: number) {
+    if (!query) {
+      this.filteredOffices[idx] = this.offices;
+    } else {
+      const q = query.toLowerCase();
+      this.filteredOffices[idx] = this.offices.filter(off => off.toLowerCase().includes(q));
+    }
+  }
+
+  selectEmployee(idx: number, empName: string, empDesignation: string) {
+    if (this.items[idx]) {
+      this.items[idx].accountable_officer = empName;
+      if (empDesignation) {
+        this.items[idx].receiver_designation = empDesignation;
+      }
+      this.onGridInputChange();
+    }
+  }
+
+  filterEmployees(query: string, idx: number) {
+    if (!query) {
+      this.filteredEmployees[idx] = this.employees;
+    } else {
+      const q = query.toLowerCase();
+      this.filteredEmployees[idx] = this.employees.filter(emp =>
+        (emp.full_name || '').toLowerCase().includes(q) ||
+        (emp.designation || '').toLowerCase().includes(q)
+      );
+    }
   }
 }
