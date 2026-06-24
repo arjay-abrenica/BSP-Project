@@ -32,3 +32,4 @@ exports.updateSettings = async (req, res) => {
     res.status(500).json({ message: 'Server error while updating settings' });
   }
 };
+

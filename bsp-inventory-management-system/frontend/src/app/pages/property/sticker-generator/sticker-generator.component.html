@@ -79,21 +79,56 @@
             <div *ngFor="let item of selectedProperties" class="property-sticker animate-pop">
                <div class="sticker-header">
                   <img src="assets/img/bspLogo.png" class="sticker-logo">
-                  <div class="sticker-org-container">
+                  <div class="sticker-header-text">
                      <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
-                     <div class="sticker-sub">National Headquarters, Manila</div>
+                     <div class="sticker-sub">National Office, Manila</div>
+                     <div class="sticker-title">BSP PROPERTY</div>
                   </div>
                </div>
+               
                <div class="sticker-body">
-                  <div class="sticker-prop-no">{{ item.property_no }}</div>
-                  <div class="sticker-item-name">{{ item.item_name }}</div>
-                  <div class="sticker-officer">Officer: {{ item.accountable_officer }}</div>
-                  
-                  <!-- Premium visual barcode placeholder for ui dashboard wow factor -->
-                  <div class="sticker-barcode-placeholder">
-                     <div class="barcode-lines"></div>
-                     <div class="barcode-text">BSP PROPERTY TAG</div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Property Number:</span>
+                     <span class="sticker-value">{{ item.property_no }}</span>
                   </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Region:</span>
+                     <span class="sticker-value">{{ getDivision(item) }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Description:</span>
+                     <span class="sticker-value">{{ getDescription(item) }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label sticker-no-colon">Model No.</span>
+                     <span class="sticker-value">{{ getModelNo(item) }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label sticker-no-colon">Serial No.</span>
+                     <span class="sticker-value">{{ item.serial_no || 'N/A' }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Acquisition Date:</span>
+                     <span class="sticker-value">{{ formatAcquisitionDate(item.delivery_date) }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Acquisition Cost:</span>
+                     <span class="sticker-value">{{ formatCost(item.unit_cost) }}</span>
+                  </div>
+                  <div class="sticker-info-row">
+                     <span class="sticker-label">Persons Accountable:</span>
+                     <span class="sticker-value">{{ item.accountable_officer }}</span>
+                  </div>
+               </div>
+               
+               <div class="sticker-signature-section">
+                  <div class="sticker-signature-line"></div>
+                  <div class="sticker-signature-text">Signature of Inventory Committee</div>
+               </div>
+               
+               <div class="sticker-footer">
+                  <div class="sticker-tampering">Tampering of this sticker is punishable by law.</div>
+                  <div class="sticker-bottom-date">{{ formatBottomDate(item.delivery_date) }}</div>
                </div>
             </div>
          </div>
@@ -115,23 +150,59 @@
 <div class="print-only">
    <div class="sticker-print-grid">
       <div *ngFor="let item of selectedProperties" class="property-sticker print-version">
-          <div class="sticker-header">
-             <img src="assets/img/bspLogo.png" class="sticker-logo">
-             <div class="sticker-org-container">
-                <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
-                <div class="sticker-sub">National Headquarters, Manila</div>
-             </div>
-          </div>
-          <div class="sticker-body">
-             <div class="sticker-prop-no">{{ item.property_no }}</div>
-             <div class="sticker-item-name">{{ item.item_name }}</div>
-             <div class="sticker-officer">Officer: {{ item.accountable_officer }}</div>
-             
-             <div class="sticker-barcode-placeholder">
-                <div class="barcode-lines print-barcode"></div>
-                <div class="barcode-text">BSP PROPERTY TAG</div>
-             </div>
-          </div>
+         <div class="sticker-header">
+            <img src="assets/img/bspLogo.png" class="sticker-logo">
+            <div class="sticker-header-text">
+               <div class="sticker-org">BOY SCOUTS OF THE PHILIPPINES</div>
+               <div class="sticker-sub">National Office, Manila</div>
+               <div class="sticker-title">BSP PROPERTY</div>
+            </div>
+         </div>
+         
+         <div class="sticker-body">
+            <div class="sticker-info-row">
+               <span class="sticker-label">Property Number:</span>
+               <span class="sticker-value">{{ item.property_no }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label">Region:</span>
+               <span class="sticker-value">{{ getDivision(item) }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label">Description:</span>
+               <span class="sticker-value">{{ getDescription(item) }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label sticker-no-colon">Model No.</span>
+               <span class="sticker-value">{{ getModelNo(item) }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label sticker-no-colon">Serial No.</span>
+               <span class="sticker-value">{{ item.serial_no || 'N/A' }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label">Acquisition Date:</span>
+               <span class="sticker-value">{{ formatAcquisitionDate(item.delivery_date) }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label">Acquisition Cost:</span>
+               <span class="sticker-value">{{ formatCost(item.unit_cost) }}</span>
+            </div>
+            <div class="sticker-info-row">
+               <span class="sticker-label">Persons Accountable:</span>
+               <span class="sticker-value">{{ item.accountable_officer }}</span>
+            </div>
+         </div>
+         
+         <div class="sticker-signature-section">
+            <div class="sticker-signature-line"></div>
+            <div class="sticker-signature-text">Signature of Inventory Committee</div>
+         </div>
+         
+         <div class="sticker-footer">
+            <div class="sticker-tampering">Tampering of this sticker is punishable by law.</div>
+            <div class="sticker-bottom-date">{{ formatBottomDate(item.delivery_date) }}</div>
+         </div>
       </div>
    </div>
 </div>

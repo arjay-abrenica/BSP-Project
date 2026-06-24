@@ -56,4 +56,88 @@ export class StickerGeneratorComponent implements OnInit {
   clearSelection() {
     this.selectedProperties = [];
   }
+
+  parseAttributes(attributes: any): any[] {
+    if (!attributes) return [];
+    if (typeof attributes === 'string') {
+      try {
+        return JSON.parse(attributes);
+      } catch (e) {
+        return [];
+      }
+    }
+    return Array.isArray(attributes) ? attributes : [];
+  }
+
+  getModelNo(item: any): string {
+    const attrs = this.parseAttributes(item.attributes);
+    const modelAttr = attrs.find(a => a.label && /model/i.test(a.label));
+    if (modelAttr && modelAttr.value) {
+      return modelAttr.value;
+    }
+    const textToSearch = `${item.item_name || ''} ${item.description || ''}`;
+    const match = textToSearch.match(/model(?:\s+no\.?|\s*:)?\s*([a-zA-Z0-9_-]+(?:\s+[a-zA-Z0-9_-]+)*)/i);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+    return 'N/A';
+  }
+
+  getDivision(item: any): string {
+    if (item.office_name && item.office_acronym) {
+      return `${item.office_name} - ${item.office_acronym}`.toUpperCase();
+    }
+    return (item.office_name || item.rco || 'National Office').toUpperCase();
+  }
+
+  getDescription(item: any): string {
+    const name = (item.item_name || '').trim();
+    const desc = (item.description || '').trim();
+    if (!name) return desc || 'N/A';
+    if (!desc) return name;
+    
+    const nameLower = name.toLowerCase();
+    const descLower = desc.toLowerCase();
+    
+    if (nameLower.includes(descLower)) {
+      return name;
+    }
+    if (descLower.includes(nameLower)) {
+      return desc;
+    }
+    return `${name}, ${desc}`;
+  }
+
+  formatAcquisitionDate(dateStr: any): string {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const day = String(date.getDate()).padStart(2, '0');
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  }
+
+  formatBottomDate(dateStr: any): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${month} ${year}`;
+  }
+
+  formatCost(cost: any): string {
+    const val = parseFloat(cost);
+    if (isNaN(val) || val <= 0) return 'Set with CPU';
+    return '₱' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 }
