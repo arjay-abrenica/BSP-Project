@@ -77,6 +77,16 @@ export class IarEncodeComponent implements OnInit {
   getFormulaBarValue(): string {
     if (this.activeModelKey) {
       if (this.activeItemIndex !== null && this.activeItemKey) {
+        if (this.activeItemKey.startsWith('attributes.')) {
+          const parts = this.activeItemKey.split('.');
+          const attrIdx = parseInt(parts[1], 10);
+          const attrKey = parts[2];
+          const item = this.items[this.activeItemIndex];
+          if (item && item.attributes && item.attributes[attrIdx]) {
+            return item.attributes[attrIdx][attrKey] || '';
+          }
+          return '';
+        }
         return this.items[this.activeItemIndex][this.activeItemKey] || '';
       }
       return (this as any)[this.activeModelKey] || '';
@@ -87,12 +97,25 @@ export class IarEncodeComponent implements OnInit {
   setFormulaBarValue(val: any) {
     if (this.activeModelKey) {
       if (this.activeItemIndex !== null && this.activeItemKey) {
-        this.items[this.activeItemIndex][this.activeItemKey] = val;
-        if (['quantity', 'unit_cost', 'discount'].includes(this.activeItemKey)) {
-          this.calculateAmounts(this.items[this.activeItemIndex]);
+        if (this.activeItemKey.startsWith('attributes.')) {
+          const parts = this.activeItemKey.split('.');
+          const attrIdx = parseInt(parts[1], 10);
+          const attrKey = parts[2];
+          const item = this.items[this.activeItemIndex];
+          if (item && item.attributes && item.attributes[attrIdx]) {
+            item.attributes[attrIdx][attrKey] = val;
+          }
+        } else {
+          this.items[this.activeItemIndex][this.activeItemKey] = val;
+          if (['quantity', 'unit_cost', 'discount'].includes(this.activeItemKey)) {
+            this.calculateAmounts(this.items[this.activeItemIndex]);
+          }
         }
       } else {
-        (this as any)[this.activeModelKey] = val;
+        // Prevent accidental overwriting of entire items array when activeItemKey is missing/empty
+        if (this.activeModelKey !== 'items') {
+          (this as any)[this.activeModelKey] = val;
+        }
       }
     }
   }
@@ -251,40 +274,81 @@ export class IarEncodeComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    const payload = {
+    
+    // First, export the IAR to Excel as a necessary step before database submission
+    const excelPayload = {
+      entityName: this.entityName,
       fundCluster: this.fundCluster,
       supplierName: this.supplierName,
+      iarNo: this.iarNo,
       poPrNo: this.poPrNo,
       poPrDate: this.poPrDate,
-      requisitioningOffice: this.requisitioningOffice,
-      responsibilityCenterCode: this.responsibilityCenterCode,
-      iarNo: this.iarNo,
       iarDate: this.iarDate,
+      requisitioningOffice: this.requisitioningOffice,
       invoiceDrNo: this.invoiceDrNo,
+      responsibilityCenterCode: this.responsibilityCenterCode,
       invoiceDate: this.invoiceDate,
-      
       inspectionDate: this.inspectionDate,
-      inspectedBy: this.inspectedBy,
-      inspectedByDesignation: this.inspectedByDesignation,
-      inspectionStatus: this.inspectionStatus,
-      
       receivedDate: this.receivedDate,
-      acceptedBy: this.receivedBy,
-      acceptedByDesignation: this.receivedByDesignation,
+      acceptance_status: this.acceptanceType,
       acceptedByDivision: this.receivedByDivision,
-      acceptanceStatus: this.acceptanceType,
-      
       items: this.items
     };
 
-    this.propertyService.createIar(payload).subscribe({
-      next: () => {
-        alert('IAR encoded and items classified successfully!');
-        this.router.navigate(['/property/registry']);
+    this.propertyService.previewIarExcel(excelPayload).subscribe({
+      next: (blob) => {
+        // Trigger Excel download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `IAR_Report_${this.iarNo || 'export'}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Proceed with actual database submission
+        const payload = {
+          fundCluster: this.fundCluster,
+          supplierName: this.supplierName,
+          poPrNo: this.poPrNo,
+          poPrDate: this.poPrDate,
+          requisitioningOffice: this.requisitioningOffice,
+          responsibilityCenterCode: this.responsibilityCenterCode,
+          iarNo: this.iarNo,
+          iarDate: this.iarDate,
+          invoiceDrNo: this.invoiceDrNo,
+          invoiceDate: this.invoiceDate,
+          
+          inspectionDate: this.inspectionDate,
+          inspectedBy: this.inspectedBy,
+          inspectedByDesignation: this.inspectedByDesignation,
+          inspectionStatus: this.inspectionStatus,
+          
+          receivedDate: this.receivedDate,
+          acceptedBy: this.receivedBy,
+          acceptedByDesignation: this.receivedByDesignation,
+          acceptedByDivision: this.receivedByDivision,
+          acceptanceStatus: this.acceptanceType,
+          
+          items: this.items
+        };
+
+        this.propertyService.createIar(payload).subscribe({
+          next: () => {
+            alert('IAR encoded, Excel exported, and items classified successfully!');
+            this.router.navigate(['/property/registry']);
+          },
+          error: (err) => {
+            console.error('Submission error:', err);
+            alert('Failed to encode IAR.');
+            this.isSubmitting = false;
+          }
+        });
       },
       error: (err) => {
-        console.error('Submission error:', err);
-        alert('Failed to encode IAR.');
+        console.error('Excel Export error before submission:', err);
+        alert('Failed to export Excel. Submission aborted.');
         this.isSubmitting = false;
       }
     });

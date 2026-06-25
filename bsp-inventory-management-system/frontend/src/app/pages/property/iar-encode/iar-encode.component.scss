@@ -605,12 +605,12 @@ $focus-ring: rgba(0, 94, 56, 0.15);
 
     .grid-cell-input {
       padding: 0.35rem 0.25rem !important;
-      font-size: 0.7rem !important;
+      font-size: 0.78rem !important;
     }
     
     .grid-cell-select {
       padding: 0.3rem 0.15rem !important;
-      font-size: 0.7rem !important;
+      font-size: 0.78rem !important;
       -webkit-appearance: none !important;
       -moz-appearance: none !important;
       appearance: none !important;
@@ -675,7 +675,7 @@ $focus-ring: rgba(0, 94, 56, 0.15);
 }
 
 .item-grid-table .gap-1 {
-  gap: 0.1rem;
+  gap: 0.25rem;
 }
 
 .item-grid-table .w-full {
@@ -691,11 +691,11 @@ $focus-ring: rgba(0, 94, 56, 0.15);
 }
 
 .item-grid-table .mt-1 {
-  margin-top: 0.1rem;
+  margin-top: 0.25rem;
 }
 
 .item-grid-table .text-xs {
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
 }
 
 .item-grid-table .w-2\/5 {
