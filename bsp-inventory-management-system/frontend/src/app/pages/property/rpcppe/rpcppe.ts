@@ -18,7 +18,8 @@ export class Rpcppe implements OnInit {
   selectedEmployee: string = 'ALL';
   asOfDate: string = new Date().toISOString().split('T')[0];
   today = new Date();
-  reportType: string = 'RPCPPE';
+  reportType: string = 'ALL';
+  allEmployees: Employee[] = [];
 
   constructor(
     private propertyService: PropertyService,
@@ -33,6 +34,7 @@ export class Rpcppe implements OnInit {
   loadEmployees() {
     this.employeeService.getAllEmployees().subscribe({
       next: (data: Employee[]) => {
+        this.allEmployees = data;
         this.employees = data.map(e => e.full_name).sort();
       },
       error: (err: any) => console.error('Failed to load employees', err)
@@ -63,6 +65,52 @@ export class Rpcppe implements OnInit {
     return this.reportData;
   }
 
+  parseAttributes(attributes: any): any[] {
+    if (!attributes) return [];
+    if (typeof attributes === 'string') {
+      try {
+        return JSON.parse(attributes);
+      } catch (e) {
+        return [];
+      }
+    }
+    return Array.isArray(attributes) ? attributes : [];
+  }
+
+  getPreparedBy(): { name: string, designation: string } {
+    if (this.selectedEmployee && this.selectedEmployee !== 'ALL') {
+      const emp = this.allEmployees.find(e => e.full_name.toUpperCase() === this.selectedEmployee.toUpperCase());
+      return {
+        name: this.selectedEmployee.toUpperCase(),
+        designation: emp?.designation || 'Signature over Printed Name'
+      };
+    } else {
+      const cust = this.allEmployees.find(e => e.full_name.toLowerCase().includes('rubrico') || e.designation.toLowerCase().includes('custodian'));
+      return {
+        name: cust?.full_name.toUpperCase() || 'JERRY B. RUBRICO',
+        designation: cust?.designation || 'Acting Property Custodian'
+      };
+    }
+  }
+
+  getCertifiedCorrect(): { name: string, designation: string } {
+    const cust = this.allEmployees.find(e => e.full_name.toLowerCase().includes('rubrico') || e.designation.toLowerCase().includes('custodian'));
+    const prepared = this.getPreparedBy();
+    
+    if (prepared.name === (cust?.full_name.toUpperCase() || 'JERRY B. RUBRICO')) {
+      const cert = this.allEmployees.find(e => e.full_name.toLowerCase().includes('vinuya') || e.full_name.toLowerCase().includes('arvina'));
+      return {
+        name: cert?.full_name.toUpperCase() || 'ARVINA S. VINUYA',
+        designation: cert?.designation || 'Administrative Officer III'
+      };
+    } else {
+      return {
+        name: cust?.full_name.toUpperCase() || 'JERRY B. RUBRICO',
+        designation: cust?.designation || 'Acting Property Custodian'
+      };
+    }
+  }
+
   exportToExcel() {
     if (!this.reportData || this.reportData.length === 0) {
       alert('No data to export.');
@@ -74,7 +122,8 @@ export class Rpcppe implements OnInit {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${this.reportType}_Report_${this.selectedEmployee}.xlsx`;
+        const filename = this.reportType === 'ALL' ? 'Physical_Count_Report' : `${this.reportType}_Report`;
+        a.download = `${filename}_${this.selectedEmployee}.xlsx`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

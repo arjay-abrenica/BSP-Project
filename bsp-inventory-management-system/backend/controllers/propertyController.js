@@ -93,7 +93,7 @@ const getPropertyReportsCount = async (req, res) => {
   const targetType = type || (reportType === 'RPCPPE' ? 'PAR' : reportType === 'RPCSP' ? 'ICS' : null);
   const targetEmployee = rco || employee;
 
-  let q = `SELECT p.property_no, p.item_name, p.description, p.serial_no, p.unit_cost, p.type, p.accountable_officer, p.rco, p.delivery_date, p.status, p.condition, o.acronym as office_acronym FROM Property_Items p LEFT JOIN Offices o ON p.office_id = o.office_id WHERE 1=1`;
+  let q = `SELECT p.property_no, p.item_name, p.description, p.serial_no, p.unit_cost, p.type, p.accountable_officer, p.rco, p.delivery_date, p.status, p.condition, p.attributes, o.acronym as office_acronym FROM Property_Items p LEFT JOIN Offices o ON p.office_id = o.office_id WHERE 1=1`;
   const params = [];
   
   if (targetType && targetType !== 'all') {
@@ -521,7 +521,13 @@ const exportIcsExcel = async (req, res) => {
       for (const attr of parsedAttributes) {
         if (attrRow > 21) break;
         ws.getCell("F" + attrRow).value = "   " + attr.label + ": " + attr.value;
+        ws.getCell("F" + attrRow).alignment = { horizontal: 'left', vertical: 'middle' };
         attrRow++;
+      }
+      
+      if (attrRow <= 21) {
+        ws.getCell("F" + attrRow).value = "x   x   x   x   x   x   x   x   x   x   x   x  ";
+        ws.getCell("F" + attrRow).alignment = { horizontal: 'center', vertical: 'middle' };
       }
     }
 
@@ -542,12 +548,29 @@ const exportIcsExcel = async (req, res) => {
 
 const exportPhysicalCountExcel = async (req, res) => {
   const { reportType, employee, asOfDate } = req.query;
-  const classification = reportType === 'RPCPPE' ? 'PAR' : 'ICS';
   
   try {
-    let q = 'SELECT p.*, o.office_name FROM Property_Items p LEFT JOIN Offices o ON p.office_id = o.office_id WHERE p.type = $1 AND p.status != \'RETURNED\'';
-    const params = [classification];
-    if (employee && employee !== 'ALL') { params.push(employee); q += ' AND p.accountable_officer = $2'; }
+    let q = `
+      SELECT p.*, o.office_name, i.entity_name, li.unit AS unit_of_measure
+      FROM Property_Items p 
+      LEFT JOIN Offices o ON p.office_id = o.office_id 
+      LEFT JOIN IAR_Records i ON p.iar_id = i.iar_id 
+      LEFT JOIN IAR_Line_Items li ON p.iar_line_id = li.iar_line_id 
+      WHERE p.status != 'RETURNED'`;
+      
+    const params = [];
+    if (reportType === 'RPCPPE') {
+      params.push('PAR');
+      q += ' AND p.type = $1';
+    } else if (reportType === 'RPCSP') {
+      params.push('ICS');
+      q += ' AND p.type = $1';
+    }
+    
+    if (employee && employee !== 'ALL') {
+      params.push(employee);
+      q += ` AND p.accountable_officer = $${params.length}`;
+    }
     if (asOfDate) {
       params.push(asOfDate);
       q += ` AND p.delivery_date <= $${params.length}`;
@@ -555,54 +578,358 @@ const exportPhysicalCountExcel = async (req, res) => {
     q += ' ORDER BY p.accountable_officer ASC, p.property_no ASC';
     
     const pRes = await db.query(q, params);
+    const items = pRes.rows;
     
     const ExcelJS = require('exceljs'); const path = require('path'); const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(path.join(__dirname, '../rpcppe_template.xlsx'));
-    const ws = workbook.worksheets[0];
+    
+    const isRPCPPE = reportType === 'RPCPPE' || reportType === 'ALL';
+    const ws = isRPCPPE ? workbook.worksheets[0] : workbook.worksheets[1];
     ws.name = (reportType || "Physical Count").replace(/[*?:\/\[\]]/g, "").trim().substring(0, 31);
+
+    // Remove the unused worksheet so that the exported file only contains the relevant sheet
+    if (isRPCPPE) {
+      workbook.removeWorksheet(workbook.worksheets[1].id);
+    } else {
+      workbook.removeWorksheet(workbook.worksheets[0].id);
+    }
+    
     const formatDate = (dateStr) => { if (!dateStr) return ''; const d = new Date(dateStr); if (isNaN(d.getTime())) return ''; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }); };
 
     const year = new Date().getFullYear();
-    const title = reportType === 'RPCPPE' ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY (RPCSP)';
-    ws.getCell('A6').value = year + ' ' + title;
-    ws.getCell('A9').value = 'as of ' + formatDate(asOfDate || new Date());
-
-    if (employee && employee !== 'ALL') {
-       ws.getCell('B12').value = 'For which: ' + employee.toUpperCase() + ' is accountable.';
+    const title = reportType === 'ALL'
+      ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTIES (RPCPPE & RPCSP)'
+      : (isRPCPPE ? 'REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)' : 'REPORT ON THE PHYSICAL COUNT OF SEMI-EXPENDABLE PROPERTY (RPCSP)');
+    
+    if (isRPCPPE) {
+      ws.getCell('A6').value = year + ' ' + title;
+      ws.getCell('A9').value = 'as of ' + formatDate(asOfDate || new Date());
+      if (employee && employee !== 'ALL') {
+        ws.getCell('B12').value = 'For which: ' + employee.toUpperCase() + ' is accountable.';
+      } else {
+        ws.getCell('B12').value = 'For All Accountable Officers';
+      }
     } else {
-       ws.getCell('B12').value = 'For All Accountable Officers';
+      ws.getCell('B7').value = year + ' ' + title;
+      ws.getCell('B10').value = 'as of ' + formatDate(asOfDate || new Date());
+      if (employee && employee !== 'ALL') {
+        ws.getCell('B13').value = 'For which: ' + employee.toUpperCase() + ' is accountable.';
+      } else {
+        ws.getCell('B13').value = 'For All Accountable Officers';
+      }
     }
 
-    const items = pRes.rows;
-    const requiredRowsCount = items.length;
-    let shift = 0;
-    
-    // Template items start at Row 17. The template has around 14 item rows (17-30).
-    const templateRowsCount = 14; 
-    
-    if (requiredRowsCount > templateRowsCount) {
-      shift = requiredRowsCount - templateRowsCount;
-      ws.insertRows(31, new Array(shift).fill([]), 'o');
-    }
-
-    // Clear existing values in item rows
-    for(let r=17; r <= 30 + shift; r++) {
-       ws.getCell("B"+r).value = null; ws.getCell("C"+r).value = null; ws.getCell("F"+r).value = null;
-       ws.getCell("G"+r).value = null; ws.getCell("H"+r).value = null; ws.getCell("I"+r).value = null;
-       ws.getCell("J"+r).value = null; ws.getCell("L"+r).value = null;
-    }
-
-    items.forEach((item, idx) => {
-      const rNum = 17 + idx;
-      ws.getCell('B'+rNum).value = item.item_name || '';
-      ws.getCell('C'+rNum).value = item.description || (item.serial_no ? 'SN: ' + item.serial_no : '');
-      ws.getCell('F'+rNum).value = item.property_no || '';
-      ws.getCell('G'+rNum).value = formatDate(item.delivery_date) || '';
-      ws.getCell('H'+rNum).value = 'unit';
-      ws.getCell('I'+rNum).value = 'Purchase';
-      ws.getCell('J'+rNum).value = parseFloat(item.unit_cost) || 0;
-      ws.getCell('L'+rNum).value = 1;
+    // Split items into with and without attributes
+    const itemsWithout = [];
+    const itemsWith = [];
+    items.forEach(item => {
+      let attrs = [];
+      try {
+        attrs = typeof item.attributes === 'string' ? JSON.parse(item.attributes) : (item.attributes || []);
+      } catch (e) {}
+      if (Array.isArray(attrs) && attrs.length > 0) {
+        itemsWith.push({ item, attrs });
+      } else {
+        itemsWithout.push(item);
+      }
     });
+
+    // Define worksheet slots and template rows
+    let slot1Start, slot1End, slot1Capacity, slot1Type;
+    let slot2Start, slot2End, slot2Capacity, slot2Type;
+    
+    let templateWithoutRow, templateWithMainRow, templateWithAttrRow;
+    
+    const originalDataStart = isRPCPPE ? 17 : 18;
+    const originalDataEnd = isRPCPPE ? 35 : 69;
+
+    if (isRPCPPE) {
+      slot1Start = 17;
+      slot1End = 21;
+      slot1Capacity = 5;
+      slot1Type = 'without';
+      
+      slot2Start = 22;
+      slot2End = 35;
+      slot2Capacity = 14;
+      slot2Type = 'with';
+      
+      templateWithoutRow = ws.getRow(17);
+      templateWithMainRow = ws.getRow(22);
+      templateWithAttrRow = ws.getRow(23);
+    } else {
+      slot1Start = 18;
+      slot1End = 43;
+      slot1Capacity = 26;
+      slot1Type = 'with';
+      
+      slot2Start = 44;
+      slot2End = 69;
+      slot2Capacity = 26;
+      slot2Type = 'without';
+      
+      templateWithMainRow = ws.getRow(18);
+      templateWithAttrRow = ws.getRow(19);
+      templateWithoutRow = ws.getRow(44);
+    }
+
+    // Extract and unmerge merges starting at or below originalDataStart
+    const footerMergesToReapply = [];
+    const mergesToUnmerge = [];
+    
+    for (const key in ws._merges) {
+      const merge = ws._merges[key];
+      if (merge && merge.model) {
+        const { top, bottom, left, right } = merge.model;
+        if (top >= originalDataStart) {
+          mergesToUnmerge.push({ key, model: merge.model });
+          if (top > originalDataEnd) {
+            footerMergesToReapply.push({ top, bottom, left, right });
+          }
+        }
+      }
+    }
+    
+    mergesToUnmerge.forEach(m => {
+      try {
+        ws.unMergeCells(m.key);
+      } catch (e) {}
+    });
+
+    const getRowStyle = (row) => {
+      const styles = [];
+      for (let c = 2; c <= 15; c++) {
+        const cell = row.getCell(c);
+        styles[c] = {
+          font: cell.font,
+          fill: cell.fill,
+          border: cell.border,
+          alignment: cell.alignment,
+          numFmt: cell.numFmt
+        };
+      }
+      return { height: row.height, styles };
+    };
+
+    const styleWithout = getRowStyle(templateWithoutRow);
+    const styleWithMain = getRowStyle(templateWithMainRow);
+    const styleWithAttr = getRowStyle(templateWithAttrRow);
+
+    const applyRowStyle = (targetRowIdx, styleObj) => {
+      const row = ws.getRow(targetRowIdx);
+      row.height = styleObj.height;
+      for (let c = 2; c <= 15; c++) {
+        const cell = row.getCell(c);
+        const s = styleObj.styles[c];
+        if (s) {
+          if (s.font) cell.font = JSON.parse(JSON.stringify(s.font));
+          if (s.fill) cell.fill = JSON.parse(JSON.stringify(s.fill));
+          if (s.border) cell.border = JSON.parse(JSON.stringify(s.border));
+          if (s.alignment) cell.alignment = JSON.parse(JSON.stringify(s.alignment));
+          if (s.numFmt) cell.numFmt = s.numFmt;
+        }
+      }
+    };
+
+    const totalWithRows = itemsWith.reduce((sum, item) => sum + 1 + item.attrs.length, 0);
+    const totalWithoutRows = itemsWithout.length;
+
+    const needed1 = slot1Type === 'without' ? totalWithoutRows : totalWithRows;
+    const needed2 = slot2Type === 'without' ? totalWithoutRows : totalWithRows;
+
+    const netShift1 = needed1 - slot1Capacity;
+    const netShift2 = needed2 - slot2Capacity;
+
+    // Adjust Slot 2 first (since it is below Slot 1 in the sheet layout)
+    if (netShift2 > 0) {
+      ws.insertRows(slot2End + 1, new Array(netShift2).fill([]), 'o');
+    } else if (netShift2 < 0) {
+      ws.spliceRows(slot2Start + needed2, -netShift2);
+    }
+
+    // Adjust Slot 1
+    if (netShift1 > 0) {
+      ws.insertRows(slot1End + 1, new Array(netShift1).fill([]), 'o');
+    } else if (netShift1 < 0) {
+      ws.spliceRows(slot1Start + needed1, -netShift1);
+    }
+
+    const s1Start = slot1Start;
+    const s2Start = slot2Start + netShift1;
+
+    const populateWithout = (start) => {
+      itemsWithout.forEach((item, idx) => {
+        const rNum = start + idx;
+        applyRowStyle(rNum, styleWithout);
+        try { ws.mergeCells(rNum, 3, rNum, 5); } catch(e) {}
+
+        ws.getCell('B' + rNum).value = item.item_name || '';
+        ws.getCell('C' + rNum).value = item.description || (item.serial_no ? 'SN: ' + item.serial_no : '');
+        ws.getCell('F' + rNum).value = item.property_no || '';
+
+        if (isRPCPPE) {
+          ws.getCell('G' + rNum).value = formatDate(item.delivery_date) || '';
+          ws.getCell('H' + rNum).value = item.unit_of_measure || 'unit';
+          ws.getCell('I' + rNum).value = item.mode_of_acquisition || 'Purchase';
+          ws.getCell('J' + rNum).value = parseFloat(item.unit_cost) || 0;
+          ws.getCell('K' + rNum).value = 1;
+          ws.getCell('L' + rNum).value = 1;
+          ws.getCell('M' + rNum).value = 0;
+          ws.getCell('N' + rNum).value = 0;
+          ws.getCell('O' + rNum).value = (item.condition === 'GOOD' || item.condition === 'FAIR') ? 'Serviceable' : (item.condition || 'Serviceable');
+        } else {
+          ws.getCell('G' + rNum).value = item.unit_of_measure || 'unit';
+          ws.getCell('H' + rNum).value = parseFloat(item.unit_cost) || 0;
+          ws.getCell('I' + rNum).value = 1;
+          ws.getCell('J' + rNum).value = 1;
+          ws.getCell('K' + rNum).value = 0;
+          ws.getCell('L' + rNum).value = 0;
+          ws.getCell('M' + rNum).value = (item.condition === 'GOOD' || item.condition === 'FAIR') ? 'Serviceable' : (item.condition || 'Serviceable');
+        }
+      });
+    };
+
+    const populateWith = (start) => {
+      let currRow = start;
+      itemsWith.forEach(({ item, attrs }) => {
+        const mainRowIdx = currRow;
+        applyRowStyle(mainRowIdx, styleWithMain);
+        try { ws.mergeCells(mainRowIdx, 3, mainRowIdx, 5); } catch(e) {}
+
+        ws.getCell('B' + mainRowIdx).value = item.item_name || '';
+        ws.getCell('C' + mainRowIdx).value = item.description || (item.serial_no ? 'SN: ' + item.serial_no : '');
+        ws.getCell('F' + mainRowIdx).value = item.property_no || '';
+
+        if (isRPCPPE) {
+          ws.getCell('G' + mainRowIdx).value = formatDate(item.delivery_date) || '';
+          ws.getCell('H' + mainRowIdx).value = item.unit_of_measure || 'unit';
+          ws.getCell('I' + mainRowIdx).value = item.mode_of_acquisition || 'Purchase';
+          ws.getCell('J' + mainRowIdx).value = parseFloat(item.unit_cost) || 0;
+          ws.getCell('K' + mainRowIdx).value = 1;
+          ws.getCell('L' + mainRowIdx).value = 1;
+          ws.getCell('M' + mainRowIdx).value = 0;
+          ws.getCell('N' + mainRowIdx).value = 0;
+          ws.getCell('O' + mainRowIdx).value = (item.condition === 'GOOD' || item.condition === 'FAIR') ? 'Serviceable' : (item.condition || 'Serviceable');
+        } else {
+          ws.getCell('G' + mainRowIdx).value = item.unit_of_measure || 'unit';
+          ws.getCell('H' + mainRowIdx).value = parseFloat(item.unit_cost) || 0;
+          ws.getCell('I' + mainRowIdx).value = 1;
+          ws.getCell('J' + mainRowIdx).value = 1;
+          ws.getCell('K' + mainRowIdx).value = 0;
+          ws.getCell('L' + mainRowIdx).value = 0;
+          ws.getCell('M' + mainRowIdx).value = (item.condition === 'GOOD' || item.condition === 'FAIR') ? 'Serviceable' : (item.condition || 'Serviceable');
+        }
+
+        attrs.forEach((attr, aIdx) => {
+          const attrRowIdx = mainRowIdx + 1 + aIdx;
+          applyRowStyle(attrRowIdx, styleWithAttr);
+          ws.getCell('C' + attrRowIdx).value = attr.label || '';
+          ws.getCell('D' + attrRowIdx).value = ':';
+          ws.getCell('E' + attrRowIdx).value = attr.value || '';
+          
+          const colsToClear = isRPCPPE 
+            ? ['B', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']
+            : ['B', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+          colsToClear.forEach(col => {
+            ws.getRow(attrRowIdx).getCell(col).value = null;
+          });
+        });
+
+        const mergeCols = isRPCPPE
+          ? [2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+          : [2, 6, 7, 8, 9, 10, 11, 12, 13];
+        mergeCols.forEach(col => {
+          try { ws.mergeCells(mainRowIdx, col, mainRowIdx + attrs.length, col); } catch(e) {}
+        });
+
+        currRow = mainRowIdx + 1 + attrs.length;
+      });
+    };
+
+    if (slot1Type === 'without') {
+      populateWithout(s1Start);
+      populateWith(s2Start);
+    } else {
+      populateWith(s1Start);
+      populateWithout(s2Start);
+    }
+
+    const getShiftedRow = (r) => {
+      let shift = 0;
+      if (r > slot1End) {
+        shift += netShift1;
+      }
+      if (r > slot2End) {
+        shift += netShift2;
+      }
+      return r + shift;
+    };
+
+    footerMergesToReapply.forEach(m => {
+      const newTop = getShiftedRow(m.top);
+      const newBottom = getShiftedRow(m.bottom);
+      try {
+        ws.mergeCells(newTop, m.left, newBottom, m.right);
+      } catch (e) {}
+    });
+
+    // Fetch prepared by details from Employees table based on dropdown/query parameter choice
+    let preparedByName = '';
+    let preparedByDesignation = '';
+    if (employee && employee !== 'ALL') {
+      const empRes = await db.query('SELECT full_name, designation FROM Employees WHERE full_name ILIKE $1 LIMIT 1', [employee]);
+      if (empRes.rows.length > 0) {
+        preparedByName = empRes.rows[0].full_name.toUpperCase();
+        preparedByDesignation = empRes.rows[0].designation || 'Signature over Printed Name';
+      } else {
+        preparedByName = employee.toUpperCase();
+        preparedByDesignation = 'Signature over Printed Name';
+      }
+    } else {
+      const custodianRes = await db.query("SELECT full_name, designation FROM Employees WHERE full_name ILIKE '%Rubrico%' OR designation ILIKE '%Custodian%' LIMIT 1");
+      if (custodianRes.rows.length > 0) {
+        preparedByName = custodianRes.rows[0].full_name.toUpperCase();
+        preparedByDesignation = custodianRes.rows[0].designation || 'Acting Property Custodian';
+      } else {
+        preparedByName = 'JERRY B. RUBRICO';
+        preparedByDesignation = 'Acting Property Custodian';
+      }
+    }
+
+    // Fetch custodian/certifier details
+    const custodianRes = await db.query("SELECT full_name, designation FROM Employees WHERE full_name ILIKE '%Rubrico%' OR designation ILIKE '%Custodian%' LIMIT 1");
+    let custodianName = 'JERRY B. RUBRICO';
+    let custodianDesignation = 'Acting Property Custodian';
+    if (custodianRes.rows.length > 0) {
+      custodianName = custodianRes.rows[0].full_name.toUpperCase();
+      custodianDesignation = custodianRes.rows[0].designation || 'Acting Property Custodian';
+    }
+
+    // Fetch accountant details
+    const accountantRes = await db.query("SELECT full_name, designation FROM Employees WHERE designation ILIKE '%Accountant%' LIMIT 1");
+    let accountantName = 'DIANARA R. BAÑEZ';
+    let accountantDesignation = 'Accountant III';
+    if (accountantRes.rows.length > 0) {
+      accountantName = accountantRes.rows[0].full_name.toUpperCase();
+      accountantDesignation = accountantRes.rows[0].designation || 'Accountant III';
+    }
+
+    // Populate signature/custodian names and designations at shifted locations
+    if (isRPCPPE) {
+      ws.getCell('C' + getShiftedRow(40)).value = preparedByName;
+      ws.getCell('C' + getShiftedRow(41)).value = preparedByDesignation;
+      ws.getCell('C' + getShiftedRow(46)).value = custodianName;
+      ws.getCell('C' + getShiftedRow(47)).value = custodianDesignation;
+      ws.getCell('C' + getShiftedRow(52)).value = accountantName;
+      ws.getCell('C' + getShiftedRow(53)).value = accountantDesignation;
+    } else {
+      ws.getCell('C' + getShiftedRow(73)).value = preparedByName;
+      ws.getCell('C' + getShiftedRow(74)).value = preparedByDesignation;
+      ws.getCell('C' + getShiftedRow(79)).value = custodianName;
+      ws.getCell('C' + getShiftedRow(80)).value = custodianDesignation;
+      ws.getCell('C' + getShiftedRow(85)).value = accountantName;
+      ws.getCell('C' + getShiftedRow(86)).value = accountantDesignation;
+    }
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=' + reportType + '_Report.xlsx');

@@ -4,8 +4,8 @@
     <div class="excel-header-left">
       <span class="excel-header-icon">🏢</span>
       <div class="excel-header-texts">
-        <h2>Dedicated RPCPPE Dashboard</h2>
-        <p class="subtitle">Report on the Physical Count of Property, Plant and Equipment</p>
+        <h2>Physical Count Dashboard</h2>
+        <p class="subtitle">Report on the Physical Count of Property, Plant & Equipment (RPCPPE) and Semi-Expendable Property (RPCSP)</p>
       </div>
     </div>
     <div class="excel-header-actions no-print">
@@ -47,7 +47,7 @@
   <!-- Main Report Card -->
   <div class="card shadow-sm mt-4 border-excel">
     <div class="card-header border-excel-header">
-       📁 Report on Property, Plant and Equipment (RPCPPE)
+       📁 Report on Properties (RPCPPE & RPCSP)
        <span class="header-divider">|</span> 
        <span class="accountability-text">Accountability: {{ selectedEmployee === 'ALL' ? 'BSP National Office' : selectedEmployee }}</span>
     </div>
@@ -83,7 +83,12 @@
 
             <ng-container *ngIf="!isLoading">
               <tr *ngFor="let item of getFilteredData()" class="clickable-row-item">
-                <td><strong class="prop-no-link">🔢 {{ item.property_no }}</strong></td>
+                <td>
+                  <strong class="prop-no-link">🔢 {{ item.property_no }}</strong>
+                  <span class="badge-type" [class.badge-par]="item.type === 'PAR'" [class.badge-ics]="item.type === 'ICS'">
+                    {{ item.type }}
+                  </span>
+                </td>
                 <td>
                    <div class="item-name-text">{{ item.item_name }}</div>
                    <div class="text-xs text-muted font-italic">{{ item.description }}</div>
@@ -126,7 +131,7 @@
          <p class="text-center text-sm">Republic of the Philippines</p>
          <p class="text-center font-bold">BOY SCOUTS OF THE PHILIPPINES</p>
          <p class="text-center text-xs">National Office, Manila</p>
-         <h2 class="text-center mt-4">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)</h2>
+         <h2 class="text-center mt-4">REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT & EQUIPMENT (RPCPPE) & SEMI-EXPENDABLE PROPERTY (RPCSP)</h2>
          <p class="text-center text-xs">As of {{ today | date:'longDate' }}</p>
        </div>
 
@@ -149,19 +154,49 @@
              </tr>
           </thead>
           <tbody>
-             <tr *ngFor="let item of getFilteredData()">
-                <td>{{ item.property_no }}</td>
-                <td>{{ item.item_name }} {{ item.description ? '(' + item.description + ')' : '' }}</td>
-                <td>{{ item.serial_no || 'N/A' }}</td>
-                <td class="text-right">₱{{ item.unit_cost | number:'1.2-2' }}</td>
-                <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
-                <td class="text-center">{{ item.condition }}</td>
-             </tr>
+              <ng-container *ngFor="let item of getFilteredData()">
+                <tr>
+                   <td>
+                     {{ item.property_no }}
+                     <span class="badge-type" style="font-size: 8px; border: 1px solid #aaa; padding: 1px 3px; border-radius: 3px; margin-left: 4px;">
+                       {{ item.type }}
+                     </span>
+                   </td>
+                   <td>{{ item.item_name }} {{ item.description ? '(' + item.description + ')' : '' }}</td>
+                   <td>{{ item.serial_no || 'N/A' }}</td>
+                   <td class="text-right">₱{{ item.unit_cost | number:'1.2-2' }}</td>
+                   <td>{{ item.delivery_date | date:'MM/dd/yyyy' }}</td>
+                   <td class="text-center">{{ item.condition }}</td>
+                </tr>
+                <!-- Attribute Rows -->
+                <tr *ngFor="let attr of parseAttributes(item.attributes)">
+                   <td></td>
+                   <td colspan="5" class="pl-6 text-xs text-muted-print font-italic" style="padding-left: 2rem;">
+                      &nbsp;&nbsp;&nbsp;&nbsp;{{ attr.label }}: {{ attr.value }}
+                   </td>
+                </tr>
+              </ng-container>
              <tr>
                <td class="text-center">&nbsp;</td>
                <td colspan="5" class="text-muted-print text-center">x x x x x Nothing Follows x x x x x</td>
              </tr>
           </tbody>
-       </table>
-   </div>
-</div>
+        </table>
+
+        <!-- Staggered Signature Signoffs -->
+        <div class="report-signature-container mt-5">
+          <div class="sig-section">
+            <div class="sig-header">Prepared By:</div>
+            <div class="sig-space mt-4"></div>
+            <p class="sig-name">{{ getPreparedBy().name }}</p>
+            <p class="sig-title">{{ getPreparedBy().designation }}</p>
+          </div>
+          <div class="sig-section">
+            <div class="sig-header">Certified Correct By:</div>
+            <div class="sig-space mt-4"></div>
+            <p class="sig-name">{{ getCertifiedCorrect().name }}</p>
+            <p class="sig-title">{{ getCertifiedCorrect().designation }}</p>
+          </div>
+        </div>
+    </div>
+ </div>

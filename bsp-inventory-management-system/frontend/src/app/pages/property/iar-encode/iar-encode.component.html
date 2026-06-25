@@ -308,12 +308,12 @@
                         
                         <div class="flex items-center gap-1 mt-1" *ngFor="let attr of item.attributes; let attrIdx = index; trackBy: trackByAttr">
                           <input type="text" [(ngModel)]="attr.label" [name]="'attrLabel_' + idx + '_' + attrIdx"
-                            (focus)="onCellFocus('B' + (10 + idx) + '_attrL_' + attrIdx, 'Row ' + (10 + idx) + ' Spec Label ' + (attrIdx+1), 'items', idx)"
+                            (focus)="onCellFocus('B' + (10 + idx) + '_attrL_' + attrIdx, 'Row ' + (10 + idx) + ' Spec Label ' + (attrIdx+1), 'items', idx, 'attributes.' + attrIdx + '.label')"
                             (ngModelChange)="onGridInputChange()"
-                            placeholder="Name" class="grid-cell-input text-xs w-2/5 border-b border-dashed border-slate-200">
+                            placeholder="Name" class="grid-cell-input text-xs flex-1 border-b border-dashed border-slate-200">
                           <span class="text-xs font-bold text-slate-400">:</span>
                           <input type="text" [(ngModel)]="attr.value" [name]="'attrVal_' + idx + '_' + attrIdx"
-                            (focus)="onCellFocus('B' + (10 + idx) + '_attrV_' + attrIdx, 'Row ' + (10 + idx) + ' Spec Value ' + (attrIdx+1), 'items', idx)"
+                            (focus)="onCellFocus('B' + (10 + idx) + '_attrV_' + attrIdx, 'Row ' + (10 + idx) + ' Spec Value ' + (attrIdx+1), 'items', idx, 'attributes.' + attrIdx + '.value')"
                             (ngModelChange)="onGridInputChange()"
                             placeholder="Value" class="grid-cell-input text-xs flex-1 border-b border-dashed border-slate-200">
                           <button type="button" class="text-rose-500 text-xs px-1 hover:bg-rose-50 rounded" (click)="removeAttribute(idx, attrIdx)" title="Remove Spec">✕</button>

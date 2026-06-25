@@ -439,3 +439,29 @@ $shadow-soft: 0 10px 30px rgba(42, 82, 59, 0.05);
     display: block !important;
   }
 }
+
+/* --- Badge Type Styles --- */
+.badge-type {
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.badge-par {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-ics {
+  background-color: #faf5ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
